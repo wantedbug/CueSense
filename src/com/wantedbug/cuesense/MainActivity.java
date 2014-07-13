@@ -26,7 +26,15 @@ import android.widget.TextView;
 
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
 
+	/**
+	 * Constants
+	 */
+	// Number of tabs in the app
 	private static final int NUM_TABS = 4;
+
+	// Section number fragment argument for a particular fragment.
+	private static final String ARG_SECTION_NUMBER = "section_number";
+
 	/**
 	 * The {@link android.support.v4.view.PagerAdapter} that will provide
 	 * fragments for each of the sections. We use a {@link FragmentPagerAdapter}
@@ -143,11 +151,17 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		public Fragment getItem(int position) {
 			// getItem is called to instantiate the fragment for the given page.
 			switch(position) {
+//			case 0: // TODO - CueSense profile tab
 			case 1:
 				if(mFBFragment == null) {
 					mFBFragment = new FBFragment();
+					Bundle args = new Bundle();
+					args.putInt(ARG_SECTION_NUMBER, position + 1);
+					mFBFragment.setArguments(args);
 				}
 				return mFBFragment;
+//			case 2: // TODO - Twitter tab
+//			case 3: // TODO - Foursquare tab
 			default: return PlaceholderFragment.newInstance(position + 1);
 			}
 			
@@ -175,16 +189,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		}
 	}
 
+	// TODO: remove this when tabs are done
 	/**
 	 * A placeholder fragment containing a simple view.
 	 */
 	public static class PlaceholderFragment extends Fragment {
-		/**
-		 * The fragment argument representing the section number for this
-		 * fragment.
-		 */
-		private static final String ARG_SECTION_NUMBER = "section_number";
-
 		/**
 		 * Returns a new instance of this fragment for the given section number.
 		 */
