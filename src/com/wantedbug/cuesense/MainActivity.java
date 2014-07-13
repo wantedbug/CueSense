@@ -26,6 +26,7 @@ import android.widget.TextView;
 
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
 
+	private static final int NUM_TABS = 4;
 	/**
 	 * The {@link android.support.v4.view.PagerAdapter} that will provide
 	 * fragments for each of the sections. We use a {@link FragmentPagerAdapter}
@@ -154,8 +155,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 		@Override
 		public int getCount() {
-			// Show 3 total pages.
-			return 4;
+			return NUM_TABS;
 		}
 
 		@Override
