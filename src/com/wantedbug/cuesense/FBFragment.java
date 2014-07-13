@@ -29,6 +29,10 @@ import com.facebook.model.GraphUser;
 import com.facebook.widget.LoginButton;
 //import com.facebook.widget.UserSettingsFragment;
 
+/**
+ * This class holds the Facebook login button. 
+ * @author vikasprabhu
+ */
 public class FBFragment extends Fragment {
 
 	// Debugging
