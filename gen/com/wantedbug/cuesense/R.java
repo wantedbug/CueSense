@@ -296,9 +296,11 @@ containing a value of this type.
         public static final int settings=0x7f090001;
     }
     public static final class string {
-        public static final int action_settings=0x7f07001e;
+        public static final int action_settings=0x7f07001f;
         public static final int app_id=0x7f070020;
         public static final int app_name=0x7f07001a;
+        public static final int bt_not_available=0x7f070023;
+        public static final int bt_not_enabled=0x7f070024;
         public static final int com_facebook_choose_friends=0x7f07000f;
         public static final int com_facebook_dialogloginactivity_ok_button=0x7f070000;
         public static final int com_facebook_internet_permission_error_message=0x7f070013;
@@ -325,11 +327,12 @@ containing a value of this type.
         public static final int com_facebook_usersettingsfragment_log_in_button=0x7f070008;
         public static final int com_facebook_usersettingsfragment_logged_in=0x7f070009;
         public static final int com_facebook_usersettingsfragment_not_logged_in=0x7f07000a;
+        public static final int not_connected=0x7f070025;
         public static final int title_activity_settings=0x7f070022;
         public static final int title_section1=0x7f07001b;
         public static final int title_section2=0x7f07001c;
         public static final int title_section3=0x7f07001d;
-        public static final int title_section4=0x7f07001f;
+        public static final int title_section4=0x7f07001e;
         public static final int user_info=0x7f070021;
     }
     public static final class style {

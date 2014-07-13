@@ -142,9 +142,11 @@ int layout fragment_fb 0x7f030011
 int layout fragment_main 0x7f030012
 int menu main 0x7f090000
 int menu settings 0x7f090001
-int string action_settings 0x7f07001e
+int string action_settings 0x7f07001f
 int string app_id 0x7f070020
 int string app_name 0x7f07001a
+int string bt_not_available 0x7f070023
+int string bt_not_enabled 0x7f070024
 int string com_facebook_choose_friends 0x7f07000f
 int string com_facebook_dialogloginactivity_ok_button 0x7f070000
 int string com_facebook_internet_permission_error_message 0x7f070013
@@ -171,11 +173,12 @@ int string com_facebook_tooltip_default 0x7f070019
 int string com_facebook_usersettingsfragment_log_in_button 0x7f070008
 int string com_facebook_usersettingsfragment_logged_in 0x7f070009
 int string com_facebook_usersettingsfragment_not_logged_in 0x7f07000a
+int string not_connected 0x7f070025
 int string title_activity_settings 0x7f070022
 int string title_section1 0x7f07001b
 int string title_section2 0x7f07001c
 int string title_section3 0x7f07001d
-int string title_section4 0x7f07001f
+int string title_section4 0x7f07001e
 int string user_info 0x7f070021
 int style AppBaseTheme 0x7f080003
 int style AppTheme 0x7f080004

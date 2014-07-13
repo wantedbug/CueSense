@@ -1,6 +1,7 @@
 package com.wantedbug.cuesense;
 
 import java.util.Locale;
+import java.util.UUID;
 
 import android.app.ActionBar.Tab;
 import android.app.Activity;
@@ -11,21 +12,36 @@ import android.support.v4.app.FragmentActivity;
 //import android.app.FragmentManager;
 import android.support.v4.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 //import android.support.v4.app.FragmentTransaction;
 //import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+
+/**
+ * This class is the starting point for the application. 
+ * @author vikasprabhu
+ */
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
+	
+	// Debugging
+	private static final String TAG = "MainActivity";
 
 	/**
 	 * Constants
@@ -35,6 +51,16 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	// Section number fragment argument for a particular fragment.
 	private static final String ARG_SECTION_NUMBER = "section_number";
+
+	/**
+	 * Members
+	 */
+	// Intent request codes
+	private static final int REQUEST_ENABLE_BT = 1;	
+
+	// Members
+	private BluetoothAdapter mBTAdapter = null;
+	private BluetoothManager mBTManager = null;
 
 	/**
 	 * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -60,6 +86,19 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		/** Bluetooth setup */
+		// Get the default Bluetooth adapter
+	    mBTAdapter = BluetoothAdapter.getDefaultAdapter();
+	    
+	    // If the adapter is null, then Bluetooth is not supported
+        if (mBTAdapter == null) {
+        	Log.e(TAG, "BT not available");
+            Toast.makeText(this, R.string.bt_not_available, Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+        
+		/** Action bar and tabs setup */
 		// Set up the action bar.
 		final ActionBar actionBar = getActionBar();
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
@@ -100,6 +139,137 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			actionBar.addTab(newTab);
 		}
 	}
+	
+	@Override
+	public void onStart()
+	{
+		super.onStart();
+        Log.d(TAG, "onStart()");
+
+        // If BT is not on, request that it be enabled.
+        // setupChat() will then be called during onActivityResult
+        if (!mBTAdapter.isEnabled()) {
+        	Log.i(TAG, "BT not enabled. Enabling..");
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+        // Otherwise, setup the chat session
+        } else {
+        	Log.i(TAG, "BT enabled. Setting up link..");
+            if (mBTManager == null) setupBTLink();
+        }
+	}
+	
+	@Override
+    public synchronized void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume()");
+
+        // Performing this check in onResume() covers the case in which BT was
+        // not enabled during onStart(), so we were paused to enable it...
+        // onResume() will be called when ACTION_REQUEST_ENABLE activity returns.
+        if (mBTManager != null) {
+            // Only if the state is STATE_NONE, do we know that we haven't started already
+            if (mBTManager.getState() == BluetoothManager.STATE_NONE) {
+              // Start the Bluetooth chat services
+              mBTManager.start();
+            }
+        }
+    }
+	
+	/**
+	 * Connect to the Bluetooth device
+	 */
+	private void connectDevice()
+	{
+		Log.d(TAG, "connectDevice");
+        // Get the BluetoothDevice object
+        BluetoothDevice device = mBTAdapter.getRemoteDevice(BluetoothManager.DEVICE_MAC);
+        // Attempt to connect to the device
+        mBTManager.connect(device);
+    }
+	
+	/**
+	 * Setup BluetoothManager and UI element links
+	 */
+	private void setupBTLink()
+	{
+        Log.d(TAG, "setupBTLink()");
+
+//        // Initialize the compose field with a listener for the return key
+//        mEditText = (EditText) findViewById(R.id.edit_text_out);
+//
+//        // Initialize the send button with a listener that for click events
+//        mSendButton = (Button) findViewById(R.id.button_send);
+//        mSendButton.setOnClickListener(new OnClickListener() {
+//			public void onClick(View v) {
+//                // Send a message using content of the edit text widget
+//                TextView view = (TextView) findViewById(R.id.edit_text_out);
+//                String message = view.getText().toString();
+//                sendToBT(message);
+//			}
+//		});
+
+        // Initialize BluetoothManager
+        mBTManager = new BluetoothManager(this);
+
+        // Initialize the buffer for outgoing messages
+//        mOutStringBuffer = new StringBuffer("");
+        
+        // Connect to the Bluetooth device
+        connectDevice();
+    }
+	
+//	/**
+//	 * Sends text from the TextView to the Bluetooth device
+//	 * @param text
+//	 */
+//	private void sendToBT(String text)
+//	{
+//        // Check that we're actually connected before trying anything
+//        if (mBTManager.getState() != BluetoothManager.STATE_CONNECTED) {
+//            Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT).show();
+//            return;
+//        }
+//
+//        // Check that there's actually something to send
+//        if (text.length() > 0) {
+//            mBTManager.write(text);
+//
+//            // Reset out string buffer to zero and clear the edit text field
+//            mOutStringBuffer.setLength(0);
+//            mEditText.setText(mOutStringBuffer);
+//        }
+//    }
+	
+	/**
+	 *  This routine is called when an activity completes.
+	 */
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data)
+	{
+		Log.d(TAG, "onActivityResult()");
+		super.onActivityResult(requestCode, resultCode, data);
+		switch(requestCode) {
+		case REQUEST_ENABLE_BT:
+            if (resultCode == Activity.RESULT_OK) {
+                setupBTLink();
+            } else {
+                Log.d(TAG, "BT not enabled");
+                Toast.makeText(this, R.string.bt_not_enabled, Toast.LENGTH_SHORT).show();
+                finish();
+            }
+            break;
+		}
+	}
+	
+	@Override
+    public void onDestroy()
+    {
+		Log.d(TAG, "onDestroy()");
+        super.onDestroy();
+        // Stop the Bluetooth chat services
+        if (mBTManager != null) mBTManager.stop();
+    }
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {

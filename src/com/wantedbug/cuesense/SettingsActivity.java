@@ -6,12 +6,19 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+/**
+ * This class is for the Settings view 
+ * @author vikasprabhu
+ */
 public class SettingsActivity extends FragmentActivity {
 
 	// Debugging
 	private static final String TAG = "SettingsActivity";
 	
-	//Members
+	/**
+	 * Members
+	 */
+	// Fragment that holds Facebook login button
 	FBFragment mFBFragment;
 	
 	@Override
