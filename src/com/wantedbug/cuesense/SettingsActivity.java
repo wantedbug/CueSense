@@ -16,7 +16,7 @@ public class SettingsActivity extends FragmentActivity {
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		Log.d(TAG, "onCreate()");
+		Log.i(TAG, "onCreate()");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_settings);
 		
@@ -50,8 +50,14 @@ public class SettingsActivity extends FragmentActivity {
 	}
 	
 	@Override
+	protected void onPause() {
+		Log.i(TAG, "onPause()");
+		super.onPause();
+	}
+	
+	@Override
 	protected void onDestroy() {
-		Log.d(TAG, "onDestroy()");
+		Log.i(TAG, "onDestroy()");
 		super.onDestroy();
 	}
 }

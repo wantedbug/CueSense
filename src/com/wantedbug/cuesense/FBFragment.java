@@ -61,6 +61,7 @@ public class FBFragment extends Fragment {
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		Log.i(TAG, "onCreate()");
 	    super.onCreate(savedInstanceState);
 	    uiHelper = new UiLifecycleHelper(getActivity(), callback);
 	    uiHelper.onCreate(savedInstanceState);
@@ -69,6 +70,7 @@ public class FBFragment extends Fragment {
 	/** BEGIN Fragment lifecycle methods*/
 	@Override
 	public void onResume() {
+		Log.i(TAG, "onResume()");
 	    super.onResume();
 	    
 	    // For scenarios where the main activity is launched and user
@@ -85,24 +87,28 @@ public class FBFragment extends Fragment {
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		Log.i(TAG, "onActivityResult()");
 	    super.onActivityResult(requestCode, resultCode, data);
 	    uiHelper.onActivityResult(requestCode, resultCode, data);
 	}
 
 	@Override
 	public void onPause() {
+		Log.i(TAG, "onPause()");
 	    super.onPause();
 	    uiHelper.onPause();
 	}
 
 	@Override
 	public void onDestroy() {
+		Log.i(TAG, "onDestroy()");
 	    super.onDestroy();
 	    uiHelper.onDestroy();
 	}
 
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
+		Log.i(TAG, "onSaveInstanceState()");
 	    super.onSaveInstanceState(outState);
 	    uiHelper.onSaveInstanceState(outState);
 	}
@@ -112,6 +118,7 @@ public class FBFragment extends Fragment {
 	public View onCreateView(LayoutInflater inflater, 
 			ViewGroup container, 
 			Bundle savedInstanceState) {
+		Log.i(TAG, "onCreateView()");
 //		View view = inflater.inflate(R.layout.activity_main, container, false);
 		View view = inflater.inflate(R.layout.fragment_fb, container, false);
 
@@ -210,7 +217,6 @@ public class FBFragment extends Fragment {
 	// Check if Facebook.Session changed between calls
 	// Note: required as onSessionStateChange() gets called multiple times
 	private boolean isSessionChanged(Session session) {
-
 	    // Check if session state changed
 	    if (mSession.getState() != session.getState())
 	        return true;
