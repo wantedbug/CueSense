@@ -10,5 +10,6 @@
     <string name="title_section4">Foursquare</string>
     <string name="app_id">600390553410604</string>
     <string name="user_info">User info</string>
+    <string name="title_activity_settings">Settings</string>
 
 </resources>

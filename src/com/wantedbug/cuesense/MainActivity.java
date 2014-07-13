@@ -11,6 +11,7 @@ import android.support.v4.app.FragmentActivity;
 //import android.app.FragmentManager;
 import android.support.v4.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.Intent;
 //import android.support.v4.app.FragmentTransaction;
 //import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -114,6 +115,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
 		if (id == R.id.action_settings) {
+			Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
+			startActivity(settingsIntent);
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
@@ -164,7 +167,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 //			case 3: // TODO - Foursquare tab
 			default: return PlaceholderFragment.newInstance(position + 1);
 			}
-			
 		}
 
 		@Override
