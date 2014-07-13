@@ -69,18 +69,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 * becomes too memory intensive, it may be best to switch to a
 	 * {@link android.support.v13.app.FragmentStatePagerAdapter}.
 	 */
-	SectionsPagerAdapter mSectionsPagerAdapter;
+	private SectionsPagerAdapter mSectionsPagerAdapter;
 
 	/**
 	 * The {@link ViewPager} that will host the section contents.
 	 */
-	ViewPager mViewPager;
+	private ViewPager mViewPager;
 	
-	/**
-	 * Facebook fragment
-	 */
-	FBFragment mFBFragment;
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
