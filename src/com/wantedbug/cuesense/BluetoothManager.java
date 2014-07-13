@@ -15,7 +15,7 @@ import android.content.Context;
 import android.util.Log;
 
 /**
- * This class is the wrapper for Bluetooth connection and transmission
+ * This class is the interface for Bluetooth connection and transmission
  * functions.
  * It has threads for:
  *  - connecting with a device

@@ -1,3 +1,7 @@
+/**
+ * Copyright (C) 2014 Tampere University of Technology 
+ */
+
 package com.wantedbug.cuesense;
 
 import android.os.Bundle;
