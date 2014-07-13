@@ -11,11 +11,23 @@ public class SettingsActivity extends FragmentActivity {
 	// Debugging
 	private static final String TAG = "SettingsActivity";
 	
+	//Members
+	FBFragment mFBFragment;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreate()");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_settings);
+		
+		if (savedInstanceState == null) {
+	        // Add the fragment on initial activity setup
+	        mFBFragment = new FBFragment();
+	        getSupportFragmentManager().beginTransaction().add(android.R.id.content, mFBFragment).commit();
+	    } else {
+	        // Or set the fragment from restored state info
+	        mFBFragment = (FBFragment) getSupportFragmentManager().findFragmentById(android.R.id.content);
+	    }
 	}
 
 	@Override

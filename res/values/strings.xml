@@ -5,9 +5,8 @@
     <string name="title_section1">CueSense</string>
     <string name="title_section2">Facebook</string>
     <string name="title_section3">Twitter</string>
-    <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
-    <string name="title_section4">Foursquare</string>
+    <string name="title_section4">Foursquare</string><string name="action_settings">Settings</string>
+    
     <string name="app_id">600390553410604</string>
     <string name="user_info">User info</string>
     <string name="title_activity_settings">Settings</string>

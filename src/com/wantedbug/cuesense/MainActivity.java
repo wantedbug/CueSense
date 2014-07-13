@@ -117,7 +117,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		if (id == R.id.action_settings) {
 			Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
 			startActivity(settingsIntent);
-			return true;
+//			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
@@ -155,14 +155,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			// getItem is called to instantiate the fragment for the given page.
 			switch(position) {
 //			case 0: // TODO - CueSense profile tab
-			case 1:
-				if(mFBFragment == null) {
-					mFBFragment = new FBFragment();
-					Bundle args = new Bundle();
-					args.putInt(ARG_SECTION_NUMBER, position + 1);
-					mFBFragment.setArguments(args);
-				}
-				return mFBFragment;
+//			case 1:
+//				if(mFBFragment == null) {
+//					mFBFragment = new FBFragment();
+//					Bundle args = new Bundle();
+//					args.putInt(ARG_SECTION_NUMBER, position + 1);
+//					mFBFragment.setArguments(args);
+//				}
+//				return mFBFragment;
 //			case 2: // TODO - Twitter tab
 //			case 3: // TODO - Foursquare tab
 			default: return PlaceholderFragment.newInstance(position + 1);
