@@ -73,7 +73,7 @@ public class InfoPool {
 	 * @param item
 	 * @return
 	 */
-	public void add(InfoItem item) {
+	public synchronized void add(InfoItem item) {
 		Log.d(TAG, "add: " + item.type() + item.data());
 		mList.add(item);
 	}
@@ -90,7 +90,7 @@ public class InfoPool {
 	 * Adds a list of InfoItems to the InfoPool
 	 * @param items
 	 */
-	public void addItems(ArrayList<InfoItem> items) {
+	public synchronized void addItems(ArrayList<InfoItem> items) {
 		Log.d(TAG, "addItems(): " + items.size());
 		mList.addAll(items);
 	}
@@ -99,25 +99,22 @@ public class InfoPool {
 	 * Deletes all entries of a particular InfoType
 	 * @param type
 	 */
-	public void deleteType(InfoType type) {
+	public synchronized void deleteType(InfoType type) {
 		Log.d(TAG, "deleteType(): " + type.toString());
 		
-		// Make the following iteration atomic
-		synchronized(mList) {
-			// Nothing to do with an empty list
-			if(mList.isEmpty()) {
-				Log.i(TAG, "deleteType() - list empty");
-				return;
-			}
-			// Iterate through the list weeding out items with type
-			else {
-				Iterator<InfoItem> it = mList.iterator();
-				while(it.hasNext()) {
-					InfoItem item = it.next();
-					if(item.type().equals(type)) {
-						Log.i(TAG, "removing " + item.type() + item.data());
-						it.remove();
-					}
+		// Nothing to do with an empty list
+		if(mList.isEmpty()) {
+			Log.i(TAG, "deleteType() - list empty");
+			return;
+		}
+		// Iterate through the list weeding out items with type
+		else {
+			Iterator<InfoItem> it = mList.iterator();
+			while(it.hasNext()) {
+				InfoItem item = it.next();
+				if(item.type().equals(type)) {
+					Log.i(TAG, "removing " + item.type() + item.data());
+					it.remove();
 				}
 			}
 		}
