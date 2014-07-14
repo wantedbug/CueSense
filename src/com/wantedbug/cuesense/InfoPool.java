@@ -5,6 +5,7 @@
 package com.wantedbug.cuesense;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Vector;
 
 import com.wantedbug.cuesense.MainActivity.InfoType;
@@ -50,7 +51,7 @@ public class InfoPool {
 		}
 		
 		/**
-		 * Get-set methods 
+		 * Get/set methods 
 		 */
 		public InfoType type() { return mType; }
 		public void setType(InfoType type) { mType = type; }
@@ -59,6 +60,7 @@ public class InfoPool {
 	}
 	
 	// List for the data
+	// Note: using Vector for its inbuilt thread safety
 	private Vector<InfoItem> mList = new Vector<InfoItem>(INIT_SIZE);
 	
 	/**
@@ -99,9 +101,24 @@ public class InfoPool {
 	 */
 	public void deleteType(InfoType type) {
 		Log.d(TAG, "deleteType(): " + type.toString());
-		for(InfoItem item : mList) {
-			if(item.type() == type) {
-				
+		
+		// Make the following iteration atomic
+		synchronized(mList) {
+			// Nothing to do with an empty list
+			if(mList.isEmpty()) {
+				Log.i(TAG, "deleteType() - list empty");
+				return;
+			}
+			// Iterate through the list weeding out items with type
+			else {
+				Iterator<InfoItem> it = mList.iterator();
+				while(it.hasNext()) {
+					InfoItem item = it.next();
+					if(item.type().equals(type)) {
+						Log.i(TAG, "removing " + item.type() + item.data());
+						it.remove();
+					}
+				}
 			}
 		}
 	}
