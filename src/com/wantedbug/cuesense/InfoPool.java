@@ -6,6 +6,8 @@ package com.wantedbug.cuesense;
 
 import java.util.ArrayList;
 
+import com.wantedbug.cuesense.MainActivity.InfoType;
+
 import android.util.Log;
 
 /**
@@ -18,18 +20,28 @@ public class InfoPool {
 	private static final String TAG = "InfoPool";
 	
 	/**
-	 * Constants
-	 */
-	
-	
-	/**
 	 * Members
 	 */
 	// Static singleton instance
 	public static final InfoPool INSTANCE = new InfoPool();
 	
+	public class InfoItem {
+		private InfoType mType;
+		private String mData;
+		
+		public InfoItem(InfoType type, String data) {
+			mType = type;
+			mData = data;
+		}
+		
+		public InfoType type() { return mType; }
+		public void setType(InfoType type) { mType = type; }
+		public String data() { return mData; }
+		public void setData(String data) { mData = data; }
+	}
+	
 	// List for the data
-	private ArrayList<String> mData = new ArrayList<String>();
+	private ArrayList<InfoItem> mList = new ArrayList<InfoItem>();
 	
 	/**
 	 * Private c'tor to defeat instantiation
@@ -37,12 +49,12 @@ public class InfoPool {
 	private InfoPool() { }
 	
 	/**
-	 * 
-	 * @param data
+	 * Adds an InfoItem to the pool
+	 * @param item
 	 * @return
 	 */
-	public void add(String data) {
-		Log.d(TAG, "add: " + data);
-		mData.add(data);
+	public void add(InfoItem item) {
+		Log.d(TAG, "add: " + item.type() + item.data());
+		mList.add(item);
 	}
 }
