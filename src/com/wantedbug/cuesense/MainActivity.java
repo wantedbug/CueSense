@@ -93,6 +93,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	private ViewPager mViewPager;
 	
+	/** MainActivity lifecycle methods*/
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -156,18 +157,17 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 	
 	@Override
-	public void onStart()
-	{
+	public void onStart() {
 		super.onStart();
         Log.d(TAG, "onStart()");
 
         // If BT is not on, request that it be enabled.
-        // setupChat() will then be called during onActivityResult
+        // setupBTLink() will then be called during onActivityResult
         if (!mBTAdapter.isEnabled()) {
         	Log.i(TAG, "BT not enabled. Enabling..");
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-        // Otherwise, setup the chat session
+        // Otherwise, setup the BT link
         } else {
         	Log.i(TAG, "BT enabled. Setting up link..");
             if (mBTManager == null) setupBTLink();
@@ -185,17 +185,25 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         if (mBTManager != null) {
             // Only if the state is STATE_NONE, do we know that we haven't started already
             if (mBTManager.getState() == BluetoothManager.STATE_NONE) {
-              // Start the Bluetooth chat services
+              // Start the Bluetooth threads
               mBTManager.start();
             }
         }
     }
 	
+	@Override
+    public void onDestroy() {
+		Log.d(TAG, "onDestroy()");
+        super.onDestroy();
+        // Stop the Bluetooth threads
+        if (mBTManager != null) mBTManager.stop();
+    }
+	/** End MainActivity lifecycle methods*/
+	
 	/**
 	 * Connect to the Bluetooth device
 	 */
-	private void connectDevice()
-	{
+	private void connectDevice() {
 		Log.d(TAG, "connectDevice");
         // Get the BluetoothDevice object
         BluetoothDevice device = mBTAdapter.getRemoteDevice(BluetoothManager.DEVICE_MAC);
@@ -206,8 +214,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	/**
 	 * Setup BluetoothManager and UI element links
 	 */
-	private void setupBTLink()
-	{
+	private void setupBTLink() {
         Log.d(TAG, "setupBTLink()");
 
 //        // Initialize the compose field with a listener for the return key
@@ -260,8 +267,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 *  This routine is called when an activity completes.
 	 */
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data)
-	{
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		Log.d(TAG, "onActivityResult()");
 		super.onActivityResult(requestCode, resultCode, data);
 		switch(requestCode) {
@@ -276,15 +282,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             break;
 		}
 	}
-	
-	@Override
-    public void onDestroy()
-    {
-		Log.d(TAG, "onDestroy()");
-        super.onDestroy();
-        // Stop the Bluetooth chat services
-        if (mBTManager != null) mBTManager.stop();
-    }
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
