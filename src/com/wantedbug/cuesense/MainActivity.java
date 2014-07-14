@@ -107,7 +107,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		setContentView(R.layout.activity_main);
 		
 		/** InfoPool instantiation */
-//		InfoPool pool = InfoPool.INSTANCE;
+		InfoPool pool = InfoPool.INSTANCE;
 
 		/** Bluetooth setup */
 		// Get the default Bluetooth adapter
