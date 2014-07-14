@@ -58,8 +58,7 @@ public class BluetoothManager {
      * C'tor
      * @param context
      */
-	public BluetoothManager(Context context)
-	{
+	public BluetoothManager(Context context) {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mState = STATE_NONE;
 	}
@@ -68,8 +67,7 @@ public class BluetoothManager {
 	 * Return current state of the connection
 	 * @return
 	 */
-	public synchronized int getState()
-	{
+	public synchronized int getState() {
         return mState;
     }
 	
@@ -77,8 +75,7 @@ public class BluetoothManager {
 	 * Set current state of the connection
 	 * @param state
 	 */
-	private synchronized void setState(int state)
-	{
+	private synchronized void setState(int state) {
         Log.d(TAG, "setState() " + mState + " -> " + state);
         mState = state;
 	}
@@ -100,8 +97,7 @@ public class BluetoothManager {
 	/**
 	 * Stop all threads
 	 */
-	public synchronized void stop()
-	{
+	public synchronized void stop() {
         Log.d(TAG, "stop");
 
         stopConnectedThreads();
@@ -112,8 +108,7 @@ public class BluetoothManager {
 	/**
 	 * Stops ConnectThread and ConnectedThread
 	 */
-	private synchronized void stopConnectedThreads()
-	{
+	private synchronized void stopConnectedThreads() {
 		if (mConnectThread != null) {
             mConnectThread.cancel();
             mConnectThread = null;
@@ -129,8 +124,7 @@ public class BluetoothManager {
 	 * Start the ConnectThread to initiate a connection to a remote device.
 	 * @param device BluetoothDevice to connect
 	 */
-	public synchronized void connect(BluetoothDevice device)
-	{
+	public synchronized void connect(BluetoothDevice device) {
         Log.d(TAG, "connect to: " + device);
 
         // Cancel any thread attempting to make a connection
@@ -158,8 +152,7 @@ public class BluetoothManager {
 	 * @param socket BluetoothSocket on which the connection was made
 	 * @param device BluetoothDevice that has been connected
 	 */
-	public synchronized void connected(BluetoothSocket socket, BluetoothDevice device)
-	{
+	public synchronized void connected(BluetoothSocket socket, BluetoothDevice device) {
         Log.d(TAG, "connected");
 
         stopConnectedThreads();
@@ -201,8 +194,7 @@ public class BluetoothManager {
 		private final BluetoothSocket mSocket;
 		private final BluetoothDevice mDevice;
 		
-		public ConnectThread(BluetoothDevice device)
-		{
+		public ConnectThread(BluetoothDevice device) {
 			mDevice = device;
 			BluetoothSocket tmp = null;
 			
@@ -217,8 +209,8 @@ public class BluetoothManager {
 			mSocket = tmp;
 		}
 		
-		public void run()
-		{
+		public void run() {
+			Log.d(TAG, "ConnectThread::run()");
 			mAdapter.cancelDiscovery();
 			if(mSocket != null)
 		    {
@@ -245,9 +237,8 @@ public class BluetoothManager {
 		    }
 		}
 		
-		public void cancel()
-		{
-			Log.d(TAG, "Socket close from ConnectThread::cancel()");
+		public void cancel() {
+			Log.d(TAG, "ConnectThread::cancel()");
 			// Try to close the socket
 			try {
 				mSocket.close();
@@ -265,8 +256,7 @@ public class BluetoothManager {
 		private final BluetoothSocket mSocket;
         private final OutputStream mOutStream;
         
-        public ConnectedThread(BluetoothSocket socket)
-        {
+        public ConnectedThread(BluetoothSocket socket) {
             mSocket = socket;
             OutputStream tmpOut = null;
 
@@ -280,9 +270,8 @@ public class BluetoothManager {
             mOutStream = tmpOut;
         }
         
-        public void run()
-        {
-            Log.d(TAG, "BEGIN mConnectedThread");
+        public void run() {
+            Log.d(TAG, "ConnectedThread::run()");
             // Do nothing as we don't have to listen for incoming data
         }
 
@@ -290,8 +279,8 @@ public class BluetoothManager {
          * Write to OutputStream
          * @param buffer
          */
-        public void write(byte[] buffer)
-        {
+        public void write(byte[] buffer) {
+        	Log.d(TAG, "ConnectedThread::write()");
             try {
                 mOutStream.write(buffer);
                 sleep(1);
@@ -300,8 +289,8 @@ public class BluetoothManager {
             }
         }
 
-        public void cancel()
-        {
+        public void cancel() {
+        	Log.d(TAG, "ConnectedThread::cancel()");
         	Log.d(TAG, "Socket close from ConnectThread::cancel()");
             try {
                 mSocket.close();
@@ -309,6 +298,5 @@ public class BluetoothManager {
                 Log.e(TAG, "close() of connect socket failed", e);
             }
         }
-        
 	}
 }
