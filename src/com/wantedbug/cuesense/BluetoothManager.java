@@ -39,7 +39,7 @@ public class BluetoothManager {
     private static final UUID SERIAL_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     
     // Bluetooth device properties
-    private static final String DEVICE_NAME = "BTMateSilver";
+//    private static final String DEVICE_NAME = "BTMateSilver";
 	public static final String DEVICE_MAC = "00:06:66:60:1D:07";
 	
 	// Termination character to append to a Bluetooth transmission to
