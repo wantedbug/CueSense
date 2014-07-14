@@ -50,8 +50,29 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	/**
 	 * Constants
 	 */
-	// Number of tabs in the app
-	private static final int NUM_TABS = 4;
+	// Tab content identifiers
+	public enum Tabs {
+		TAB_CUESENSE(0),
+		TAB_FACEBOOK(1),
+		TAB_TWITTER(2),
+		TAB_SENTINEL(3);
+		
+		private final int value;
+		
+		private Tabs(int val) { this.value = val; }
+		public int value() { return this.value; }
+		
+		public static Tabs toTabs(int val) {
+			Tabs ret = null;
+		    for (Tabs temp : Tabs.values()) {
+		        if(temp.value() == val)  {
+		        	ret = temp;
+		            break;
+		        }
+		    }
+		    return ret;
+		}
+	}
 
 	// Section number fragment argument for a particular fragment.
 	private static final String ARG_SECTION_NUMBER = "section_number";
@@ -84,6 +105,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		
+		/** InfoPool instantiation */
+//		InfoPool pool = InfoPool.INSTANCE;
 
 		/** Bluetooth setup */
 		// Get the default Bluetooth adapter
@@ -340,21 +364,20 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 		@Override
 		public int getCount() {
-			return NUM_TABS;
+			return Tabs.TAB_SENTINEL.value();
 		}
 
 		@Override
 		public CharSequence getPageTitle(int position) {
-			Locale l = Locale.getDefault();
-			switch (position) {
-			case 0:
+			switch (Tabs.toTabs(position)) {
+			case TAB_CUESENSE:
 				return getString(R.string.title_section1);
-			case 1:
+			case TAB_FACEBOOK:
 				return getString(R.string.title_section2);
-			case 2:
+			case TAB_TWITTER:
 				return getString(R.string.title_section3);
-			case 3:
-				return getString(R.string.title_section4);
+			case TAB_SENTINEL:
+				return getString(R.string.title_section3);
 			}
 			return null;
 		}

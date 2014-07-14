@@ -43,7 +43,7 @@ public class BluetoothManager {
 	public static final String DEVICE_MAC = "00:06:66:60:1D:07";
 	
 	// Termination character to append to a Bluetooth transmission to
-	// signify the end of the same 
+	// signify the end of the same
 	private static final String TERM_CHAR = "|";
 	
 	/**
