@@ -51,20 +51,20 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 * Constants
 	 */
 	// Tab content identifiers
-	public enum Tabs {
-		TAB_CUESENSE(0),
-		TAB_FACEBOOK(1),
-		TAB_TWITTER(2),
-		TAB_SENTINEL(3);
+	public enum InfoType {
+		INFO_CUESENSE(0),
+		INFO_FACEBOOK(1),
+		INFO_TWITTER(2),
+		INFO_SENTINEL(3);
 		
 		private final int value;
 		
-		private Tabs(int val) { this.value = val; }
+		private InfoType(int val) { this.value = val; }
 		public int value() { return this.value; }
 		
-		public static Tabs toTabs(int val) {
-			Tabs ret = null;
-		    for (Tabs temp : Tabs.values()) {
+		public static InfoType toInfoType(int val) {
+			InfoType ret = null;
+		    for (InfoType temp : InfoType.values()) {
 		        if(temp.value() == val)  {
 		        	ret = temp;
 		            break;
@@ -364,19 +364,19 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 		@Override
 		public int getCount() {
-			return Tabs.TAB_SENTINEL.value();
+			return InfoType.INFO_SENTINEL.value();
 		}
 
 		@Override
 		public CharSequence getPageTitle(int position) {
-			switch (Tabs.toTabs(position)) {
-			case TAB_CUESENSE:
+			switch (InfoType.toInfoType(position)) {
+			case INFO_CUESENSE:
 				return getString(R.string.title_section1);
-			case TAB_FACEBOOK:
+			case INFO_FACEBOOK:
 				return getString(R.string.title_section2);
-			case TAB_TWITTER:
+			case INFO_TWITTER:
 				return getString(R.string.title_section3);
-			case TAB_SENTINEL:
+			case INFO_SENTINEL:
 				return getString(R.string.title_section3);
 			}
 			return null;
