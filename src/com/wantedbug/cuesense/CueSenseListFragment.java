@@ -4,6 +4,8 @@
 
 package com.wantedbug.cuesense;
 
+import android.content.Context;
+import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
@@ -12,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 /**
@@ -20,7 +23,33 @@ import android.widget.Toast;
  */
 public class CueSenseListFragment extends ListFragment {
 	private String sampleList[];
+	
+	public class CueSenseListAdapter extends ArrayAdapter<String> {
+		private final Context context;
+		private final String[] values;
+		LayoutInflater inflater;
 
+		public CueSenseListAdapter(Context context, String[] values) {
+			super(context, R.layout.listitem_tab_cuesense, values);
+			this.context = context;
+			this.values = values;
+			inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			View view = convertView;
+			
+			if(convertView == null) {
+				view = inflater.inflate(R.layout.listitem_tab_cuesense, parent, false);
+			}
+			
+			TextView textView = (TextView) view.findViewById(R.id.data);
+			textView.setText(values[position]);
+			return view;
+		}
+	}
+	
 	public CueSenseListFragment() {
 		sampleList = new String[] {
 				"Apolitical",
@@ -35,7 +64,8 @@ public class CueSenseListFragment extends ListFragment {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		ListAdapter listAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_multiple_choice, sampleList);
+//		ListAdapter listAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_multiple_choice, sampleList);
+		ListAdapter listAdapter = new CueSenseListAdapter(getActivity(), sampleList);
 		setListAdapter(listAdapter);
 	}
 
