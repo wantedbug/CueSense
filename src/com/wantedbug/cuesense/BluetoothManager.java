@@ -348,7 +348,7 @@ public class BluetoothManager {
                 	// Reset mDeviceReady flag
                 	setDeviceReadyStatus(false);
                 }
-            } catch (IOException e) {// | InterruptedException e) {
+            } catch (IOException e) {
                 Log.e(TAG, "Exception during write: ", e);
             }
         }
