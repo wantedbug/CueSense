@@ -101,6 +101,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	private ViewPager mViewPager;
 	
+	// Contents of the CueSense profile tab
+	private CueSenseListFragment mCueSenseFragment;
+	
 	// TODO temp stuff to test sending messages
 //	Timer t;
 	Vector<InfoItem> list = new Vector<InfoItem>(10);
@@ -153,7 +156,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 		// Create the adapter that will return a fragment for each of the three
 		// primary sections of the activity.
-//		mSectionsPagerAdapter = new SectionsPagerAdapter(getFragmentManager());
 		mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
 		// Set up the ViewPager with the sections adapter.
@@ -379,7 +381,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		public Fragment getItem(int position) {
 			// getItem is called to instantiate the fragment for the given page.
 			switch(position) {
-//			case 0: // TODO - CueSense profile tab
+			case 0:
+				if(mCueSenseFragment == null) {
+					mCueSenseFragment = new CueSenseListFragment();
+				}
+				return mCueSenseFragment;
 //			case 1:
 //				if(mFBFragment == null) {
 //					mFBFragment = new FBFragment();

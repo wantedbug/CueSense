@@ -140,6 +140,7 @@ int layout com_facebook_tooltip_bubble 0x7f03000f
 int layout com_facebook_usersettingsfragment 0x7f030010
 int layout fragment_fb 0x7f030011
 int layout fragment_main 0x7f030012
+int layout tab_cuesense 0x7f030013
 int menu main 0x7f090000
 int menu settings 0x7f090001
 int string action_settings 0x7f07001f

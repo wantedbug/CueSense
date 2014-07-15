@@ -290,6 +290,7 @@ containing a value of this type.
         public static final int com_facebook_usersettingsfragment=0x7f030010;
         public static final int fragment_fb=0x7f030011;
         public static final int fragment_main=0x7f030012;
+        public static final int tab_cuesense=0x7f030013;
     }
     public static final class menu {
         public static final int main=0x7f090000;
