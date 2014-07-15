@@ -5,6 +5,7 @@
 package com.wantedbug.cuesense;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
 
@@ -19,7 +20,7 @@ import android.util.Log;
  * functions.
  * It has threads for:
  *  - connecting with a device
- *  - transmitting to a device when connected  
+ *  - transmitting adn listening to a device when connected
  * @author vikasprabhu
  */
 public class BluetoothManager {
@@ -39,7 +40,6 @@ public class BluetoothManager {
     private static final UUID SERIAL_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     
     // Bluetooth device properties
-//    private static final String DEVICE_NAME = "BTMateSilver";
 	public static final String DEVICE_MAC = "00:06:66:60:1D:07";
 	
 	// Termination character to append to a Bluetooth transmission to
@@ -49,9 +49,16 @@ public class BluetoothManager {
 	/**
 	 * Members
 	 */
+	// Bluetooth adapter
 	private final BluetoothAdapter mAdapter;
+	
+	// Thread to create the connection to the wearable device
 	private ConnectThread mConnectThread;
+	
+	// Thread to transmit and listen to the wearable device
 	private ConnectedThread mConnectedThread;
+	
+	// Bluetooth connection state
 	private int mState;
 	
     /**
@@ -249,30 +256,69 @@ public class BluetoothManager {
 	}
 	
     /**
-     * This thread handles outgoing transmissions.
+     * This thread handles outgoing transmissions to and listens to
+     * incoming transmissions from the wearable device.
      * @author vikasprabhu
      */
 	private class ConnectedThread extends Thread {
+		/**
+		 * Constants
+		 */
+		private static final String CMD_READY = "R";
+		/**
+		 * Members
+		 */
+		// BluetoothSocket that the connection was made on
 		private final BluetoothSocket mSocket;
+		// Output stream
         private final OutputStream mOutStream;
+        // Input stream
+        private final InputStream mInStream;
+        // Flag to monitor if the device is ready to receive data
+        // Note: Since the sent messages can be of any length, the only way to
+        // make sure that the entire message has been displayed (scrolled) on
+        //  the wearable device is to have it communicate that it has done so
+        private boolean mDeviceReady;
         
         public ConnectedThread(BluetoothSocket socket) {
             mSocket = socket;
             OutputStream tmpOut = null;
+            InputStream tmpIn = null;
+            mDeviceReady = false;
 
             // Get the BluetoothSocket input and output streams
             try {
                 tmpOut = socket.getOutputStream();
+                tmpIn = socket.getInputStream();
             } catch (IOException e) {
                 Log.e(TAG, "Output socket not created", e);
             }
 
             mOutStream = tmpOut;
+            mInStream = tmpIn;
+            mDeviceReady = true;
         }
         
+        /**
+         * Listen for incoming data
+         */
         public void run() {
             Log.d(TAG, "ConnectedThread::run()");
-            // Do nothing as we don't have to listen for incoming data
+            byte[] buffer = new byte[10];
+            int bytes;
+            
+            // Listen for incoming data
+            while(true) {
+            	try {
+            		bytes = mInStream.read(buffer);
+            		if(buffer.toString().equals(CMD_READY)) {
+            			mDeviceReady = true;
+            		}
+            	} catch(IOException e) {
+            		Log.e(TAG, "Read error" + e);
+            		break;
+            	}
+            }
         }
 
         /**
@@ -282,8 +328,14 @@ public class BluetoothManager {
         public void write(byte[] buffer) {
         	Log.d(TAG, "ConnectedThread::write()");
             try {
-                mOutStream.write(buffer);
-                sleep(1);
+            	// Write only if the device is ready
+                if(mDeviceReady) {
+                	// Write out
+                	mOutStream.write(buffer);
+                	sleep(1);
+                	// Reset mDeviceReady flag
+                	mDeviceReady = false;
+                }
             } catch (IOException | InterruptedException e) {
                 Log.e(TAG, "Exception during write", e);
             }
@@ -291,7 +343,6 @@ public class BluetoothManager {
 
         public void cancel() {
         	Log.d(TAG, "ConnectedThread::cancel()");
-        	Log.d(TAG, "Socket close from ConnectThread::cancel()");
             try {
                 mSocket.close();
             } catch (IOException e) {
