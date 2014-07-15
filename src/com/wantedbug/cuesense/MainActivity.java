@@ -106,7 +106,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	Vector<InfoItem> list = new Vector<InfoItem>(10);
 	Handler timerHandler = new Handler();
     Runnable timerRunnable = new Runnable() {
-
         @Override
         public void run() {
         	Log.d(TAG, "Runnable::run()");
@@ -128,19 +127,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		/** InfoPool instantiation */
 		InfoPool pool = InfoPool.INSTANCE;
 		
-        /** test stuff */
+        /** test stuff */ // TODO remove
 		for(int i = 0; i < 10; ++i) {
-			InfoPool.INSTANCE.add(InfoPool.INSTANCE.new InfoItem(InfoType.INFO_CUESENSE, "msg " + i));
+			InfoPool.INSTANCE.add(InfoPool.INSTANCE.new InfoItem(InfoType.INFO_CUESENSE,
+					"The length of this message is more than 16 characters " + i));
 		}
-		
-//		t = new Timer();
-//	    t.schedule(new TimerTask() {
-//	        public void run() {
-//	        	if(mBTManager.getState() == BluetoothManager.STATE_CONNECTED) {
-//	        		sendToBT(InfoPool.INSTANCE.getNext());
-//	        	}
-//	        }
-//	      }, 5000);
 		/** END test stuff */
 	    
 		/** Bluetooth setup */
