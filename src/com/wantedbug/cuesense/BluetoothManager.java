@@ -13,6 +13,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.os.Handler;
 import android.util.Log;
 
 /**
@@ -61,6 +62,9 @@ public class BluetoothManager {
 	// Bluetooth connection state
 	private int mState;
 	
+	// Flag that specifies whether device is ready to receive new data
+	private boolean mDeviceReady;
+	
     /**
      * C'tor
      * @param context
@@ -85,6 +89,14 @@ public class BluetoothManager {
 	private synchronized void setState(int state) {
         Log.d(TAG, "setState() " + mState + " -> " + state);
         mState = state;
+	}
+	
+	public synchronized boolean isDeviceReady() {
+		return mDeviceReady;
+	}
+	
+	private synchronized void setDeviceReadyStatus(boolean status) {
+		mDeviceReady = status;
 	}
 	
 	/**
@@ -278,7 +290,6 @@ public class BluetoothManager {
         // Note: Since the sent messages can be of any length, the only way to
         // make sure that the entire message has been displayed (scrolled) on
         //  the wearable device is to have it communicate that it has done so
-        private boolean mDeviceReady;
         
         public ConnectedThread(BluetoothSocket socket) {
             mSocket = socket;
@@ -291,7 +302,7 @@ public class BluetoothManager {
                 tmpOut = socket.getOutputStream();
                 tmpIn = socket.getInputStream();
             } catch (IOException e) {
-                Log.e(TAG, "Output socket not created", e);
+                Log.e(TAG, "Output socket not created: ", e);
             }
 
             mOutStream = tmpOut;
@@ -304,18 +315,20 @@ public class BluetoothManager {
          */
         public void run() {
             Log.d(TAG, "ConnectedThread::run()");
-            byte[] buffer = new byte[10];
+            byte[] buffer = new byte[1];
             int bytes;
             
-            // Listen for incoming data
+            // Listen for incoming ready signal
             while(true) {
             	try {
             		bytes = mInStream.read(buffer);
-            		if(buffer.toString().equals(CMD_READY)) {
-            			mDeviceReady = true;
+            		String temp = new String(buffer, "UTF-8");
+            		Log.d(TAG, bytes + " " + temp);
+            		if(temp.equals(CMD_READY)) {
+            			setDeviceReadyStatus(true);
             		}
             	} catch(IOException e) {
-            		Log.e(TAG, "Read error" + e);
+            		Log.e(TAG, "Read error: " + e);
             		break;
             	}
             }
@@ -329,15 +342,14 @@ public class BluetoothManager {
         	Log.d(TAG, "ConnectedThread::write()");
             try {
             	// Write only if the device is ready
-                if(mDeviceReady) {
+                if(isDeviceReady()) {
                 	// Write out
                 	mOutStream.write(buffer);
-                	sleep(1);
                 	// Reset mDeviceReady flag
-                	mDeviceReady = false;
+                	setDeviceReadyStatus(false);
                 }
-            } catch (IOException | InterruptedException e) {
-                Log.e(TAG, "Exception during write", e);
+            } catch (IOException e) {// | InterruptedException e) {
+                Log.e(TAG, "Exception during write: ", e);
             }
         }
 
@@ -346,7 +358,7 @@ public class BluetoothManager {
             try {
                 mSocket.close();
             } catch (IOException e) {
-                Log.e(TAG, "close() of connect socket failed", e);
+                Log.e(TAG, "close() of connect socket failed: ", e);
             }
         }
 	}

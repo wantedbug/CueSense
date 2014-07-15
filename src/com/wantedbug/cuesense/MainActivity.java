@@ -4,6 +4,13 @@
 
 package com.wantedbug.cuesense;
 
+import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.Vector;
+
+import com.wantedbug.cuesense.InfoPool.InfoItem;
+
 import android.app.ActionBar.Tab;
 import android.app.Activity;
 import android.app.ActionBar;
@@ -20,6 +27,7 @@ import android.content.Intent;
 //import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -93,6 +101,24 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	private ViewPager mViewPager;
 	
+	// TODO temp stuff to test sending messages
+//	Timer t;
+	Vector<InfoItem> list = new Vector<InfoItem>(10);
+	Handler timerHandler = new Handler();
+    Runnable timerRunnable = new Runnable() {
+
+        @Override
+        public void run() {
+        	Log.d(TAG, "Runnable::run()");
+        	if(mBTManager.getState() == BluetoothManager.STATE_CONNECTED &&
+        			mBTManager.isDeviceReady()) {
+        		Log.d(TAG, "BT is connected and ready");
+        		sendToBT(InfoPool.INSTANCE.getNext());
+        	}
+            timerHandler.postDelayed(this, 5000);
+        }
+    };
+	
 	/** MainActivity lifecycle methods*/
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -101,7 +127,22 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		
 		/** InfoPool instantiation */
 		InfoPool pool = InfoPool.INSTANCE;
-
+		
+        /** test stuff */
+		for(int i = 0; i < 10; ++i) {
+			InfoPool.INSTANCE.add(InfoPool.INSTANCE.new InfoItem(InfoType.INFO_CUESENSE, "msg " + i));
+		}
+		
+//		t = new Timer();
+//	    t.schedule(new TimerTask() {
+//	        public void run() {
+//	        	if(mBTManager.getState() == BluetoothManager.STATE_CONNECTED) {
+//	        		sendToBT(InfoPool.INSTANCE.getNext());
+//	        	}
+//	        }
+//	      }, 5000);
+		/** END test stuff */
+	    
 		/** Bluetooth setup */
 		// Get the default Bluetooth adapter
 	    mBTAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -175,6 +216,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 	
 	@Override
+	public synchronized void onPause() {
+		super.onPause();
+        Log.d(TAG, "onPause()");
+		timerHandler.removeCallbacks(timerRunnable);
+	}
+	
+	@Override
     public synchronized void onResume() {
         super.onResume();
         Log.d(TAG, "onResume()");
@@ -197,6 +245,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         super.onDestroy();
         // Stop the Bluetooth threads
         if (mBTManager != null) mBTManager.stop();
+        timerHandler.removeCallbacks(timerRunnable);
     }
 	/** End MainActivity lifecycle methods*/
 	
@@ -239,29 +288,32 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         
         // Connect to the Bluetooth device
         connectDevice();
+        
+        timerHandler.postDelayed(timerRunnable, 1000);
     }
 	
-//	/**
-//	 * Sends text from the TextView to the Bluetooth device
-//	 * @param text
-//	 */
-//	private void sendToBT(String text)
-//	{
-//        // Check that we're actually connected before trying anything
-//        if (mBTManager.getState() != BluetoothManager.STATE_CONNECTED) {
-//            Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT).show();
-//            return;
-//        }
-//
-//        // Check that there's actually something to send
-//        if (text.length() > 0) {
-//            mBTManager.write(text);
+	/**
+	 * Sends text from the TextView to the Bluetooth device
+	 * @param text
+	 */
+	private void sendToBT(String text)
+	{
+		Log.d(TAG, "sendToBT() " + text);
+        // Check that we're actually connected before trying anything
+        if (mBTManager.getState() != BluetoothManager.STATE_CONNECTED) {
+            Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Check that there's actually something to send
+        if (text.length() > 0) {
+            mBTManager.write(text);
 //
 //            // Reset out string buffer to zero and clear the edit text field
 //            mOutStringBuffer.setLength(0);
 //            mEditText.setText(mOutStringBuffer);
-//        }
-//    }
+        }
+    }
 	
 	/**
 	 *  This routine is called when an activity completes.

@@ -32,6 +32,9 @@ public class InfoPool {
 	// Static singleton instance
 	public static final InfoPool INSTANCE = new InfoPool();
 	
+	// TODO test stuff to send messages
+	private int counter = 0;
+	
 	/**
 	 * This class represents an item in the InfoPool
 	 * @author vikasprabhu
@@ -118,5 +121,18 @@ public class InfoPool {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Gets next message from the list
+	 * @return
+	 */
+	public String getNext() {
+		if(counter >= mList.size()) {
+			counter = 0;
+		}
+		String temp = mList.elementAt(counter).data();
+		++counter;
+		return temp;
 	}
 }
