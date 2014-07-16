@@ -22,6 +22,9 @@ import android.widget.Toast;
  * @author vikasprabhu
  */
 public class CueSenseListFragment extends ListFragment {
+	/**
+	 * Members
+	 */
 	private String sampleList[];
 	
 	public class CueSenseListAdapter extends ArrayAdapter<String> {
@@ -51,6 +54,7 @@ public class CueSenseListFragment extends ListFragment {
 	}
 	
 	public CueSenseListFragment() {
+		// TODO remove dummy data
 		sampleList = new String[] {
 				"Apolitical",
 				"Humanist",
