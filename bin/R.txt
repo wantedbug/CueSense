@@ -144,6 +144,7 @@ int layout fragment_fb 0x7f030011
 int layout fragment_main 0x7f030012
 int layout listitem_tab_cuesense 0x7f030013
 int layout tab_cuesense 0x7f030014
+int layout tab_facebook 0x7f030015
 int menu main 0x7f090000
 int menu settings 0x7f090001
 int string action_settings 0x7f07001f

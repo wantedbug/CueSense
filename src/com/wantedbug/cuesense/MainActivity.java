@@ -102,7 +102,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private ViewPager mViewPager;
 	
 	// Contents of the CueSense profile tab
-	private CueSenseListFragment mCueSenseFragment;
+	private CueSenseListFragment mCueSenseListFragment;
+	
+	// Contents of the Facebook tab
+	private FBListFragment mFBListFragment;
 	
 	// TODO temp stuff to test sending messages
 //	Timer t;
@@ -382,18 +385,18 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			// getItem is called to instantiate the fragment for the given page.
 			switch(position) {
 			case 0:
-				if(mCueSenseFragment == null) {
-					mCueSenseFragment = new CueSenseListFragment();
+				if(mCueSenseListFragment == null) {
+					mCueSenseListFragment = new CueSenseListFragment();
 				}
-				return mCueSenseFragment;
-//			case 1:
-//				if(mFBFragment == null) {
-//					mFBFragment = new FBFragment();
-//					Bundle args = new Bundle();
-//					args.putInt(ARG_SECTION_NUMBER, position + 1);
-//					mFBFragment.setArguments(args);
-//				}
-//				return mFBFragment;
+				return mCueSenseListFragment;
+			case 1:
+				if(mFBListFragment == null) {
+					mFBListFragment = new FBListFragment();
+					Bundle args = new Bundle();
+					args.putInt(ARG_SECTION_NUMBER, position + 1);
+					mFBListFragment.setArguments(args);
+				}
+				return mFBListFragment;
 //			case 2: // TODO - Twitter tab
 //			case 3: // TODO - Foursquare tab
 			default: return PlaceholderFragment.newInstance(position + 1);

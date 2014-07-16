@@ -294,6 +294,7 @@ containing a value of this type.
         public static final int fragment_main=0x7f030012;
         public static final int listitem_tab_cuesense=0x7f030013;
         public static final int tab_cuesense=0x7f030014;
+        public static final int tab_facebook=0x7f030015;
     }
     public static final class menu {
         public static final int main=0x7f090000;
