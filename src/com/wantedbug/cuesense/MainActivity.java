@@ -4,9 +4,6 @@
 
 package com.wantedbug.cuesense;
 
-import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.Vector;
 
 import com.wantedbug.cuesense.InfoPool.InfoItem;
@@ -39,7 +36,7 @@ import android.widget.Toast;
 
 
 /**
- * This class is the starting point for the application. 
+ * This class is the starting point for the CueSense application. 
  * @author vikasprabhu
  */
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
