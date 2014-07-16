@@ -4,6 +4,8 @@
 
 package com.wantedbug.cuesense;
 
+import java.util.ArrayList;
+
 import android.content.Context;
 import android.database.DataSetObserver;
 import android.os.Bundle;
@@ -26,6 +28,7 @@ public class CueSenseListFragment extends ListFragment {
 	 * Members
 	 */
 	private String sampleList[];
+	private ArrayList<CueItem> mCueSenseList;
 	
 	public class CueSenseListAdapter extends ArrayAdapter<String> {
 		private final Context context;
