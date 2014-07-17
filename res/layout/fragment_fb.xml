@@ -17,7 +17,7 @@
         android:layout_height="match_parent"
         android:layout_marginLeft="20dp"
         android:layout_marginTop="20dp"
-        android:text="@string/user_info"
+        android:text="User info"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:visibility="invisible" />
 

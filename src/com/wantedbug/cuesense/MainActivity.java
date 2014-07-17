@@ -316,17 +316,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		Log.d(TAG, "sendToBT() " + text);
         // Check that we're actually connected before trying anything
         if (mBTManager.getState() != BluetoothManager.STATE_CONNECTED) {
-            Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.bt_not_connected, Toast.LENGTH_LONG).show();
             return;
         }
 
         // Check that there's actually something to send
         if (text.length() > 0) {
             mBTManager.write(text);
-//
-//            // Reset out string buffer to zero and clear the edit text field
-//            mOutStringBuffer.setLength(0);
-//            mEditText.setText(mOutStringBuffer);
         }
     }
 	
@@ -343,7 +339,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 setupBTLink();
             } else {
                 Log.d(TAG, "BT not enabled");
-                Toast.makeText(this, R.string.bt_not_enabled, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.bt_not_enabled, Toast.LENGTH_LONG).show();
                 finish();
             }
             break;
