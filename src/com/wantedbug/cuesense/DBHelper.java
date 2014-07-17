@@ -55,6 +55,8 @@ public class DBHelper extends SQLiteOpenHelper {
             		");";
     private static final String QUERY_NEXT_ID = 
     		"SELECT MAX(" + COLUMN_ID + ") FROM " + TABLE_CUESENSE + ";";
+    private static final String QUERY_DELETE_WHERE = 
+    		COLUMN_ID + " = ?";
     
     /**
      * Members
@@ -139,6 +141,10 @@ public class DBHelper extends SQLiteOpenHelper {
 	public void deleteCueItem(CueItem item) {
 		Log.d(TAG, "deleteCueItem()");
 		SQLiteDatabase db = getWritableDatabase();
+		long ret = db.delete(TABLE_CUESENSE, QUERY_DELETE_WHERE, new String[] { String.valueOf(item.getId()) });
+		if(ret == -1) {
+			Log.e(TAG, "deleteCueItem() failed");
+		}
 	}
 	
 	/**

@@ -6,7 +6,7 @@ package com.wantedbug.cuesense;
 
 import java.util.Vector;
 
-import com.wantedbug.cuesense.InfoPool.InfoItem;
+import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
 
 import android.app.ActionBar.Tab;
 import android.app.Activity;
@@ -39,7 +39,7 @@ import android.widget.Toast;
  * This class is the starting point for the CueSense application. 
  * @author vikasprabhu
  */
-public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
+public class MainActivity extends FragmentActivity implements ActionBar.TabListener, CueSenseListener {
 	
 	// Debugging
 	private static final String TAG = "MainActivity";
@@ -106,7 +106,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	
 	// TODO temp stuff to test sending messages
 //	Timer t;
-	Vector<InfoItem> list = new Vector<InfoItem>(10);
+	Vector<CueItem> list = new Vector<CueItem>(10);
 	Handler timerHandler = new Handler();
     Runnable timerRunnable = new Runnable() {
         @Override
@@ -132,8 +132,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		
         /** test stuff */ // TODO remove
 		for(int i = 0; i < 10; ++i) {
-			InfoPool.INSTANCE.add(InfoPool.INSTANCE.new InfoItem(InfoType.INFO_CUESENSE,
-					"The length of this message is more than 16 characters " + i));
+			InfoPool.INSTANCE.addCueItem(new CueItem(i, InfoType.INFO_CUESENSE,
+					"The length of this message is more than 16 characters " + i, true));
 		}
 		/** END test stuff */
 	    
@@ -447,6 +447,28 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 					false);
 			return rootView;
 		}
+	}
+
+	@Override
+	public void onCueAdded(CueItem item) {
+		// Push to database
+		
+		// Push to InfoPool
+	}
+
+	@Override
+	public void onCueDeleted(CueItem item) {
+		// Push to database
+		
+		// Push to InfoPool
+	}
+
+	@Override
+	public void onCueChanged(CueItem item) {
+		// Push to database
+		
+		// Push to InfoPool
+		
 	}
 
 }

@@ -35,36 +35,9 @@ public class InfoPool {
 	// TODO test stuff to send messages
 	private int counter = 0;
 	
-	/**
-	 * This class represents an item in the InfoPool
-	 * @author vikasprabhu
-	 */
-	public class InfoItem {
-		/**
-		 * Members
-		 */
-		// The type of information
-		private InfoType mType;
-		// The information
-		private String mData;
-		
-		public InfoItem(InfoType type, String data) {
-			mType = type;
-			mData = data;
-		}
-		
-		/**
-		 * Get/set methods 
-		 */
-		public InfoType type() { return mType; }
-		public void setType(InfoType type) { mType = type; }
-		public String data() { return mData; }
-		public void setData(String data) { mData = data; }
-	}
-	
 	// List for the data
 	// Note: using Vector for its inbuilt thread safety
-	private Vector<InfoItem> mList = new Vector<InfoItem>(INIT_SIZE);
+	private Vector<CueItem> mList = new Vector<CueItem>(INIT_SIZE);
 	
 	/**
 	 * Private c'tor to defeat instantiation
@@ -76,8 +49,8 @@ public class InfoPool {
 	 * @param item
 	 * @return
 	 */
-	public synchronized void add(InfoItem item) {
-		Log.d(TAG, "add: " + item.type() + item.data());
+	public synchronized void addCueItem(CueItem item) {
+		Log.d(TAG, "add: " + item.getType() + item.getData());
 		mList.add(item);
 	}
 	
@@ -93,9 +66,27 @@ public class InfoPool {
 	 * Adds a list of InfoItems to the InfoPool
 	 * @param items
 	 */
-	public synchronized void addItems(ArrayList<InfoItem> items) {
-		Log.d(TAG, "addItems(): " + items.size());
+	public synchronized void addCueItems(ArrayList<CueItem> items) {
+		Log.d(TAG, "addCueItems(): " + items.size());
 		mList.addAll(items);
+	}
+	
+	/**
+	 * Deletes a CueItem from the list
+	 * @param item
+	 * The CueItems are matched according to their id
+	 */
+	public synchronized void deleteCueItem(CueItem item) {
+		Log.d(TAG, "deleteCueItem(): " + item.getId());
+		Iterator<CueItem> it = mList.iterator();
+		while(it.hasNext()) {
+			CueItem temp = it.next();
+			if(item.getId() == temp.getId()) {
+				Log.i(TAG, "removing " + item.getType() + item.getData());
+				it.remove();
+				break;
+			}
+		}
 	}
 	
 	/**
@@ -112,11 +103,11 @@ public class InfoPool {
 		}
 		// Iterate through the list weeding out items with type
 		else {
-			Iterator<InfoItem> it = mList.iterator();
+			Iterator<CueItem> it = mList.iterator();
 			while(it.hasNext()) {
-				InfoItem item = it.next();
-				if(item.type().equals(type)) {
-					Log.i(TAG, "removing " + item.type() + item.data());
+				CueItem item = it.next();
+				if(item.getType().equals(type)) {
+					Log.i(TAG, "removing " + item.getType() + item.getData());
 					it.remove();
 				}
 			}
@@ -127,11 +118,11 @@ public class InfoPool {
 	 * Gets next message from the list
 	 * @return
 	 */
-	public String getNext() {
+	public synchronized String getNext() {
 		if(counter >= mList.size()) {
 			counter = 0;
 		}
-		String temp = mList.elementAt(counter).data();
+		String temp = mList.elementAt(counter).getData();
 		++counter;
 		return temp;
 	}

@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.wantedbug.cuesense.MainActivity.InfoType;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
@@ -27,12 +28,26 @@ import android.widget.Toast;
  */
 public class CueSenseListFragment extends ListFragment {
 	/**
+	 * Interface
+	 */
+	public interface CueSenseListener {
+		/** Handle addition of a new cue */
+		void onCueAdded(CueItem item);
+		
+		/** Handle deletion of a cue */
+		void onCueDeleted(CueItem item);
+		
+		/** Handle modification of a cue */
+		void onCueChanged(CueItem item);
+	}
+	
+	/**
 	 * Members
 	 */
 	// List of CueItems
 	private List<CueItem> mCueSenseList;
-	// DB helper
-	private DBHelper mDBHelper;
+	// Listener to handle CueItem addition, deletion and modification
+	CueSenseListener mListener;
 	
 	/**
 	 * Custom list adapter for the list view 
@@ -73,10 +88,10 @@ public class CueSenseListFragment extends ListFragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		mDBHelper = new DBHelper(getActivity());
+		DBHelper dbHelper = new DBHelper(getActivity());
 
 		// Read items from database when the view is first created
-		mCueSenseList = mDBHelper.getItems(InfoType.INFO_CUESENSE);
+		mCueSenseList = dbHelper.getItems(InfoType.INFO_CUESENSE);
 		ListAdapter listAdapter = new CueSenseListAdapter(getActivity(), mCueSenseList);
 		setListAdapter(listAdapter);
 	}
@@ -85,6 +100,17 @@ public class CueSenseListFragment extends ListFragment {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		return inflater.inflate(R.layout.tab_cuesense, container, false);
 	}
+	
+	@Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        
+        if(!(activity instanceof CueSenseListener)) {
+            throw new RuntimeException("Activity must implement NewTaskDialogListener interface!");
+        }
+        
+        mListener = (CueSenseListener) activity;
+    }
 
 	@Override
 	public void onListItemClick(ListView list, View v, int position, long id) {
