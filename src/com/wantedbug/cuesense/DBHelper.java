@@ -9,9 +9,12 @@ import java.util.List;
 
 import com.wantedbug.cuesense.MainActivity.InfoType;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 /**
  * This class is a wrapper to SQLite functionality 
@@ -19,6 +22,9 @@ import android.database.sqlite.SQLiteOpenHelper;
  * It implements CRUD for CueSense items that the user inputs
  */
 public class DBHelper extends SQLiteOpenHelper {
+	// Debugging
+	private static final String TAG = "DBHelper";
+	
 	/**
 	 * Constants
 	 */
@@ -32,14 +38,16 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String COLUMN_TYPE = "type";
     public static final String COLUMN_DATA = "data";
     public static final String COLUMN_ISCHECKED = "ischecked";
-    // SQL queries
+    /** SQL queries */
     private static final String CUESENSE_TABLE_CREATE =
     		"CREATE TABLE IF NOT EXISTS " + TABLE_CUESENSE + " (" +
             		COLUMN_ID + " INT, " +
             		COLUMN_TYPE + " INT, " +
             		COLUMN_DATA + " TEXT, " +
-            		COLUMN_ISCHECKED + "INT" + 
+            		COLUMN_ISCHECKED + "BOOLEAN" + 
             		");";
+    private static final String NEXT_ID = 
+    		"SELECT MAX(" + COLUMN_ID + ") FROM " + TABLE_CUESENSE + ";";
     
     /**
      * Members
@@ -57,6 +65,7 @@ public class DBHelper extends SQLiteOpenHelper {
      */
 	@Override
 	public void onCreate(SQLiteDatabase db) {
+		Log.d(TAG, "onCreate()");
 		// Create the database and table
 		db.execSQL(CUESENSE_TABLE_CREATE);
 	}
@@ -66,6 +75,7 @@ public class DBHelper extends SQLiteOpenHelper {
 	 */
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+		Log.d(TAG, "onUpgrade()");
 		// Do nothing
 	}
 	
@@ -74,7 +84,36 @@ public class DBHelper extends SQLiteOpenHelper {
 	 * @param item
 	 */
 	public void addCueItem(CueItem item) {
+		Log.d(TAG, "addCueItem()");
+		// Create WHERE clause
+		ContentValues values = new ContentValues();
+		values.put(COLUMN_ID, getNextId());
+		values.put(COLUMN_TYPE, item.getType().value());
+		values.put(COLUMN_DATA, item.getData());
+		values.put(COLUMN_ISCHECKED, true); // new item is checked by default
+		
+		// Write to the database
 		SQLiteDatabase db = getWritableDatabase();
+		long ret = db.insert(TABLE_CUESENSE, null, values);
+		if(ret == -1) {
+			Log.e(TAG, "addCueItem() failed");
+		}
+	}
+	
+	/**
+	 * Returns the next valid id from the database
+	 * @return
+	 */
+	private int getNextId() {
+		Log.d(TAG, "getNextId()");
+		SQLiteDatabase db = getReadableDatabase();
+		Cursor c = db.rawQuery(NEXT_ID, null);
+		int id = 0;
+		if(c.moveToFirst()) {
+			id = c.getInt(0);
+		}
+		Log.d(TAG, "getNextId() " + id);
+		return id + 1;
 	}
 	
 	/**
@@ -82,6 +121,7 @@ public class DBHelper extends SQLiteOpenHelper {
 	 * @param item
 	 */
 	public void updateCueItem(CueItem item) {
+		Log.d(TAG, "updateCueItem()");
 		SQLiteDatabase db = getWritableDatabase();
 	}
 	
@@ -90,6 +130,7 @@ public class DBHelper extends SQLiteOpenHelper {
 	 * @param item
 	 */
 	public void deleteCueItem(CueItem item) {
+		Log.d(TAG, "deleteCueItem()");
 		SQLiteDatabase db = getWritableDatabase();
 	}
 	
@@ -99,6 +140,7 @@ public class DBHelper extends SQLiteOpenHelper {
 	 * @return
 	 */
 	public List<CueItem> getItems(InfoType type) {
+		Log.d(TAG, "getItems()");
 		SQLiteDatabase db = getReadableDatabase();
 		
 		// Execute query and get a cursor
@@ -106,6 +148,7 @@ public class DBHelper extends SQLiteOpenHelper {
 		// Fill the list with data from the cursor
 		List<CueItem> result = new ArrayList<CueItem>();
 		
+		Log.d(TAG, "getItems() " + result.size());
 		return result;
 	}
 
