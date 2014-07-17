@@ -48,10 +48,10 @@ public class DBHelper extends SQLiteOpenHelper {
     /** SQL queries */
     private static final String QUERY_TABLE_CREATE =
     		"CREATE TABLE IF NOT EXISTS " + TABLE_CUESENSE + " (" +
-            		COLUMN_ID + " INT, " +
+            		COLUMN_ID + " INT PRIMARY KEY, " +
             		COLUMN_TYPE + " INT, " +
             		COLUMN_DATA + " TEXT, " +
-            		COLUMN_ISCHECKED + "BOOLEAN" + 
+            		COLUMN_ISCHECKED + " BOOLEAN" + 
             		");";
     private static final String QUERY_NEXT_ID = 
     		"SELECT MAX(" + COLUMN_ID + ") FROM " + TABLE_CUESENSE + ";";
@@ -87,7 +87,7 @@ public class DBHelper extends SQLiteOpenHelper {
 	}
 	
 	/**
-	 * Adds a fully formed CueItem to the database
+	 * Adds a CueItem to the database
 	 * @param item
 	 */
 	public void addCueItem(CueItem item) {
@@ -162,7 +162,7 @@ public class DBHelper extends SQLiteOpenHelper {
 		// Execute query and get a cursor
 		Cursor cursor = db.query(TABLE_CUESENSE,
                 ALL_COLUMNS,
-                "type = " + type.toString(),
+                "type = " + type.value(),
                 null,
                 null,
                 null,
@@ -186,5 +186,4 @@ public class DBHelper extends SQLiteOpenHelper {
 		Log.d(TAG, "getItems() " + result.size());
 		return result;
 	}
-
 }

@@ -16,9 +16,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 /**
@@ -34,6 +34,10 @@ public class CueSenseListFragment extends ListFragment {
 	// DB helper
 	private DBHelper mDBHelper;
 	
+	/**
+	 * Custom list adapter for the list view 
+	 * @author vikasprabhu
+	 */
 	public class CueSenseListAdapter extends ArrayAdapter<CueItem> {
 		private final Context context;
 		private final List<CueItem> values;
@@ -54,7 +58,7 @@ public class CueSenseListFragment extends ListFragment {
 				view = inflater.inflate(R.layout.listitem_tab_cuesense, parent, false);
 			}
 			
-			TextView textView = (TextView) view.findViewById(R.id.data);
+			EditText textView = (EditText) view.findViewById(R.id.data);
 			textView.setText(values.get(position).getData());
 			CheckBox checkbox = (CheckBox) view.findViewById(R.id.isChecked);
 			checkbox.setChecked(values.get(position).isChecked());
@@ -63,12 +67,13 @@ public class CueSenseListFragment extends ListFragment {
 	}
 	
 	public CueSenseListFragment() {
-		mDBHelper = new DBHelper(getActivity());
+		
 	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		mDBHelper = new DBHelper(getActivity());
 
 		// Read items from database when the view is first created
 		mCueSenseList = mDBHelper.getItems(InfoType.INFO_CUESENSE);
