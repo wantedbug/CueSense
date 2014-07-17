@@ -13,6 +13,9 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 /**
@@ -52,6 +55,9 @@ public class BluetoothManager {
 	// Bluetooth adapter
 	private final BluetoothAdapter mAdapter;
 	
+	// Handler from the UI
+	private final Handler mHandler;
+	
 	// Thread to create the connection to the wearable device
 	private ConnectThread mConnectThread;
 	
@@ -68,8 +74,9 @@ public class BluetoothManager {
      * C'tor
      * @param context
      */
-	public BluetoothManager(Context context) {
+	public BluetoothManager(Context context, Handler handler) {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
+        mHandler = handler;
         mState = STATE_NONE;
 	}
 	
@@ -183,6 +190,36 @@ public class BluetoothManager {
     }
 	
 	/**
+     * Indicate that the connection attempt failed and notify the UI
+     */
+    private void connectionFailed() {
+        // Send a failure message back to the UI
+        Message msg = mHandler.obtainMessage(MainActivity.BT_MSG_TOAST);
+        Bundle bundle = new Bundle();
+        bundle.putInt(MainActivity.BT_MSG_ERROR, MainActivity.BT_ERR_CONN_FAILED);
+        msg.setData(bundle);
+        mHandler.sendMessage(msg);
+
+        // Start the service over to restart listening mode
+        BluetoothManager.this.start();
+    }
+    
+    /**
+     * Indicate that the connection was lost and notify the UI
+     */
+    private void connectionLost() {
+        // Send a failure message back to the Activity
+        Message msg = mHandler.obtainMessage(MainActivity.BT_MSG_TOAST);
+        Bundle bundle = new Bundle();
+        bundle.putInt(MainActivity.BT_MSG_ERROR, MainActivity.BT_ERR_CONN_FAILED);
+        msg.setData(bundle);
+        mHandler.sendMessage(msg);
+
+        // Start the service over to restart listening mode
+        BluetoothManager.this.start();
+    }
+    
+	/**
 	 * Write to ConnectedThread
 	 * @param out
 	 */
@@ -243,6 +280,8 @@ public class BluetoothManager {
 		    		} catch(IOException closeException) {
 		    			Log.e(TAG, "Socket close error in Thread run()" + closeException);
 		    		}
+		    		connectionFailed();
+		    		return;
 				}
 		    	
 		    	// Reset the ConnectThread because we're done

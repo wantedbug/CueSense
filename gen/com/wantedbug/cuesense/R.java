@@ -304,6 +304,8 @@ containing a value of this type.
         public static final int action_settings=0x7f07001f;
         public static final int app_id=0x7f070020;
         public static final int app_name=0x7f07001a;
+        public static final int bt_connection_failed=0x7f070026;
+        public static final int bt_connection_lost=0x7f070027;
         public static final int bt_not_available=0x7f070023;
         public static final int bt_not_enabled=0x7f070024;
         public static final int com_facebook_choose_friends=0x7f07000f;

@@ -23,6 +23,7 @@ import android.content.Intent;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -71,6 +72,16 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	// Section number fragment argument for a particular fragment.
 	private static final String ARG_SECTION_NUMBER = "section_number";
+	
+	// Types of messages that can be handled from the BTManager
+	public static final int BT_MSG_TOAST = 1;
+	
+	// Key message names received from BTManager
+	public static final String BT_MSG_ERROR = "error";
+	
+	// Error message values
+	public static final int BT_ERR_CONN_LOST = 1;
+	public static final int BT_ERR_CONN_FAILED = 2;
 
 	/**
 	 * Members
@@ -104,6 +115,22 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	
 	// Contents of the Facebook tab
 	private FBListFragment mFBListFragment;
+	
+	// A handler to deal with callbacks from BTManager
+    private final Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+            case BT_MSG_TOAST:
+            	int msgData = msg.getData().getInt(BT_MSG_ERROR);
+            	if(BT_ERR_CONN_FAILED == msgData) {
+            		Toast.makeText(getApplicationContext(), R.string.bt_connection_failed, Toast.LENGTH_LONG).show();
+            	} else if(BT_ERR_CONN_LOST == msgData) {
+            		Toast.makeText(getApplicationContext(), R.string.bt_connection_lost, Toast.LENGTH_LONG).show();
+            	}
+            }
+        }
+    };
 	
 	// TODO temp stuff to test sending messages
 	Handler timerHandler = new Handler();
@@ -269,7 +296,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 //		});
 
         // Initialize BluetoothManager
-        mBTManager = new BluetoothManager(this);
+        mBTManager = new BluetoothManager(this, mHandler);
 
         // Initialize the buffer for outgoing messages
 //        mOutStringBuffer = new StringBuffer("");
