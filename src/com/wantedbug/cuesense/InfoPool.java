@@ -137,6 +137,10 @@ public class InfoPool {
 	 * @return
 	 */
 	public synchronized String getNext() {
+		if(mList.size() == 0) {
+			return "CueSense";
+		}
+		
 		if(counter >= mList.size()) {
 			counter = 0;
 		}
