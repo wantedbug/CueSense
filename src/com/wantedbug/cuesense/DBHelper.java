@@ -38,15 +38,22 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String COLUMN_TYPE = "type";
     public static final String COLUMN_DATA = "data";
     public static final String COLUMN_ISCHECKED = "ischecked";
+    // All columns
+    public static final String[] ALL_COLUMNS = {
+        COLUMN_ID,
+        COLUMN_TYPE,
+        COLUMN_DATA,
+        COLUMN_ISCHECKED
+    };
     /** SQL queries */
-    private static final String CUESENSE_TABLE_CREATE =
+    private static final String QUERY_TABLE_CREATE =
     		"CREATE TABLE IF NOT EXISTS " + TABLE_CUESENSE + " (" +
             		COLUMN_ID + " INT, " +
             		COLUMN_TYPE + " INT, " +
             		COLUMN_DATA + " TEXT, " +
             		COLUMN_ISCHECKED + "BOOLEAN" + 
             		");";
-    private static final String NEXT_ID = 
+    private static final String QUERY_NEXT_ID = 
     		"SELECT MAX(" + COLUMN_ID + ") FROM " + TABLE_CUESENSE + ";";
     
     /**
@@ -67,7 +74,7 @@ public class DBHelper extends SQLiteOpenHelper {
 	public void onCreate(SQLiteDatabase db) {
 		Log.d(TAG, "onCreate()");
 		// Create the database and table
-		db.execSQL(CUESENSE_TABLE_CREATE);
+		db.execSQL(QUERY_TABLE_CREATE);
 	}
 
 	/**
@@ -107,7 +114,7 @@ public class DBHelper extends SQLiteOpenHelper {
 	private int getNextId() {
 		Log.d(TAG, "getNextId()");
 		SQLiteDatabase db = getReadableDatabase();
-		Cursor c = db.rawQuery(NEXT_ID, null);
+		Cursor c = db.rawQuery(QUERY_NEXT_ID, null);
 		int id = 0;
 		if(c.moveToFirst()) {
 			id = c.getInt(0);
@@ -135,19 +142,47 @@ public class DBHelper extends SQLiteOpenHelper {
 	}
 	
 	/**
+	 * Deletes all CueItems from the database
+	 */
+	public void deleteAll() {
+		Log.d(TAG, "deleteAll()");
+		SQLiteDatabase db = getWritableDatabase();
+		db.delete(TABLE_CUESENSE, null, null);
+	}
+	
+	/**
 	 * Returns a list of CueItems of type InfoType
 	 * @param type
 	 * @return
 	 */
 	public List<CueItem> getItems(InfoType type) {
-		Log.d(TAG, "getItems()");
+		Log.d(TAG, "getItems() " + type);
 		SQLiteDatabase db = getReadableDatabase();
 		
 		// Execute query and get a cursor
+		Cursor cursor = db.query(TABLE_CUESENSE,
+                ALL_COLUMNS,
+                "type = " + type.toString(),
+                null,
+                null,
+                null,
+                COLUMN_ID);
 		
-		// Fill the list with data from the cursor
-		List<CueItem> result = new ArrayList<CueItem>();
-		
+		// Fill a list with data from the cursor
+		final int idIdx = cursor.getColumnIndex(COLUMN_ID);
+		final int typeIdx = cursor.getColumnIndex(COLUMN_TYPE);
+        final int dataIdx = cursor.getColumnIndex(COLUMN_DATA);
+        final int isCheckedIdx = cursor.getColumnIndex(COLUMN_ISCHECKED);
+        
+        List<CueItem> result = new ArrayList<CueItem>();
+        while(cursor.moveToNext()) {
+            CueItem item = new CueItem();
+            item.setId(cursor.getInt(idIdx));
+            item.setType(InfoType.toInfoType(cursor.getInt(typeIdx)));
+            item.setData(cursor.getString(dataIdx));
+            item.setChecked((cursor.getInt(isCheckedIdx) == 0 ? Boolean.FALSE : Boolean.TRUE));
+            result.add(item);
+        }
 		Log.d(TAG, "getItems() " + result.size());
 		return result;
 	}

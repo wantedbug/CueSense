@@ -4,16 +4,18 @@
 
 package com.wantedbug.cuesense;
 
-import java.util.ArrayList;
+import java.util.List;
+
+import com.wantedbug.cuesense.MainActivity.InfoType;
 
 import android.content.Context;
-import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -27,15 +29,17 @@ public class CueSenseListFragment extends ListFragment {
 	/**
 	 * Members
 	 */
-	private String sampleList[];
-	private ArrayList<CueItem> mCueSenseList;
+	// List of CueItems
+	private List<CueItem> mCueSenseList;
+	// DB helper
+	private DBHelper mDBHelper;
 	
-	public class CueSenseListAdapter extends ArrayAdapter<String> {
+	public class CueSenseListAdapter extends ArrayAdapter<CueItem> {
 		private final Context context;
-		private final String[] values;
+		private final List<CueItem> values;
 		LayoutInflater inflater;
 
-		public CueSenseListAdapter(Context context, String[] values) {
+		public CueSenseListAdapter(Context context, List<CueItem> values) {
 			super(context, R.layout.listitem_tab_cuesense, values);
 			this.context = context;
 			this.values = values;
@@ -51,28 +55,24 @@ public class CueSenseListFragment extends ListFragment {
 			}
 			
 			TextView textView = (TextView) view.findViewById(R.id.data);
-			textView.setText(values[position]);
+			textView.setText(values.get(position).getData());
+			CheckBox checkbox = (CheckBox) view.findViewById(R.id.isChecked);
+			checkbox.setChecked(values.get(position).isChecked());
 			return view;
 		}
 	}
 	
 	public CueSenseListFragment() {
-		// TODO remove dummy data
-		sampleList = new String[] {
-				"Apolitical",
-				"Humanist",
-				"Equalist",
-				"Do or do not, there is no try",
-				"Let's see how long a message can really fit into a simple list item"
-		};
+		mDBHelper = new DBHelper(getActivity());
 	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-//		ListAdapter listAdapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_multiple_choice, sampleList);
-		ListAdapter listAdapter = new CueSenseListAdapter(getActivity(), sampleList);
+		// Read items from database when the view is first created
+		mCueSenseList = mDBHelper.getItems(InfoType.INFO_CUESENSE);
+		ListAdapter listAdapter = new CueSenseListAdapter(getActivity(), mCueSenseList);
 		setListAdapter(listAdapter);
 	}
 
