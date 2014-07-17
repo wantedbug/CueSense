@@ -36,11 +36,11 @@ public class CueItem {
 	}
 	
 	/** get/set methods */
-	public int getId() { return mId; }
+	public int id() { return mId; }
 	public void setId(int id) { mId = id; }
-	public InfoType getType() { return mType; }
+	public InfoType type() { return mType; }
 	public void setType(InfoType type) { mType = type; }
-	public String getData() { return mData; }
+	public String data() { return mData; }
     public void setData(String data) { this.mData = data; }
 	public boolean isChecked() { return mChecked; }
 	public void setChecked(boolean checked) { mChecked = checked; }

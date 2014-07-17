@@ -74,7 +74,7 @@ public class CueSenseListFragment extends ListFragment {
 			}
 			
 			EditText textView = (EditText) view.findViewById(R.id.data);
-			textView.setText(values.get(position).getData());
+			textView.setText(values.get(position).data());
 			CheckBox checkbox = (CheckBox) view.findViewById(R.id.isChecked);
 			checkbox.setChecked(values.get(position).isChecked());
 			return view;

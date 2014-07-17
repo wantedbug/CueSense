@@ -4,8 +4,6 @@
 
 package com.wantedbug.cuesense;
 
-import java.util.Vector;
-
 import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
 
 import android.app.ActionBar.Tab;
@@ -98,6 +96,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	private ViewPager mViewPager;
 	
+	// A helper class to keep database and InfoPool in sync
+	private CuesManager mCuesManager;
+	
 	// Contents of the CueSense profile tab
 	private CueSenseListFragment mCueSenseListFragment;
 	
@@ -105,8 +106,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private FBListFragment mFBListFragment;
 	
 	// TODO temp stuff to test sending messages
-//	Timer t;
-	Vector<CueItem> list = new Vector<CueItem>(10);
 	Handler timerHandler = new Handler();
     Runnable timerRunnable = new Runnable() {
         @Override
@@ -127,16 +126,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
-		/** InfoPool instantiation */
+		// InfoPool instantiation
 		InfoPool pool = InfoPool.INSTANCE;
 		
-        /** test stuff */ // TODO remove
-		for(int i = 0; i < 10; ++i) {
-			InfoPool.INSTANCE.addCueItem(new CueItem(i, InfoType.INFO_CUESENSE,
-					"The length of this message is more than 16 characters " + i, true));
-		}
-		/** END test stuff */
-	    
+		// CuesManager
+		mCuesManager = new CuesManager(getApplication());
+		
 		/** Bluetooth setup */
 		// Get the default Bluetooth adapter
 	    mBTAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -451,24 +446,17 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	@Override
 	public void onCueAdded(CueItem item) {
-		// Push to database
-		
-		// Push to InfoPool
+		mCuesManager.onCueAdded(item);
 	}
 
 	@Override
 	public void onCueDeleted(CueItem item) {
-		// Push to database
-		
-		// Push to InfoPool
+		mCuesManager.onCueDeleted(item);
 	}
 
 	@Override
 	public void onCueChanged(CueItem item) {
-		// Push to database
-		
-		// Push to InfoPool
-		
+		mCuesManager.onCueChanged(item);
 	}
 
 }

@@ -61,7 +61,7 @@ public class CuesManager {
 	public void onCueChanged(CueItem item) {
 		Log.d(TAG, "onCueChanged()");
 		// Push to database
-		
+		mDBHelper.updateCueItem(item);
 		// Push to InfoPool
 	}
 }

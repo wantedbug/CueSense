@@ -97,8 +97,8 @@ public class DBHelper extends SQLiteOpenHelper {
 		// Create WHERE clause
 		ContentValues values = new ContentValues();
 		values.put(COLUMN_ID, getNextId());
-		values.put(COLUMN_TYPE, item.getType().value());
-		values.put(COLUMN_DATA, item.getData());
+		values.put(COLUMN_TYPE, item.type().value());
+		values.put(COLUMN_DATA, item.data());
 		values.put(COLUMN_ISCHECKED, true); // new item is checked by default
 		
 		// Write to the database
@@ -140,10 +140,13 @@ public class DBHelper extends SQLiteOpenHelper {
 	 */
 	public void deleteCueItem(CueItem item) {
 		Log.d(TAG, "deleteCueItem()");
+		// Execute delete query
 		SQLiteDatabase db = getWritableDatabase();
-		long ret = db.delete(TABLE_CUESENSE, QUERY_DELETE_WHERE, new String[] { String.valueOf(item.getId()) });
+		long ret = db.delete(TABLE_CUESENSE, QUERY_DELETE_WHERE, new String[] { String.valueOf(item.id()) });
 		if(ret == -1) {
 			Log.e(TAG, "deleteCueItem() failed");
+		} else {
+			Log.i(TAG, "entries deleted: " + ret);
 		}
 	}
 	

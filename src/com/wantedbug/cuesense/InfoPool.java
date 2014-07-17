@@ -50,7 +50,7 @@ public class InfoPool {
 	 * @return
 	 */
 	public synchronized void addCueItem(CueItem item) {
-		Log.d(TAG, "add: " + item.getType() + item.getData());
+		Log.d(TAG, "add: " + item.type() + item.data());
 		mList.add(item);
 	}
 	
@@ -77,13 +77,31 @@ public class InfoPool {
 	 * The CueItems are matched according to their id
 	 */
 	public synchronized void deleteCueItem(CueItem item) {
-		Log.d(TAG, "deleteCueItem(): " + item.getId());
+		Log.d(TAG, "deleteCueItem(): " + item.id());
 		Iterator<CueItem> it = mList.iterator();
 		while(it.hasNext()) {
 			CueItem temp = it.next();
-			if(item.getId() == temp.getId()) {
-				Log.i(TAG, "removing " + item.getType() + item.getData());
+			if(item.id() == temp.id()) {
+				Log.i(TAG, "removing " + item.type() + item.data());
 				it.remove();
+				break;
+			}
+		}
+	}
+	
+	/**
+	 * Updates a CueItem in the list
+	 * @param item
+	 * The CueItems are matched according to their id
+	 */
+	public synchronized void updateCueItem(CueItem item) {
+		Log.d(TAG, "updateCueItem(): " + item.id());
+		for(CueItem it : mList) {
+			if(it.id() == item.id()) {
+				Log.i(TAG, "updating " + item.type() + item.data());
+				it.setType(item.type());
+				it.setData(item.data());
+				it.setChecked(item.isChecked());
 				break;
 			}
 		}
@@ -106,8 +124,8 @@ public class InfoPool {
 			Iterator<CueItem> it = mList.iterator();
 			while(it.hasNext()) {
 				CueItem item = it.next();
-				if(item.getType().equals(type)) {
-					Log.i(TAG, "removing " + item.getType() + item.getData());
+				if(item.type().equals(type)) {
+					Log.i(TAG, "removing " + item.type() + item.data());
 					it.remove();
 				}
 			}
@@ -122,7 +140,7 @@ public class InfoPool {
 		if(counter >= mList.size()) {
 			counter = 0;
 		}
-		String temp = mList.elementAt(counter).getData();
+		String temp = mList.elementAt(counter).data();
 		++counter;
 		return temp;
 	}
