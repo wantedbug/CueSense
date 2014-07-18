@@ -39,7 +39,6 @@ import android.widget.Toast;
  * @author vikasprabhu
  */
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener, CueSenseListener {
-	
 	// Debugging
 	private static final String TAG = "MainActivity";
 
@@ -75,10 +74,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	
 	// Types of messages that can be handled from the BTManager
 	public static final int BT_MSG_TOAST = 1;
-	
 	// Key message names received from BTManager
 	public static final String BT_MSG_ERROR = "error";
-	
 	// Error message values
 	public static final int BT_ERR_CONN_LOST = 1;
 	public static final int BT_ERR_CONN_FAILED = 2;
@@ -92,30 +89,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// Members
 	private BluetoothAdapter mBTAdapter = null;
 	private BluetoothManager mBTManager = null;
-
-	/**
-	 * The {@link android.support.v4.view.PagerAdapter} that will provide
-	 * fragments for each of the sections. We use a {@link FragmentPagerAdapter}
-	 * derivative, which will keep every loaded fragment in memory. If this
-	 * becomes too memory intensive, it may be best to switch to a
-	 * {@link android.support.v13.app.FragmentStatePagerAdapter}.
-	 */
-	private SectionsPagerAdapter mSectionsPagerAdapter;
-
-	/**
-	 * The {@link ViewPager} that will host the section contents.
-	 */
-	private ViewPager mViewPager;
-	
-	// A helper class to keep database and InfoPool in sync
-	private CuesManager mCuesManager;
-	
-	// Contents of the CueSense profile tab
-	private CueSenseListFragment mCueSenseListFragment;
-	
-	// Contents of the Facebook tab
-	private FBListFragment mFBListFragment;
-	
 	// A handler to deal with callbacks from BTManager
     private final Handler mHandler = new Handler() {
         @Override
@@ -131,7 +104,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             }
         }
     };
-	
 	// TODO temp stuff to test sending messages
 	Handler timerHandler = new Handler();
     Runnable timerRunnable = new Runnable() {
@@ -146,7 +118,21 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             timerHandler.postDelayed(this, 5000);
         }
     };
+
+	// Pager adapter that provides fragments for each section
+	private SectionsPagerAdapter mSectionsPagerAdapter;
+	// ViewPager that hosts the section contents
+	private ViewPager mViewPager;
 	
+	// A helper class to keep database and InfoPool in sync
+	private CuesManager mCuesManager;
+	
+	// Contents of the CueSense profile tab
+	private CueSenseListFragment mCueSenseListFragment;
+	// Contents of the Facebook tab
+	private FBListFragment mFBListFragment;
+	
+
 	/** MainActivity lifecycle methods*/
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -183,6 +169,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Set up the ViewPager with the sections adapter.
 		mViewPager = (ViewPager) findViewById(R.id.pager);
 		mViewPager.setAdapter(mSectionsPagerAdapter);
+		mViewPager.setOffscreenPageLimit(3);
 
 		// When swiping between different sections, select the corresponding
 		// tab. We can also use ActionBar.Tab#select() to do this if we have

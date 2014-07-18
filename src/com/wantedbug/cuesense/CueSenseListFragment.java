@@ -106,7 +106,7 @@ public class CueSenseListFragment extends ListFragment {
         super.onAttach(activity);
         
         if(!(activity instanceof CueSenseListener)) {
-            throw new RuntimeException("Activity must implement NewTaskDialogListener interface!");
+            throw new RuntimeException("Activity must implement CueSenseListener interface!");
         }
         
         mListener = (CueSenseListener) activity;
