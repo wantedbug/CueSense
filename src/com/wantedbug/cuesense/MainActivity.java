@@ -50,6 +50,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	/**
 	 * Constants
 	 */
+	// Time interval to keep trying to push messages to the wearable device
+	private static final int PUSH_INTERVAL_MS = 5000;
 	// Tab content identifiers
 	public enum InfoType {
 		INFO_CUESENSE(0),
@@ -109,8 +111,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             }
         }
     };
-	// TODO temp stuff to test sending messages
-	Handler timerHandler = new Handler();
+
+    // A Handler and Runnable to keep pushing messages to the wearable device
+    Handler timerHandler = new Handler();
     Runnable timerRunnable = new Runnable() {
         @Override
         public void run() {
@@ -120,7 +123,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         		Log.d(TAG, "BT is connected and ready");
         		sendToBT(InfoPool.INSTANCE.getNext());
         	}
-            timerHandler.postDelayed(this, 5000);
+            timerHandler.postDelayed(this, PUSH_INTERVAL_MS);
         }
     };
 
@@ -295,7 +298,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         // Connect to the Bluetooth device
         connectDevice();
         
-        timerHandler.postDelayed(timerRunnable, 1000);
+        timerHandler.postDelayed(timerRunnable, PUSH_INTERVAL_MS);
     }
 	
 	/**
