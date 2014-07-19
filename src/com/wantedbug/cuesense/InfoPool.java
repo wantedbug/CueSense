@@ -6,6 +6,7 @@ package com.wantedbug.cuesense;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
 import com.wantedbug.cuesense.MainActivity.InfoType;
@@ -52,6 +53,7 @@ public class InfoPool {
 	public synchronized void addCueItem(CueItem item) {
 		Log.d(TAG, "add: " + item.type() + item.data());
 		mList.add(item);
+		Log.i(TAG, "adding " + item.type() + item.data());
 	}
 	
 	/**
@@ -66,7 +68,7 @@ public class InfoPool {
 	 * Adds a list of InfoItems to the InfoPool
 	 * @param items
 	 */
-	public synchronized void addCueItems(ArrayList<CueItem> items) {
+	public synchronized void addCueItems(List<CueItem> items) {
 		Log.d(TAG, "addCueItems(): " + items.size());
 		mList.addAll(items);
 	}
