@@ -230,8 +230,8 @@ containing a value of this type.
         public static final int ic_launcher=0x7f020029;
     }
     public static final class id {
-        public static final int action_add=0x7f040023;
-        public static final int action_settings=0x7f040024;
+        public static final int action_add=0x7f040025;
+        public static final int action_settings=0x7f040026;
         public static final int authButton=0x7f04001e;
         public static final int com_facebook_body_frame=0x7f040016;
         public static final int com_facebook_button_xout=0x7f040018;
@@ -261,6 +261,8 @@ containing a value of this type.
         public static final int data=0x7f040021;
         public static final int isChecked=0x7f040022;
         public static final int large=0x7f040002;
+        public static final int newCueSenseItemData=0x7f040024;
+        public static final int newCueSenseItemDescription=0x7f040023;
         public static final int normal=0x7f040001;
         public static final int pager=0x7f040003;
         public static final int picker_subtitle=0x7f040013;
@@ -289,8 +291,9 @@ containing a value of this type.
         public static final int fragment_fb=0x7f030011;
         public static final int fragment_main=0x7f030012;
         public static final int listitem_tab_cuesense=0x7f030013;
-        public static final int tab_cuesense=0x7f030014;
-        public static final int tab_facebook=0x7f030015;
+        public static final int new_cuesense_item_dialog=0x7f030014;
+        public static final int tab_cuesense=0x7f030015;
+        public static final int tab_facebook=0x7f030016;
     }
     public static final class menu {
         public static final int main=0x7f090000;
@@ -332,6 +335,9 @@ containing a value of this type.
         public static final int com_facebook_usersettingsfragment_logged_in=0x7f070009;
         public static final int com_facebook_usersettingsfragment_not_logged_in=0x7f07000a;
         public static final int menu_add_cue=0x7f070027;
+        public static final int new_cuesense_item_addbutton=0x7f070029;
+        public static final int new_cuesense_item_cancelbutton=0x7f07002a;
+        public static final int new_cuesense_item_description=0x7f070028;
         public static final int title_activity_settings=0x7f070021;
         public static final int title_section1=0x7f07001b;
         public static final int title_section2=0x7f07001c;

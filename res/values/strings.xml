@@ -12,5 +12,8 @@
     <string name="bt_connection_failed">Unable to connect to your wearable. Retrying...</string>
     <string name="bt_connection_lost">Connection to your wearable lost. Reconnecting...</string>
     <string name="menu_add_cue">Add a Cue</string>
+    <string name="new_cuesense_item_description">Add a new Cue</string>
+    <string name="new_cuesense_item_addbutton">Add</string>
+    <string name="new_cuesense_item_cancelbutton">Cancel</string>
 
 </resources>

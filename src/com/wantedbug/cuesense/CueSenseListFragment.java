@@ -26,7 +26,7 @@ public class CueSenseListFragment extends ListFragment {
 	// Debugging
 	private static final String TAG = "CueSenseListFragment";
 	/**
-	 * Interface
+	 * Interface for new/deleted/changed CueItems in the list view
 	 */
 	public interface CueSenseListener {
 		/** Handle addition of a new cue */
@@ -83,4 +83,13 @@ public class CueSenseListFragment extends ListFragment {
         
         mListener = (CueSenseListener) activity;
     }
+	
+	/**
+	 * Refreshes the list view
+	 */
+	public void refreshList() {
+		mCSList.clear();
+		mCSList.addAll(mDBHelper.getItems(InfoType.INFO_CUESENSE));
+		mCSListAdapter.notifyDataSetChanged();
+	}
 }

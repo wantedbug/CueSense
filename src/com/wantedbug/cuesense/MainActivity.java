@@ -5,6 +5,7 @@
 package com.wantedbug.cuesense;
 
 import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
+import com.wantedbug.cuesense.NewCueSenseItemDialog.NewCueSenseItemListener;
 
 import android.app.ActionBar.Tab;
 import android.app.Activity;
@@ -38,7 +39,7 @@ import android.widget.Toast;
  * This class is the starting point for the CueSense application. 
  * @author vikasprabhu
  */
-public class MainActivity extends FragmentActivity implements ActionBar.TabListener, CueSenseListener {
+public class MainActivity extends FragmentActivity implements ActionBar.TabListener, CueSenseListener, NewCueSenseItemListener {
 	// Debugging
 	private static final String TAG = "MainActivity";
 
@@ -72,7 +73,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 
 	// Section number fragment argument for a particular fragment.
-	private static final String ARG_SECTION_NUMBER = "section_number";
+	private static final String ARG_TAB_NUMBER = "tab_number";
 	
 	// Types of messages that can be handled from the BTManager
 	public static final int BT_MSG_TOAST = 1;
@@ -136,6 +137,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private CueSenseListFragment mCSListFragment;
 	// Contents of the Facebook tab
 	private FBListFragment mFBListFragment;
+	
+	// Reference to Add Cue menu item to set its visibility when needed
+	private MenuItem mAddMenuItem;
 	
 
 
@@ -319,6 +323,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
+		mAddMenuItem = menu.findItem(R.id.action_add);
 		return true;
 	}
 
@@ -332,8 +337,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			// Start Settings activity
 			Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
 			startActivity(settingsIntent);
+			return true;
 		} else if(id == R.id.action_add) {
-			// New CueSense item
+			// New CueSense item dialog
+			NewCueSenseItemDialog dialog = new NewCueSenseItemDialog();
+			dialog.show(getSupportFragmentManager(), "new_cuesense_item");
+			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
@@ -343,25 +352,24 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// When the given tab is selected, switch to the corresponding page in
 		// the ViewPager.
 		mViewPager.setCurrentItem(tab.getPosition());
-
-		// Handle Add menu item visibility
+		// Enable Add menu item when CueSense tab is (re)selected
 		InfoType tabType = InfoType.toInfoType(tab.getPosition());
 		if(InfoType.INFO_CUESENSE == tabType) {
-			// Enable Add menu item
-		} else {
-			// Disable Add menu item
+			if(mAddMenuItem != null) mAddMenuItem.setVisible(true);
 		}
 	}
 
 	@Override
-	public void onTabUnselected(ActionBar.Tab tab,
-			FragmentTransaction fragmentTransaction) {
+	public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
+		// Disable Add menu item when CueSense tab is unselected
+		InfoType tabType = InfoType.toInfoType(tab.getPosition());
+		if(InfoType.INFO_CUESENSE == tabType) {
+			mAddMenuItem.setVisible(false);
+		}
 	}
 
 	@Override
-	public void onTabReselected(ActionBar.Tab tab,
-			FragmentTransaction fragmentTransaction) {
-	}
+	public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) { }
 
 	/**
 	 * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
@@ -375,23 +383,25 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 		@Override
 		public Fragment getItem(int position) {
+			Bundle args = new Bundle();
 			// getItem is called to instantiate the fragment for the given page.
-			switch(position) {
-			case 0:
+			switch(InfoType.toInfoType(position)) {
+			case INFO_CUESENSE:
 				if(mCSListFragment == null) {
 					mCSListFragment = new CueSenseListFragment();
 				}
+				args.putInt(ARG_TAB_NUMBER, position + 1);
+				mCSListFragment.setArguments(args);
 				return mCSListFragment;
-			case 1:
+			case INFO_FACEBOOK:
 				if(mFBListFragment == null) {
 					mFBListFragment = new FBListFragment();
-					Bundle args = new Bundle();
-					args.putInt(ARG_SECTION_NUMBER, position + 1);
-					mFBListFragment.setArguments(args);
 				}
+				args.putInt(ARG_TAB_NUMBER, position + 1);
+				mFBListFragment.setArguments(args);
 				return mFBListFragment;
-//			case 2: // TODO - Twitter tab
-//			case 3: // TODO - Foursquare tab
+//			case INFO_TWITTER: // TODO - Twitter tab
+			case INFO_SENTINEL: // falls through
 			default: return PlaceholderFragment.newInstance(position + 1);
 			}
 		}
@@ -428,7 +438,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		public static PlaceholderFragment newInstance(int sectionNumber) {
 			PlaceholderFragment fragment = new PlaceholderFragment();
 			Bundle args = new Bundle();
-			args.putInt(ARG_SECTION_NUMBER, sectionNumber);
+			args.putInt(ARG_TAB_NUMBER, sectionNumber);
 			fragment.setArguments(args);
 			return fragment;
 		}
@@ -446,6 +456,16 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 
 	/**
+	 * Constructs a new CueItem and adds it to the database and InfoPool
+	 */
+	@Override
+	public void onCueAdded(String itemData) {
+		// Construct a new CueItem and push to database and InfoPool
+		CueItem item = new CueItem(0, InfoType.INFO_CUESENSE, itemData, true);
+		onCueAdded(item);
+	}
+
+	/**
 	 * Keep data model, database and InfoPool in sync when a CueItem is added
 	 */
 	@Override
@@ -455,6 +475,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		mDBHelper.addCueItem(item);
 		// Push to InfoPool
 		mPool.addCueItem(item);
+		// Refresh CueSense list
+		mCSListFragment.refreshList();
 	}
 
 	/**
@@ -480,5 +502,4 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Push to InfoPool
 		mPool.updateCueItem(item);
 	}
-
 }

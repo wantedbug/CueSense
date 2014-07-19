@@ -189,7 +189,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 null,
                 null,
                 null,
-                COLUMN_ID);
+                COLUMN_ID + " DESC");
 		
 		// Fill a list with data from the cursor
 		final int idIdx = cursor.getColumnIndex(COLUMN_ID);
