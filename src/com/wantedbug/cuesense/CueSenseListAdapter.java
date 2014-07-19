@@ -7,7 +7,6 @@ import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
 import android.content.Context;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,8 +16,6 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 
 public class CueSenseListAdapter extends ArrayAdapter<CueItem> {
-	// Debugging
-	protected static final String TAG = "CueSenseListAdapter";
 	/**
 	 * Members
 	 */

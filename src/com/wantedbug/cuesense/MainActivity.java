@@ -4,10 +4,6 @@
 
 package com.wantedbug.cuesense;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
 
 import android.app.ActionBar.Tab;
@@ -35,7 +31,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 import android.widget.Toast;
 
 

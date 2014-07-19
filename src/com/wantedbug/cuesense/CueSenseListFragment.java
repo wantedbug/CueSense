@@ -9,20 +9,12 @@ import java.util.List;
 import com.wantedbug.cuesense.MainActivity.InfoType;
 
 import android.app.Activity;
-import android.content.Context;
-import android.location.GpsStatus.Listener;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
