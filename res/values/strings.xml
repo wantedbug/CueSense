@@ -11,5 +11,6 @@
     <string name="title_activity_settings">Settings</string><string name="bt_not_available">Bluetooth not available</string><string name="bt_not_enabled">Bluetooth not enabled</string><string name="bt_not_connected">Wearable not connected</string>
     <string name="bt_connection_failed">Unable to connect to your wearable. Retrying...</string>
     <string name="bt_connection_lost">Connection to your wearable lost. Reconnecting...</string>
+    <string name="menu_add_cue">Add a Cue</string>
 
 </resources>

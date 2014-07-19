@@ -329,19 +329,28 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
 		if (id == R.id.action_settings) {
+			// Start Settings activity
 			Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
 			startActivity(settingsIntent);
-//			return true;
+		} else if(id == R.id.action_add) {
+			// New CueSense item
 		}
 		return super.onOptionsItemSelected(item);
 	}
 
 	@Override
-	public void onTabSelected(ActionBar.Tab tab,
-			FragmentTransaction fragmentTransaction) {
+	public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
 		// When the given tab is selected, switch to the corresponding page in
 		// the ViewPager.
 		mViewPager.setCurrentItem(tab.getPosition());
+
+		// Handle Add menu item visibility
+		InfoType tabType = InfoType.toInfoType(tab.getPosition());
+		if(InfoType.INFO_CUESENSE == tabType) {
+			// Enable Add menu item
+		} else {
+			// Disable Add menu item
+		}
 	}
 
 	@Override

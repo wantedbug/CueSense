@@ -201,7 +201,7 @@ containing a value of this type.
         public static final int com_facebook_list_section_header_background=0x7f02000d;
         public static final int com_facebook_loginbutton_silver=0x7f02000e;
         public static final int com_facebook_logo=0x7f02000f;
-        public static final int com_facebook_picker_default_separator_color=0x7f02002f;
+        public static final int com_facebook_picker_default_separator_color=0x7f02002a;
         public static final int com_facebook_picker_item_background=0x7f020010;
         public static final int com_facebook_picker_list_focused=0x7f020011;
         public static final int com_facebook_picker_list_longpressed=0x7f020012;
@@ -226,16 +226,12 @@ containing a value of this type.
         public static final int com_facebook_top_background=0x7f020025;
         public static final int com_facebook_top_button=0x7f020026;
         public static final int com_facebook_usersettingsfragment_background_gradient=0x7f020027;
-        public static final int fb_100=0x7f020028;
-        public static final int fb_1024=0x7f020029;
-        public static final int fb_114=0x7f02002a;
-        public static final int fb_144=0x7f02002b;
-        public static final int fb_29=0x7f02002c;
-        public static final int fb_512=0x7f02002d;
-        public static final int ic_launcher=0x7f02002e;
+        public static final int ic_add=0x7f020028;
+        public static final int ic_launcher=0x7f020029;
     }
     public static final class id {
-        public static final int action_settings=0x7f040023;
+        public static final int action_add=0x7f040023;
+        public static final int action_settings=0x7f040024;
         public static final int authButton=0x7f04001e;
         public static final int com_facebook_body_frame=0x7f040016;
         public static final int com_facebook_button_xout=0x7f040018;
@@ -335,6 +331,7 @@ containing a value of this type.
         public static final int com_facebook_usersettingsfragment_log_in_button=0x7f070008;
         public static final int com_facebook_usersettingsfragment_logged_in=0x7f070009;
         public static final int com_facebook_usersettingsfragment_not_logged_in=0x7f07000a;
+        public static final int menu_add_cue=0x7f070027;
         public static final int title_activity_settings=0x7f070021;
         public static final int title_section1=0x7f07001b;
         public static final int title_section2=0x7f07001c;
