@@ -50,6 +50,7 @@ public class CueSenseListFragment extends ListFragment {
 	CueSenseListener mListener;
 	// Data for the list views
 	private List<CueItem> mCSList;
+	// Database handle
 	private DBHelper mDBHelper;
 	
 	public CueSenseListFragment() {
@@ -82,13 +83,4 @@ public class CueSenseListFragment extends ListFragment {
         
         mListener = (CueSenseListener) activity;
     }
-	
-	@Override
-	public void onListItemClick(ListView list, View v, int position, long id) {
-		Log.d(TAG, "onListItemClick");
-		Toast.makeText(getActivity(), getListView().getItemAtPosition(position).toString(), Toast.LENGTH_LONG).show();
-		CueItem item = (CueItem) list.getItemAtPosition(position);
-		mListener.onCueChanged(item);
-		mCSListAdapter.notifyDataSetChanged();
-	}
 }

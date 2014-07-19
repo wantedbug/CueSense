@@ -19,22 +19,22 @@ public class CueSenseListAdapter extends ArrayAdapter<CueItem> {
 	/**
 	 * Members
 	 */
-	private final List<CueItem> list;
-	private final Context context;
+	private final List<CueItem> mList;
+	private final Context mContext;
 	private final CueSenseListener mListener;
-	LayoutInflater inflater;
+	private LayoutInflater mInflater;
 
 	public CueSenseListAdapter(Context context, List<CueItem> values, CueSenseListener listener) {
 		super(context, R.layout.listitem_tab_cuesense, values);
-		this.context = context;
-		this.list = values;
+		this.mContext = context;
+		this.mList = values;
 		this.mListener = listener;
-		this.inflater = LayoutInflater.from(context);
+		this.mInflater = LayoutInflater.from(context);
 	}
 	
 	static class ViewHolder {
-	    protected EditText text;
-	    protected CheckBox checkbox;
+	    protected EditText mEditText;
+	    protected CheckBox mCheckbox;
 	  }
 
 	@Override
@@ -42,43 +42,45 @@ public class CueSenseListAdapter extends ArrayAdapter<CueItem> {
 		View view = convertView;
 		
 		if(convertView == null) {
-			view = inflater.inflate(R.layout.listitem_tab_cuesense, parent, false);
+			view = mInflater.inflate(R.layout.listitem_tab_cuesense, parent, false);
 			final ViewHolder viewHolder = new ViewHolder();
-			viewHolder.text = (EditText) view.findViewById(R.id.data);
-			viewHolder.text.addTextChangedListener(new TextWatcher() {
+			viewHolder.mEditText = (EditText) view.findViewById(R.id.data);
+			viewHolder.mEditText.addTextChangedListener(new TextWatcher() {
 				@Override
 				public void afterTextChanged(Editable s) {
-					CueItem item = (CueItem) viewHolder.text.getTag();
-					item.setData(s.toString());
-					mListener.onCueChanged(item);
+					CueItem item = (CueItem) viewHolder.mEditText.getTag();
+					if(item.data() != s.toString()) {
+						item.setData(s.toString());
+						mListener.onCueChanged(item);
+					}
 				}
 				@Override
 				public void beforeTextChanged(CharSequence s, int start, int count, int after) { /* Do nothing */}
 				@Override
 				public void onTextChanged(CharSequence s, int start, int before, int count) { /* Do nothing */}
 			});
-			viewHolder.checkbox = (CheckBox) view.findViewById(R.id.isChecked);
-			viewHolder.checkbox
+			viewHolder.mCheckbox = (CheckBox) view.findViewById(R.id.isChecked);
+			viewHolder.mCheckbox
 			.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView,
 						boolean isChecked) {
-					CueItem item = (CueItem) viewHolder.checkbox.getTag();
+					CueItem item = (CueItem) viewHolder.mCheckbox.getTag();
 					item.setChecked(buttonView.isChecked());
 					mListener.onCueChanged(item);
 				}
 			});
 			view.setTag(viewHolder);
-			viewHolder.checkbox.setTag(list.get(position));
-			viewHolder.text.setTag(list.get(position));
+			viewHolder.mCheckbox.setTag(mList.get(position));
+			viewHolder.mEditText.setTag(mList.get(position));
 		} else {
 			view = convertView;
-			((ViewHolder) view.getTag()).checkbox.setTag(list.get(position));
-			((ViewHolder) view.getTag()).text.setTag(list.get(position));
+			((ViewHolder) view.getTag()).mCheckbox.setTag(mList.get(position));
+			((ViewHolder) view.getTag()).mEditText.setTag(mList.get(position));
 		}		
 		ViewHolder holder = (ViewHolder) view.getTag();
-	    holder.text.setText(list.get(position).data());
-	    holder.checkbox.setChecked(list.get(position).isChecked());
+	    holder.mEditText.setText(mList.get(position).data());
+	    holder.mCheckbox.setChecked(mList.get(position).isChecked());
 		return view;
 	}
 }
