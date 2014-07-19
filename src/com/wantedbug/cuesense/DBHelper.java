@@ -57,6 +57,8 @@ public class DBHelper extends SQLiteOpenHelper {
     		"SELECT MAX(" + COLUMN_ID + ") FROM " + TABLE_CUESENSE + ";";
     private static final String QUERY_DELETE_WHERE = 
     		COLUMN_ID + " = ?";
+    private static final String QUERY_UPDATE_WHERE =
+    		COLUMN_ID + " = ?";
     
     /**
      * Members
@@ -131,7 +133,19 @@ public class DBHelper extends SQLiteOpenHelper {
 	 */
 	public void updateCueItem(CueItem item) {
 		Log.d(TAG, "updateCueItem()");
+		// Create WHERE clause
+		ContentValues values = new ContentValues();
+		values.put(COLUMN_TYPE, item.type().value());
+		values.put(COLUMN_DATA, item.data());
+		values.put(COLUMN_ISCHECKED, item.isChecked());
+		
 		SQLiteDatabase db = getWritableDatabase();
+		long ret = db.update(TABLE_CUESENSE, values, QUERY_UPDATE_WHERE, new String[] { String.valueOf(item.id()) });
+		if(ret == -1) {
+			Log.e(TAG, "updateCueItem() no update");
+		} else {
+			Log.i(TAG, "entries updated: " + ret);
+		}
 	}
 	
 	/**
