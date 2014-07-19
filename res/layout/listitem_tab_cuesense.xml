@@ -10,11 +10,12 @@
     
     <EditText
         android:id="@+id/data"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="textAutoCorrect"
+        android:inputType="textAutoCorrect|textMultiLine"
         android:layout_alignParentLeft="true"
-        android:layout_marginRight="36dp"/>
+        android:layout_marginRight="36dp"
+        android:singleLine="false"/>
     
     <CheckBox
         android:id="@+id/isChecked"
