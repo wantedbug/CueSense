@@ -367,6 +367,7 @@ public class BluetoothManager {
             		}
             	} catch(IOException e) {
             		Log.e(TAG, "Read error: " + e);
+            		connectionLost();
             		break;
             	}
             }
