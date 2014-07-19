@@ -19,6 +19,7 @@
         android:theme="@style/android:Theme.Holo" >
         <activity
             android:name=".MainActivity"
+            android:windowSoftInputMode="adjustPan"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

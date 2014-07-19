@@ -5,6 +5,8 @@ import java.util.List;
 import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
 
 import android.content.Context;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -46,6 +48,18 @@ public class CueSenseListAdapter extends ArrayAdapter<CueItem> {
 			view = inflater.inflate(R.layout.listitem_tab_cuesense, parent, false);
 			final ViewHolder viewHolder = new ViewHolder();
 			viewHolder.text = (EditText) view.findViewById(R.id.data);
+			viewHolder.text.addTextChangedListener(new TextWatcher() {
+				@Override
+				public void afterTextChanged(Editable s) {
+					CueItem item = (CueItem) viewHolder.text.getTag();
+					item.setData(s.toString());
+					mListener.onCueChanged(item);
+				}
+				@Override
+				public void beforeTextChanged(CharSequence s, int start, int count, int after) { /* Do nothing */}
+				@Override
+				public void onTextChanged(CharSequence s, int start, int before, int count) { /* Do nothing */}
+			});
 			viewHolder.checkbox = (CheckBox) view.findViewById(R.id.isChecked);
 			viewHolder.checkbox
 			.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -59,9 +73,11 @@ public class CueSenseListAdapter extends ArrayAdapter<CueItem> {
 			});
 			view.setTag(viewHolder);
 			viewHolder.checkbox.setTag(list.get(position));
+			viewHolder.text.setTag(list.get(position));
 		} else {
 			view = convertView;
 			((ViewHolder) view.getTag()).checkbox.setTag(list.get(position));
+			((ViewHolder) view.getTag()).text.setTag(list.get(position));
 		}		
 		ViewHolder holder = (ViewHolder) view.getTag();
 	    holder.text.setText(list.get(position).data());
