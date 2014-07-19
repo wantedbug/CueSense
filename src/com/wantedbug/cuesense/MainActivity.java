@@ -145,9 +145,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
-//		CueItem item = new CueItem(1, InfoType.INFO_CUESENSE, "asfhsdjkf sdfljhsdflkjsh", true);
-//		for(int i = 0 ; i < 10; ++i) mCuesManager.onCueAdded(item);
-		
 		/** Bluetooth setup */
 		// Get the default Bluetooth adapter
 	    mBTAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -270,26 +267,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private void setupBTLink() {
         Log.d(TAG, "setupBTLink()");
 
-//        // Initialize the compose field with a listener for the return key
-//        mEditText = (EditText) findViewById(R.id.edit_text_out);
-//
-//        // Initialize the send button with a listener that for click events
-//        mSendButton = (Button) findViewById(R.id.button_send);
-//        mSendButton.setOnClickListener(new OnClickListener() {
-//			public void onClick(View v) {
-//                // Send a message using content of the edit text widget
-//                TextView view = (TextView) findViewById(R.id.edit_text_out);
-//                String message = view.getText().toString();
-//                sendToBT(message);
-//			}
-//		});
-
         // Initialize BluetoothManager
         mBTManager = new BluetoothManager(this, mHandler);
 
-        // Initialize the buffer for outgoing messages
-//        mOutStringBuffer = new StringBuffer("");
-        
         // Connect to the Bluetooth device
         connectDevice();
         
