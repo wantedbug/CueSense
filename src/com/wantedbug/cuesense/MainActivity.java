@@ -4,6 +4,10 @@
 
 package com.wantedbug.cuesense;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
 
 import android.app.ActionBar.Tab;
@@ -31,6 +35,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
 import android.widget.Toast;
 
 
@@ -124,14 +129,17 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// ViewPager that hosts the section contents
 	private ViewPager mViewPager;
 	
-	// A helper class to keep database and InfoPool in sync
-	private CuesManager mCuesManager;
+	// Database helper class
+	private DBHelper mDBHelper;
+	// InfoPool instance
+	InfoPool mPool = InfoPool.INSTANCE;
 	
 	// Contents of the CueSense profile tab
-	private CueSenseListFragment mCueSenseListFragment;
+	private CueSenseListFragment mCSListFragment;
 	// Contents of the Facebook tab
 	private FBListFragment mFBListFragment;
 	
+
 
 	/** MainActivity lifecycle methods*/
 	@Override
@@ -139,11 +147,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
-		// InfoPool instantiation
-		InfoPool pool = InfoPool.INSTANCE;
-		
-		// CuesManager
-		mCuesManager = new CuesManager(getApplication());
+//		CueItem item = new CueItem(1, InfoType.INFO_CUESENSE, "asfhsdjkf sdfljhsdflkjsh", true);
+//		for(int i = 0 ; i < 10; ++i) mCuesManager.onCueAdded(item);
 		
 		/** Bluetooth setup */
 		// Get the default Bluetooth adapter
@@ -191,12 +196,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			Tab newTab = actionBar.newTab()
 					.setText(mSectionsPagerAdapter.getPageTitle(i))
 					.setTabListener(this);
-			switch(i) {
-			case 0: newTab.setIcon(R.drawable.fb_29); break;
-			case 1: newTab.setIcon(R.drawable.fb_29); break;
-			}
 			actionBar.addTab(newTab);
 		}
+		
+		mDBHelper = new DBHelper(getApplication());
+		mPool.addCueItems(mDBHelper.getItems(InfoType.INFO_CUESENSE));
 	}
 	
 	@Override
@@ -387,10 +391,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			// getItem is called to instantiate the fragment for the given page.
 			switch(position) {
 			case 0:
-				if(mCueSenseListFragment == null) {
-					mCueSenseListFragment = new CueSenseListFragment();
+				if(mCSListFragment == null) {
+					mCSListFragment = new CueSenseListFragment();
 				}
-				return mCueSenseListFragment;
+				return mCSListFragment;
 			case 1:
 				if(mFBListFragment == null) {
 					mFBListFragment = new FBListFragment();
@@ -454,19 +458,40 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		}
 	}
 
+	/**
+	 * Keep data model, database and InfoPool in sync when a CueItem is added
+	 */
 	@Override
 	public void onCueAdded(CueItem item) {
-		mCuesManager.onCueAdded(item);
+		Log.d(TAG, "onCueAdded()");
+		// Push to database
+		mDBHelper.addCueItem(item);
+		// Push to InfoPool
+		mPool.addCueItem(item);
 	}
 
+	/**
+	 * Keep data model, database and InfoPool in sync when a CueItem is deleted
+	 */
 	@Override
 	public void onCueDeleted(CueItem item) {
-		mCuesManager.onCueDeleted(item);
+		Log.d(TAG, "onCueDeleted()");
+		// Push to database
+		mDBHelper.deleteCueItem(item);
+		// Push to InfoPool
+		mPool.deleteCueItem(item);
 	}
 
+	/**
+	 * Keep data model, database and InfoPool in sync when a CueItem is modified
+	 */
 	@Override
 	public void onCueChanged(CueItem item) {
-		mCuesManager.onCueChanged(item);
+		Log.d(TAG, "onCueChanged()");
+		// Push to database
+		mDBHelper.updateCueItem(item);
+		// Push to InfoPool
+		mPool.updateCueItem(item);
 	}
 
 }
