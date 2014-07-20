@@ -147,7 +147,6 @@ int layout new_cuesense_item_dialog 0x7f030015
 int layout tab_cuesense 0x7f030016
 int layout tab_facebook 0x7f030017
 int menu main 0x7f090000
-int menu settings 0x7f090001
 int string action_settings 0x7f07001f
 int string app_id 0x7f070020
 int string app_name 0x7f07001a
