@@ -227,7 +227,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public synchronized void onPause() {
 		super.onPause();
         Log.d(TAG, "onPause()");
-		timerHandler.removeCallbacks(timerRunnable);
+//		timerHandler.removeCallbacks(timerRunnable);
 	}
 	
 	@Override
