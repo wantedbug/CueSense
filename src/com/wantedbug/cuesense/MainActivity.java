@@ -5,11 +5,13 @@
 package com.wantedbug.cuesense;
 
 import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
+import com.wantedbug.cuesense.DeleteCueSenseItemDialog.DeleteCueSenseItemListener;
 import com.wantedbug.cuesense.NewCueSenseItemDialog.NewCueSenseItemListener;
 
 import android.app.ActionBar.Tab;
 import android.app.Activity;
 import android.app.ActionBar;
+import android.support.v4.app.DialogFragment;
 //import android.app.Fragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -39,7 +41,8 @@ import android.widget.Toast;
  * This class is the starting point for the CueSense application. 
  * @author vikasprabhu
  */
-public class MainActivity extends FragmentActivity implements ActionBar.TabListener, CueSenseListener, NewCueSenseItemListener {
+public class MainActivity extends FragmentActivity implements ActionBar.TabListener,
+		CueSenseListener, NewCueSenseItemListener, DeleteCueSenseItemListener {
 	// Debugging
 	private static final String TAG = "MainActivity";
 
@@ -340,7 +343,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			return true;
 		} else if(id == R.id.action_add) {
 			// New CueSense item dialog
-			NewCueSenseItemDialog dialog = new NewCueSenseItemDialog();
+			DialogFragment dialog = new NewCueSenseItemDialog();
 			dialog.show(getSupportFragmentManager(), "new_cuesense_item");
 			return true;
 		}
@@ -479,6 +482,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		mCSListFragment.refreshList();
 	}
 
+	@Override
+	public void onCueDeleted(int itemPosition) {
+		mCSListFragment.onCueDeleted(itemPosition);
+	}
+	
 	/**
 	 * Keep data model, database and InfoPool in sync when a CueItem is deleted
 	 */

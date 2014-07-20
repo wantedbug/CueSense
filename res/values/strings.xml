@@ -15,5 +15,7 @@
     <string name="new_cuesense_item_description">Add a new Cue</string>
     <string name="new_cuesense_item_addbutton">Add</string>
     <string name="new_cuesense_item_cancelbutton">Cancel</string>
+    <string name="delete_cuesense_item_description">Delete this Cue?</string>
+    <string name="delete_cuesense_item_deletebutton">Delete</string>
 
 </resources>

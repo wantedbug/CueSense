@@ -6,15 +6,18 @@ package com.wantedbug.cuesense;
 
 import java.util.List;
 
+import com.wantedbug.cuesense.DeleteCueSenseItemDialog.DeleteCueSenseItemListener;
 import com.wantedbug.cuesense.MainActivity.InfoType;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -70,6 +73,15 @@ public class CueSenseListFragment extends ListFragment {
 		mCSList = mDBHelper.getItems(InfoType.INFO_CUESENSE);
 		mCSListAdapter = new CueSenseListAdapter(getActivity(), mCSList, mListener);
 		mCSListView.setAdapter(mCSListAdapter);
+		
+		mCSListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+			@Override
+			public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+				DialogFragment dialog = new DeleteCueSenseItemDialog(position);
+				dialog.show(getActivity().getSupportFragmentManager(), "delete_cuesense_item");
+				return true;
+			}
+		});
 		return v;
 	}
 	
@@ -91,5 +103,16 @@ public class CueSenseListFragment extends ListFragment {
 		mCSList.clear();
 		mCSList.addAll(mDBHelper.getItems(InfoType.INFO_CUESENSE));
 		mCSListAdapter.notifyDataSetChanged();
+	}
+	
+	/**
+	 * Deletes an item from the list view
+	 * @param itemPosition
+	 */
+	public void onCueDeleted(int itemPosition) {
+		CueItem item = mCSList.get(itemPosition);
+		mCSList.remove(itemPosition);
+		mCSListAdapter.notifyDataSetChanged();
+		mListener.onCueDeleted(item);
 	}
 }
