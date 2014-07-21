@@ -17,5 +17,7 @@
     <string name="new_cuesense_item_cancelbutton">Cancel</string>
     <string name="delete_cuesense_item_description">Delete this Cue?</string>
     <string name="delete_cuesense_item_deletebutton">Delete</string>
+    <string name="fb_no_data">Login to Facebook in Settings to include your Facebook data</string>
+    <string name="cuesense_no_data">No Cues added. Add one using the add button above.</string>
 
 </resources>

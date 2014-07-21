@@ -335,8 +335,10 @@ containing a value of this type.
         public static final int com_facebook_usersettingsfragment_log_in_button=0x7f070008;
         public static final int com_facebook_usersettingsfragment_logged_in=0x7f070009;
         public static final int com_facebook_usersettingsfragment_not_logged_in=0x7f07000a;
+        public static final int cuesense_no_data=0x7f07002e;
         public static final int delete_cuesense_item_deletebutton=0x7f07002c;
         public static final int delete_cuesense_item_description=0x7f07002b;
+        public static final int fb_no_data=0x7f07002d;
         public static final int menu_add_cue=0x7f070027;
         public static final int new_cuesense_item_addbutton=0x7f070029;
         public static final int new_cuesense_item_cancelbutton=0x7f07002a;
