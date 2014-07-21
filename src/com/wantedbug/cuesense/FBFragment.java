@@ -47,8 +47,8 @@ public class FBFragment extends Fragment {
 	// List of Facebook permissions
 	private static final String[] fbPermissions = {
 		"public_profile", // Facebook public profile
-		"user_about_me",
-		"user_activities",
+		"user_about_me", // User's 'About me' section
+		"user_activities", // 
 		"user_birthday",
 		"user_education_history",
 		"user_hometown",
@@ -127,7 +127,6 @@ public class FBFragment extends Fragment {
 			ViewGroup container, 
 			Bundle savedInstanceState) {
 		Log.i(TAG, "onCreateView()");
-//		View view = inflater.inflate(R.layout.activity_main, container, false);
 		View view = inflater.inflate(R.layout.fragment_fb, container, false);
 
 		LoginButton authButton = (LoginButton) view.findViewById(R.id.authButton);
