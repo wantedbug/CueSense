@@ -21,5 +21,6 @@
     <string name="title_cuesense">CueSense</string>
     <string name="title_twitter">Twitter</string>
     <string name="title_foursquare">Foursquare</string>
+    <string name="fb_login_explanation">Note: CueSense does not post anything to Facebook.</string>
 
 </resources>

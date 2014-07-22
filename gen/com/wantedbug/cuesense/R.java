@@ -341,6 +341,7 @@ containing a value of this type.
         public static final int delete_cuesense_item_description=0x7f070027;
         public static final int fb_data_error=0x7f07002b;
         public static final int fb_logged_in_as=0x7f07002c;
+        public static final int fb_login_explanation=0x7f070031;
         public static final int fb_no_data=0x7f070029;
         public static final int menu_add_cue=0x7f070023;
         public static final int new_cuesense_item_addbutton=0x7f070025;

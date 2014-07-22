@@ -51,7 +51,7 @@ public class FBFragment extends Fragment {
 		"user_education_history",
 		"user_work_history",
 		"user_hometown",
-		"user_activities", 
+		"user_activities",
 		"user_interests",
 		"user_likes"
 		};
@@ -188,7 +188,6 @@ public class FBFragment extends Fragment {
 	private void onSessionStateChange(Session session, SessionState state, Exception exception) {
 	    if (state.isOpened()) {
 	        Log.i(TAG, "Logged in...");
-	        userInfoTextView.setVisibility(View.VISIBLE);
 	        
 	        if(mSession == null || isSessionChanged(session)) {
 	        	mSession = session; // cache the session
@@ -204,22 +203,10 @@ public class FBFragment extends Fragment {
 	        			}
 	        		}
 	        	}).executeAsync();
-	        	
-//	        	Request.newGraphPathRequest(session, "/me/books.reads", new Request.Callback() {
-//					@Override
-//					public void onCompleted(Response response) {
-//						if(response.getError() == null) {
-//							Log.i(TAG, response.toString());
-////							response.getRequestForPagedResults(PagingDirection.NEXT);
-//						} else {
-//							Log.e(TAG, "PATH error " + response.getError());
-//						}
-//					}
-//				}).executeAsync();
 	        }
 	    } else if (state.isClosed()) {
 	        Log.i(TAG, "Logged out...");
-	        userInfoTextView.setVisibility(View.GONE);
+	        userInfoTextView.setText(R.string.fb_login_explanation);
 	    }
 	}
 	
