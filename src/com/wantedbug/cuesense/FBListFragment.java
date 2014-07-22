@@ -42,38 +42,6 @@ public class FBListFragment extends ListFragment {
 	private static final String ITEM_DATA = "CATEGORY";
 	// Activity request code to update Session info
 	private static final int REAUTH_ACTIVITY_CODE = 100;
-	// List of Facebook permissions
-	private static final int NUM_PERMISSIONS = 13;
-	private static final String[] fbPermissions = {
-		"public_profile", // id, name, gender, age range, locale
-		"user_actions.books",
-		"user_actions.movies",
-		"user_actions.music",
-		"user_tagged_places",
-		"user_birthday",
-		"user_about_me",
-		"user_education_history",
-		"user_work_history",
-		"user_hometown",
-		"user_activities", 
-		"user_interests",
-		"user_likes"
-		};
-	private static final String[] fbPermissionStrings = {
-		"Profile",
-		"Books",
-		"Movies",
-		"Music",
-		"Places",
-		"Birthday",
-		"About me",
-		"Education",
-		"Work history",
-		"Hometown",
-		"Activities",
-		"Interests",
-		"Likes"
-	};
 	
 	/**
 	 * Members
@@ -244,142 +212,234 @@ public class FBListFragment extends ListFragment {
 	 */
 	protected void getUserInfo(Session session, GraphUser user) {
 		Log.d(TAG, "getUserInfo()");
-	    for(int i = 0; i < NUM_PERMISSIONS; ++i) {
-	    	if(session.isPermissionGranted(fbPermissions[i])) {
-    			Log.i(TAG, "getUserInfo() " + fbPermissions[i] + " granted");
-    			switch(i) {
-    			case 0: // public_profile
-    				break;
-    			case 1: // user_actions.books
-    				break;
-    			case 2: // user.actions_movies
-    				break;
-    			case 3: // user_actions.music
-    				break;
-    			case 4: // user_tagged_places
-    				break;
-    			case 5: { // user_birthday
-    				if(!user.getBirthday().isEmpty()) {
-    					/** 1. Add the list item header to the list view */
-    					Map<String, String> bdayGroupMap = new HashMap<String, String>();
-    					bdayGroupMap.put(ITEM_DATA, fbPermissionStrings[i]);
-    					mGroupData.add(bdayGroupMap);
-    					/** 2. Get the children from the JSON response */
-    					List<Map<String, String>> bdayChildrenList = new ArrayList<Map<String, String>>();
-    					// Child 1: the actual birthday as returned by Facebook
-    					Map<String, String> birthdayString = new HashMap<String, String>();
-    					birthdayString.put(ITEM_DATA, user.getBirthday());
-    					bdayChildrenList.add(birthdayString);
-    					// Child 2: the birthday month
-    					int month = Integer.parseInt(user.getBirthday().substring(0, 2));
-    					String bdayMonth = "";
-    					switch(month) {
-    					case 1: bdayMonth = "January"; break;
-    					case 2: bdayMonth = "February"; break;
-    					case 3: bdayMonth = "March"; break;
-    					case 4: bdayMonth = "April"; break;
-    					case 5: bdayMonth = "May"; break;
-    					case 6: bdayMonth = "June"; break;
-    					case 7: bdayMonth = "July"; break;
-    					case 8: bdayMonth = "August"; break;
-    					case 9: bdayMonth = "September"; break;
-    					case 10: bdayMonth = "October"; break;
-    					case 11: bdayMonth = "November"; break;
-    					case 12: bdayMonth = "December"; break;
-    					}
-    					Map<String, String> birthdayMonth = new HashMap<String, String>();
-    					birthdayMonth.put(ITEM_DATA, "Child of " + bdayMonth);
-    					bdayChildrenList.add(birthdayMonth);
-    					/** 3. Add the list item's children to the list view */
-    					mChildData.add(bdayChildrenList);
-    				} else {
-    					Log.e(TAG, "getUserInfo() Birthday field empty");
-    				}
-    			}
-    				break;
-    			case 6: // user_about_me
-    				break;
-    			case 7: { // user_education_history
-    				JSONArray schoolsJSON = (JSONArray)user.getProperty("education");
-    				if(schoolsJSON.length() > 0) {
-    					/** 1. Add the list item header to the list view */
-    					Map<String, String> educationGroupMap = new HashMap<String, String>();
-    					educationGroupMap.put(ITEM_DATA, fbPermissionStrings[i]);
-    					/** 2. Get the children from the JSON response */
-    					List<Map<String, String>> schoolsList = new ArrayList<Map<String, String>>();
-    					int numChildrenAdded = 0;
-    					// Add all schools as children
-    					for (int j = 0; j < schoolsJSON.length(); ++j) {
-    						JSONObject schoolJSON = schoolsJSON.optJSONObject(j);
-    						try {
-    							JSONObject school = schoolJSON.getJSONObject("school");
-    							Map<String, String> schoolChild = new HashMap<String, String>();
-            					schoolChild.put(ITEM_DATA, school.optString("name"));
-            					schoolsList.add(schoolChild);
-            					++numChildrenAdded;
-    						} catch(JSONException e) {
-    							Log.e(TAG, "getUserInfo() school error");
-    						}
-    					}
-    					/** 3. Add the list item's children to the list view */
-    					if(numChildrenAdded > 0) {
-    						mGroupData.add(educationGroupMap);
-    						mChildData.add(schoolsList);
-    					}
-    				} else {
-    					Log.e(TAG, "getUserInfo() Education list empty");
-    				}
-    			}
-    				break;
-    			case 8: // user_work_history
-    				break;
-    			case 9: // user_hometown
-    				break;
-    			case 10: // user_activities
-    				break;
-    			case 11: // user_interests
-    				break;
-    			case 12: // user_likes
-    				break;
-    			default: Log.e(TAG, "getUserInfo() - something's wrong with the index");
-    				break;
-    			}
-	    	} else {
-    			Log.i(TAG, "getUserInfo() " + fbPermissions[i] + " NOT granted");
-    			switch(i) {
-    			case 0: // public_profile
-    				break;
-    			case 1: // user_actions.books
-    	        	Request.newGraphPathRequest(session, "/me/books.reads", new Request.Callback() {
-    					@Override
-    					public void onCompleted(Response response) {
-    						if(response.getError() == null) {
-    							Log.i(TAG, response.toString());
-    							// response.getRequestForPagedResults(PagingDirection.NEXT);
-    						} else {
-    							Log.e(TAG, "PATH error " + response.getError());
-    						}
-    					}
-    				}).executeAsync();
-    				break;
-    			case 2: // user.actions_movies
-    			case 3: // user_actions.music
-    			case 4: // user_tagged_places
-    			case 5: // user_birthday
-    			case 6: // user_about_me
-    			case 7: // user_education_history
-    			case 8: // user_work_history
-    			case 9: // user_hometown
-    			case 10: // user_activities
-    			case 11: // user_interests
-    			case 12: // user_likes
-    				break;
-    			default: Log.e(TAG, "getUserInfo() - something's wrong with the index");
-    				break;
-    			}
-    		}
+		// Go through all the data returned in the /me request
+		/** BIRTHDAY */
+		if(session.isPermissionGranted("user_birthday")) {
+			if(!user.getBirthday().isEmpty()) {
+				/** 1. Add the list item header to the list view */
+				Map<String, String> bdayGroupMap = new HashMap<String, String>();
+				bdayGroupMap.put(ITEM_DATA, "Birthday");
+				mGroupData.add(bdayGroupMap);
+				/** 2. Get the children from the JSON response */
+				List<Map<String, String>> bdayChildrenList = new ArrayList<Map<String, String>>();
+				// Child 1: the actual birthday as returned by Facebook
+				Map<String, String> birthdayString = new HashMap<String, String>();
+				birthdayString.put(ITEM_DATA, user.getBirthday());
+				bdayChildrenList.add(birthdayString);
+				// Child 2: the birthday month
+				int month = Integer.parseInt(user.getBirthday().substring(0, 2));
+				String bdayMonth = "";
+				switch(month) {
+				case 1: bdayMonth = "January"; break;
+				case 2: bdayMonth = "February"; break;
+				case 3: bdayMonth = "March"; break;
+				case 4: bdayMonth = "April"; break;
+				case 5: bdayMonth = "May"; break;
+				case 6: bdayMonth = "June"; break;
+				case 7: bdayMonth = "July"; break;
+				case 8: bdayMonth = "August"; break;
+				case 9: bdayMonth = "September"; break;
+				case 10: bdayMonth = "October"; break;
+				case 11: bdayMonth = "November"; break;
+				case 12: bdayMonth = "December"; break;
+				}
+				Map<String, String> birthdayMonth = new HashMap<String, String>();
+				birthdayMonth.put(ITEM_DATA, "Child of " + bdayMonth);
+				bdayChildrenList.add(birthdayMonth);
+				/** 3. Add the list item's children to the list view */
+				mChildData.add(bdayChildrenList);
+			} else {
+				Log.e(TAG, "getUserInfo() Birthday field empty");
+			}
+		} else {
+			Log.i(TAG, "getUserInfo() Birthday permission NOT granted");
 		}
-	    
+		
+		/** BOOKS */
+		Request.newGraphPathRequest(session, "/me/books.reads", new Request.Callback() {
+			@Override
+			public void onCompleted(Response response) {
+				if(response.getError() == null) {
+					Log.i(TAG, response.toString());
+					// response.getRequestForPagedResults(PagingDirection.NEXT);
+					String rawResponse = response.getRawResponse();
+					if(!rawResponse.isEmpty()) {
+						
+					} else {
+						Log.i(TAG, "getUserInfo() Books path response empty");
+					}
+				} else {
+					Log.e(TAG, "Books path error " + response.getError());
+				}
+			}
+		}).executeAsync();
+		
+		/** MUSIC */
+		JSONArray likesJSON = (JSONArray) user.getProperty("music");
+		// Try with permissions
+		if(session.isPermissionGranted("user_actions.music")) {
+			
+		} else {
+			Log.i(TAG, "getUserInfo() Music permission NOT granted");
+			// Check with a path request
+			if(likesJSON.length() > 0) {
+				Request.newGraphPathRequest(session, "/me/music", new Request.Callback() {
+					@Override
+					public void onCompleted(Response response) {
+						if(response.getError() == null) {
+							Log.i(TAG, response.toString());
+							// response.getRequestForPagedResults(PagingDirection.NEXT);
+							String rawResponse = response.getRawResponse();
+							if(!rawResponse.isEmpty()) {
+								
+							} else {
+								Log.i(TAG, "getUserInfo() Music path response empty");
+								// Look in the list of likes
+								
+							}
+						} else {
+							Log.e(TAG, "Music path error " + response.getError());
+						}
+					}
+				}).executeAsync();
+			}
+		}
+		
+		/** INSPIRATIONAL PEOPLE */
+		
+		/** ACTORS/DIRECTORS */
+		
+		/** EDUCATION */
+		if(session.isPermissionGranted("user_education_history")) {
+			JSONArray schoolsJSON = (JSONArray)user.getProperty("education");
+			if(schoolsJSON.length() > 0) {
+				/** 1. Add the list item header to the list view */
+				Map<String, String> educationGroupMap = new HashMap<String, String>();
+				educationGroupMap.put(ITEM_DATA, "Education");
+				/** 2. Get the children from the JSON response */
+				List<Map<String, String>> schoolsList = new ArrayList<Map<String, String>>();
+				int numChildrenAdded = 0;
+				// Add all schools as children
+				for (int j = 0; j < schoolsJSON.length(); ++j) {
+					JSONObject schoolJSON = schoolsJSON.optJSONObject(j);
+					try {
+						JSONObject school = schoolJSON.getJSONObject("school");
+						Map<String, String> schoolChild = new HashMap<String, String>();
+						schoolChild.put(ITEM_DATA, school.optString("name"));
+						schoolsList.add(schoolChild);
+						++numChildrenAdded;
+					} catch(JSONException e) {
+						Log.e(TAG, "getUserInfo() school error");
+					}
+				}
+				/** 3. Add the list item's children to the list view */
+				if(numChildrenAdded > 0) {
+					mGroupData.add(educationGroupMap);
+					mChildData.add(schoolsList);
+				}
+			} else {
+				Log.e(TAG, "getUserInfo() Education list empty");
+			}
+		} else {
+			Log.i(TAG, "getUserInfo() Education permission NOT granted");
+		}
+		
+		/** WORK HISTORY */
+		JSONArray companiesJSON = (JSONArray)user.getProperty("work");
+		if(companiesJSON.length() > 0) {
+			/** 1. Add the list item header to the list view */
+			Map<String, String> workGroupMap = new HashMap<String, String>();
+			workGroupMap.put(ITEM_DATA, "Work history");
+			/** 2. Get the children from the JSON response */
+			List<Map<String, String>> companiesList = new ArrayList<Map<String, String>>();
+			int numChildrenAdded = 0;
+			// Add all companies as children
+			for (int j = 0; j < companiesJSON.length(); ++j) {
+				JSONObject companyJSON = companiesJSON.optJSONObject(j);
+				try {
+					JSONObject company = companyJSON.getJSONObject("employer");
+					Map<String, String> companyChild = new HashMap<String, String>();
+					companyChild.put(ITEM_DATA, company.optString("name"));
+					companiesList.add(companyChild);
+					++numChildrenAdded;
+				} catch(JSONException e) {
+					Log.e(TAG, "getUserInfo() work error");
+				}
+			}
+			/** 3. Add the list item's children to the list view */
+			if(numChildrenAdded > 0) {
+				mGroupData.add(workGroupMap);
+				mChildData.add(companiesList);
+			}
+		} else {
+			Log.e(TAG, "getUserInfo() Education list empty");
+		}
+		
+		/** INTERESTS */
+		Request.newGraphPathRequest(session, "/me/interests", new Request.Callback() {
+			@Override
+			public void onCompleted(Response response) {
+				if(response.getError() == null) {
+					Log.i(TAG, response.toString());
+					// response.getRequestForPagedResults(PagingDirection.NEXT);
+					String rawResponse = response.getRawResponse();
+					if(!rawResponse.isEmpty()) {
+						
+					}
+				} else {
+					Log.e(TAG, "PATH error " + response.getError());
+				}
+			}
+		}).executeAsync();
+		
+		/** PERSONAL DETAILS */
+		JSONObject hometownJSON = (JSONObject)user.getProperty("hometown");
+		if(hometownJSON.has("name")) {
+			/** 1. Add the list item header to the list view */
+			Map<String, String> hometownGroupMap = new HashMap<String, String>();
+			hometownGroupMap.put(ITEM_DATA, "Hometown");
+			mGroupData.add(hometownGroupMap);
+			/** 2. Get the children from the JSON response */
+			List<Map<String, String>> hometownList = new ArrayList<Map<String, String>>();
+			Map<String, String> hometownChild = new HashMap<String, String>();
+			hometownChild.put(ITEM_DATA, hometownJSON.optString("name"));
+			hometownList.add(hometownChild);
+			/** 3. Add the list item's children to the list view */
+			mChildData.add(hometownList);
+		}
+		
+		/** LIKES */
+		if(likesJSON.length() > 0) {
+			/** Check for Musician/band likes */
+
+			/** Check for Professional sports team likes */
+
+			/** Check for Actor and Actor/director likes */
+		}
+		
+		/** LANGUAGES */
+		JSONArray languages = (JSONArray) user.getProperty("languages");
+		if (languages.length() > 0) {
+			/** 1. Add the list item header to the list view */
+			Map<String, String> languageGroupMap = new HashMap<String, String>();
+			languageGroupMap.put(ITEM_DATA, "Languages");
+			/** 2. Get the children from the JSON response */
+			List<Map<String, String>> languagesList = new ArrayList<Map<String, String>>();
+			int numChildrenAdded = 0;
+			for (int i=0; i < languages.length(); i++) {
+				JSONObject languageJSON = languages.optJSONObject(i);
+				Map<String, String> languageChild = new HashMap<String, String>();
+				languageChild.put(ITEM_DATA, languageJSON.optString("name"));
+				languagesList.add(languageChild);
+				++numChildrenAdded;
+			}
+			/** 3. Add the list item's children to the list view */
+			if(numChildrenAdded > 0) {
+				mGroupData.add(languageGroupMap);
+				mChildData.add(languagesList);
+			}
+		}
+		
 	    // Notify that the list contents have changed
 	    mAdapter.notifyDataSetChanged();
 	}

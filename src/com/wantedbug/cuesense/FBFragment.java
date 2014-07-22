@@ -4,6 +4,10 @@
 
 package com.wantedbug.cuesense;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -29,38 +33,52 @@ import com.facebook.widget.LoginButton;
  * @author vikasprabhu
  */
 public class FBFragment extends Fragment {
-
 	// Debugging
 	private static final String TAG = "FBFragment";
+	/**
+	 * Constants
+	 */
+	// List of Facebook permissions
+	public static final List<String> FB_PERMISSIONS =
+			Collections.unmodifiableList(Arrays.asList(
+					"public_profile",
+					"user_about_me",
+					"user_actions.books",
+					"user_actions.music",
+					"user_actions.news",
+					"user_actions.video",
+					"user_activities",
+					"user_birthday",
+					"user_education_history",
+					"user_events",
+					"user_friends",
+					"user_games_activity",
+					"user_groups",
+					"user_hometown",
+					"user_interests",
+					"user_likes",
+					"user_location",
+					"user_photos",
+					"user_relationship_details",
+					"user_relationships",
+					"user_religion_politics",
+					"user_status",
+					"user_tagged_places",
+					"user_videos",
+					"user_website",
+					"user_work_history"
+					));
 	
-	// Members
+	/**
+	 * Members
+	 */
 	// UiLifecycleHelper class from Facebook SDK
 	// Note: add this to any activity/fragment that needs to track and respond
 	// to Facebook.Session state changes.
 	private UiLifecycleHelper uiHelper;
 	
-	// List of Facebook permissions
-	private static final String[] fbPermissions = {
-		"public_profile", // Facebook public profile
-		"user_actions.books",
-		"user_actions.movies",
-		"user_actions.music",
-		"user_tagged_places",
-		"user_birthday",
-		"user_about_me",
-		"user_education_history",
-		"user_work_history",
-		"user_hometown",
-		"user_activities",
-		"user_interests",
-		"user_likes"
-		};
-	
 	// TextView to display user's Facebook data
 	private TextView userInfoTextView;
-	
-	// GraphUser represents a Facebook user
-//	private FBUser mFBUser;
 	
 	// Facebook.Session cache
 	private Session mSession;
@@ -129,7 +147,7 @@ public class FBFragment extends Fragment {
 
 		LoginButton authButton = (LoginButton) view.findViewById(R.id.authButton);
 		authButton.setFragment(this);
-		authButton.setReadPermissions(fbPermissions);
+		authButton.setReadPermissions(FB_PERMISSIONS);
 		
 		userInfoTextView = (TextView) view.findViewById(R.id.userInfoTextView);
 		
@@ -143,43 +161,8 @@ public class FBFragment extends Fragment {
 	 */
 	private String buildUserInfoDisplay(GraphUser user) {
 	    StringBuilder userInfo = new StringBuilder("");
-	    
 	    userInfo.append(getResources().getString(R.string.fb_logged_in_as) + " ");
-
-	    // Example: typed access (name)
-	    // - no special permissions required
 	    userInfo.append(user.getName());
-
-	    // Example: typed access (birthday)
-	    // - requires user_birthday permission
-//	    userInfo.append(String.format("Birthday: %s\n\n", 
-//	        user.getBirthday()));
-
-	    // Example: partially typed access, to location field,
-	    // name key (location)
-	    // - requires user_location permission
-//	    userInfo.append(String.format("Location: %s\n\n", 
-//	        user.getLocation().getProperty("name")));
-
-	    // Example: access via property name (locale)
-	    // - no special permissions required
-//	    userInfo.append(String.format("Locale: %s\n\n", 
-//	        user.getProperty("locale")));
-
-	    // Example: access via key for array (languages) 
-	    // - requires user_likes permission
-//	    JSONArray languages = (JSONArray)user.getProperty("languages");
-//	    if (languages.length() > 0) {
-//	        ArrayList<String> languageNames = new ArrayList<String> ();
-//	        for (int i=0; i < languages.length(); i++) {
-//	            JSONObject language = languages.optJSONObject(i);
-//	            // Add the language name to a list. Use JSON
-//	            // methods to get access to the name field. 
-//	            languageNames.add(language.optString("name"));
-//	        }           
-//	        userInfo.append(String.format("Languages: %s\n\n", 
-//	        languageNames.toString()));
-//	    }
 	    return userInfo.toString();
 	}
 	
