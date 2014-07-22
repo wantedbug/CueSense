@@ -18,6 +18,7 @@ import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
+import com.facebook.model.GraphObject;
 import com.facebook.model.GraphUser;
 import com.wantedbug.cuesense.MainActivity.InfoType;
 
@@ -61,7 +62,7 @@ public class FBListFragment extends ListFragment {
 	List<Map<String, String>> mGroupData = new ArrayList<Map<String, String>>();
 	List<List<Map<String, String>>> mChildData = new ArrayList<List<Map<String, String>>>();
 		
-	// Facebook UI lifecycle helper to complete Activity lifecycle methods
+	// Facebook UI lifecycle helper to complement Activity lifecycle methods
 	UiLifecycleHelper mUiLifecycleHelper;
 	// Callback to handle Session state change
 	private Session.StatusCallback mFBCallback = new Session.StatusCallback() {
@@ -256,54 +257,49 @@ public class FBListFragment extends ListFragment {
 		}
 		
 		/** BOOKS */
-		Request.newGraphPathRequest(session, "/me/books.reads", new Request.Callback() {
-			@Override
-			public void onCompleted(Response response) {
-				if(response.getError() == null) {
-					Log.i(TAG, response.toString());
-					// response.getRequestForPagedResults(PagingDirection.NEXT);
-					String rawResponse = response.getRawResponse();
-					if(!rawResponse.isEmpty()) {
-						
-					} else {
-						Log.i(TAG, "getUserInfo() Books path response empty");
-					}
-				} else {
-					Log.e(TAG, "Books path error " + response.getError());
-				}
-			}
-		}).executeAsync();
+		if(session.isPermissionGranted("user_actions.books")) {
+			// Life is going to easy if this permission is granted in the future
+		} else {
+			Log.i(TAG, "getUserInfo() Books permission NOT granted");
+			Request.newGraphPathRequest(session, "/me/books.reads", mBooksResponseCallback).executeAsync();
+		}
 		
 		/** MUSIC */
-		JSONArray likesJSON = (JSONArray) user.getProperty("music");
-		// Try with permissions
-		if(session.isPermissionGranted("user_actions.music")) {
-			
-		} else {
-			Log.i(TAG, "getUserInfo() Music permission NOT granted");
-			// Check with a path request
-			if(likesJSON.length() > 0) {
-				Request.newGraphPathRequest(session, "/me/music", new Request.Callback() {
-					@Override
-					public void onCompleted(Response response) {
-						if(response.getError() == null) {
-							Log.i(TAG, response.toString());
-							// response.getRequestForPagedResults(PagingDirection.NEXT);
-							String rawResponse = response.getRawResponse();
-							if(!rawResponse.isEmpty()) {
-								
-							} else {
-								Log.i(TAG, "getUserInfo() Music path response empty");
-								// Look in the list of likes
-								
-							}
-						} else {
-							Log.e(TAG, "Music path error " + response.getError());
-						}
-					}
-				}).executeAsync();
-			}
-		}
+//		JSONArray likesJSON = (JSONArray) user.getProperty("music");
+//		// Try with permissions
+//		if(session.isPermissionGranted("user_actions.music")) {
+//			// Life is going to easy if this permission is granted in the future
+//		} else {
+//			Log.i(TAG, "getUserInfo() Music permission NOT granted");
+//			// Check with a path request
+//			if(likesJSON.length() > 0) {
+//				Request.newGraphPathRequest(session, "/me/music", new Request.Callback() {
+//					@Override
+//					public void onCompleted(Response response) {
+//						if(response.getError() == null) {
+//							Log.i(TAG, response.toString());
+//							// response.getRequestForPagedResults(PagingDirection.NEXT);
+//							String rawResponse = response.getRawResponse();
+//							if(!rawResponse.isEmpty()) {
+//								GraphObject responseGraphObject = response.getGraphObject();
+//								JSONObject json = responseGraphObject.getInnerJSONObject();
+//								if(json.has("data")) {
+//									JSONArray musicJSON = null;
+//								} else {
+//									Log.e(TAG, "getUserInfo() Music list null");
+//								}
+//							} else {
+//								Log.i(TAG, "getUserInfo() Music path response empty");
+//								// Look in the list of likes
+//								
+//							}
+//						} else {
+//							Log.e(TAG, "Music path error " + response.getError());
+//						}
+//					}
+//				}).executeAsync();
+//			}
+//		}
 		
 		/** INSPIRATIONAL PEOPLE */
 		
@@ -336,6 +332,8 @@ public class FBListFragment extends ListFragment {
 				if(numChildrenAdded > 0) {
 					mGroupData.add(educationGroupMap);
 					mChildData.add(schoolsList);
+				} else {
+					Log.e(TAG, "getUserInfo() Education extraction error");
 				}
 			} else {
 				Log.e(TAG, "getUserInfo() Education list empty");
@@ -345,77 +343,87 @@ public class FBListFragment extends ListFragment {
 		}
 		
 		/** WORK HISTORY */
-		JSONArray companiesJSON = (JSONArray)user.getProperty("work");
-		if(companiesJSON.length() > 0) {
-			/** 1. Add the list item header to the list view */
-			Map<String, String> workGroupMap = new HashMap<String, String>();
-			workGroupMap.put(ITEM_DATA, "Work history");
-			/** 2. Get the children from the JSON response */
-			List<Map<String, String>> companiesList = new ArrayList<Map<String, String>>();
-			int numChildrenAdded = 0;
-			// Add all companies as children
-			for (int j = 0; j < companiesJSON.length(); ++j) {
-				JSONObject companyJSON = companiesJSON.optJSONObject(j);
-				try {
-					JSONObject company = companyJSON.getJSONObject("employer");
-					Map<String, String> companyChild = new HashMap<String, String>();
-					companyChild.put(ITEM_DATA, company.optString("name"));
-					companiesList.add(companyChild);
-					++numChildrenAdded;
-				} catch(JSONException e) {
-					Log.e(TAG, "getUserInfo() work error");
+		if(session.isPermissionGranted("user_work_history")) {
+			JSONArray companiesJSON = (JSONArray)user.getProperty("work");
+			if(companiesJSON.length() > 0) {
+				/** 1. Add the list item header to the list view */
+				Map<String, String> workGroupMap = new HashMap<String, String>();
+				workGroupMap.put(ITEM_DATA, "Work history");
+				/** 2. Get the children from the JSON response */
+				List<Map<String, String>> companiesList = new ArrayList<Map<String, String>>();
+				int numChildrenAdded = 0;
+				// Add all companies as children
+				for (int j = 0; j < companiesJSON.length(); ++j) {
+					JSONObject companyJSON = companiesJSON.optJSONObject(j);
+					try {
+						JSONObject company = companyJSON.getJSONObject("employer");
+						Map<String, String> companyChild = new HashMap<String, String>();
+						companyChild.put(ITEM_DATA, company.optString("name"));
+						companiesList.add(companyChild);
+						++numChildrenAdded;
+					} catch(JSONException e) {
+						Log.e(TAG, "getUserInfo() work error");
+					}
 				}
-			}
-			/** 3. Add the list item's children to the list view */
-			if(numChildrenAdded > 0) {
-				mGroupData.add(workGroupMap);
-				mChildData.add(companiesList);
+				/** 3. Add the list item's children to the list view */
+				if(numChildrenAdded > 0) {
+					mGroupData.add(workGroupMap);
+					mChildData.add(companiesList);
+				} else {
+					Log.e(TAG, "getUserInfo() Work extraction error");
+				}
+			} else {
+				Log.e(TAG, "getUserInfo() Work list empty");
 			}
 		} else {
-			Log.e(TAG, "getUserInfo() Education list empty");
+			Log.i(TAG, "getUserInfo() Work permission NOT granted");
 		}
 		
 		/** INTERESTS */
-		Request.newGraphPathRequest(session, "/me/interests", new Request.Callback() {
-			@Override
-			public void onCompleted(Response response) {
-				if(response.getError() == null) {
-					Log.i(TAG, response.toString());
-					// response.getRequestForPagedResults(PagingDirection.NEXT);
-					String rawResponse = response.getRawResponse();
-					if(!rawResponse.isEmpty()) {
-						
-					}
-				} else {
-					Log.e(TAG, "PATH error " + response.getError());
-				}
-			}
-		}).executeAsync();
+//		Request.newGraphPathRequest(session, "/me/interests", new Request.Callback() {
+//			@Override
+//			public void onCompleted(Response response) {
+//				if(response.getError() == null) {
+//					Log.i(TAG, response.toString());
+//					// response.getRequestForPagedResults(PagingDirection.NEXT);
+//					String rawResponse = response.getRawResponse();
+//					if(!rawResponse.isEmpty()) {
+//						
+//					}
+//				} else {
+//					Log.e(TAG, "PATH error " + response.getError());
+//				}
+//			}
+//		}).executeAsync();
 		
 		/** PERSONAL DETAILS */
-		JSONObject hometownJSON = (JSONObject)user.getProperty("hometown");
-		if(hometownJSON.has("name")) {
-			/** 1. Add the list item header to the list view */
-			Map<String, String> hometownGroupMap = new HashMap<String, String>();
-			hometownGroupMap.put(ITEM_DATA, "Hometown");
-			mGroupData.add(hometownGroupMap);
-			/** 2. Get the children from the JSON response */
-			List<Map<String, String>> hometownList = new ArrayList<Map<String, String>>();
-			Map<String, String> hometownChild = new HashMap<String, String>();
-			hometownChild.put(ITEM_DATA, hometownJSON.optString("name"));
-			hometownList.add(hometownChild);
-			/** 3. Add the list item's children to the list view */
-			mChildData.add(hometownList);
+		if(session.isPermissionGranted("user_hometown")) {
+			JSONObject hometownJSON = (JSONObject)user.getProperty("hometown");
+			if(hometownJSON.has("name")) {
+				/** 1. Add the list item header to the list view */
+				Map<String, String> hometownGroupMap = new HashMap<String, String>();
+				hometownGroupMap.put(ITEM_DATA, "Hometown");
+				mGroupData.add(hometownGroupMap);
+				/** 2. Get the children from the JSON response */
+				List<Map<String, String>> hometownList = new ArrayList<Map<String, String>>();
+				Map<String, String> hometownChild = new HashMap<String, String>();
+				hometownChild.put(ITEM_DATA, hometownJSON.optString("name"));
+				hometownList.add(hometownChild);
+				/** 3. Add the list item's children to the list view */
+				mChildData.add(hometownList);
+			} else {
+				Log.e(TAG, "getUserInfo() Hometown field empty");
+			}
+		} else {
+			Log.i(TAG, "getUserInfo() Hometown permission NOT granted");
 		}
 		
 		/** LIKES */
-		if(likesJSON.length() > 0) {
-			/** Check for Musician/band likes */
-
+//		if(likesJSON.length() > 0) {
 			/** Check for Professional sports team likes */
 
 			/** Check for Actor and Actor/director likes */
-		}
+//		}
 		
 		/** LANGUAGES */
 		JSONArray languages = (JSONArray) user.getProperty("languages");
@@ -426,8 +434,14 @@ public class FBListFragment extends ListFragment {
 			/** 2. Get the children from the JSON response */
 			List<Map<String, String>> languagesList = new ArrayList<Map<String, String>>();
 			int numChildrenAdded = 0;
-			for (int i=0; i < languages.length(); i++) {
-				JSONObject languageJSON = languages.optJSONObject(i);
+			for (int i = 0; i < languages.length(); i++) {
+				JSONObject languageJSON = null;
+				try {
+					languageJSON = languages.getJSONObject(i);
+				} catch(JSONException e) {
+					Log.e(TAG, "getUserInfo() Language[" + i + "] extraction error");
+					continue;
+				}
 				Map<String, String> languageChild = new HashMap<String, String>();
 				languageChild.put(ITEM_DATA, languageJSON.optString("name"));
 				languagesList.add(languageChild);
@@ -437,10 +451,72 @@ public class FBListFragment extends ListFragment {
 			if(numChildrenAdded > 0) {
 				mGroupData.add(languageGroupMap);
 				mChildData.add(languagesList);
+			} else {
+				Log.e(TAG, "getUserInfo() Languages extraction error");
 			}
+		} else {
+			Log.i(TAG, "getUserInfo() Languages list empty");
 		}
-		
+
 	    // Notify that the list contents have changed
 	    mAdapter.notifyDataSetChanged();
 	}
+	
+	private Request.Callback mBooksResponseCallback =  new Request.Callback() {
+		@Override
+		public void onCompleted(Response response) {
+			if(response.getError() == null) {
+				// response.getRequestForPagedResults(PagingDirection.NEXT);
+				String rawResponse = response.getRawResponse();
+				if(!rawResponse.isEmpty()) {
+					GraphObject responseGraphObject = response.getGraphObject();
+					JSONObject json = responseGraphObject.getInnerJSONObject();
+					if(json.has("data")) {
+						JSONArray booksJSON = null;
+						try {
+							booksJSON = json.getJSONArray("data");
+						} catch(JSONException e) {
+							Log.e(TAG, "getUserInfo() Books array extraction error " + e);
+							return;
+						}
+						/** 1. Add the list item header to the list view */
+						Map<String, String> booksGroupMap = new HashMap<String, String>();
+						booksGroupMap.put(ITEM_DATA, "Books");
+						/** 2. Get the children from the JSON response */
+						List<Map<String, String>> booksChildrenList = new ArrayList<Map<String, String>>();
+						int numChildrenAdded = 0;
+						for(int i = 0; i < booksJSON.length(); ++i) {
+							JSONObject bookData = null;
+							try {
+								bookData = booksJSON.getJSONObject(i).getJSONObject("data").getJSONObject("book");
+								if(bookData.has("title")) {
+									Map<String, String> bookChild = new HashMap<String, String>();
+									bookChild.put(ITEM_DATA, bookData.optString("title"));
+									booksChildrenList.add(bookChild);
+									++numChildrenAdded;
+								} else {
+									Log.e(TAG, "getUserInfo() Books no title");
+								}
+							} catch(JSONException e) {
+								Log.e(TAG, "getUserInfo() Books[" + i + "] extraction error " + e);
+							}
+						}
+						/** 3. Add the list item's children to the list view */
+						if(numChildrenAdded > 0) {
+							mGroupData.add(booksGroupMap);
+							mChildData.add(booksChildrenList);
+						}
+						// Notify list adapter here since this is an async task
+						mAdapter.notifyDataSetChanged();
+					} else {
+						Log.e(TAG, "getUserInfo() Books data empty");
+					}
+				} else {
+					Log.e(TAG, "getUserInfo() Books path response empty");
+				}
+			} else {
+				Log.e(TAG, "getUserInfo() Books path error " + response.getError());
+			}
+		}
+	};
 }
