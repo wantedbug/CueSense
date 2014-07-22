@@ -465,14 +465,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public void onCueAdded(String itemData) {
 		// Construct a new CueItem and push to database and InfoPool
 		CueItem item = new CueItem(0, InfoType.INFO_CUESENSE, itemData, true);
-		onCueAdded(item);
+		onCueSenseCueAdded(item);
 	}
 
 	/**
 	 * Keep data model, database and InfoPool in sync when a CueItem is added
 	 */
 	@Override
-	public void onCueAdded(CueItem item) {
+	public void onCueSenseCueAdded(CueItem item) {
 		Log.d(TAG, "onCueAdded()");
 		// Push to database
 		mDBHelper.addCueItem(item);
@@ -491,7 +491,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 * Keep data model, database and InfoPool in sync when a CueItem is deleted
 	 */
 	@Override
-	public void onCueDeleted(CueItem item) {
+	public void onCueSenseCueDeleted(CueItem item) {
 		Log.d(TAG, "onCueDeleted()");
 		// Push to database
 		mDBHelper.deleteCueItem(item);
@@ -503,7 +503,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 * Keep data model, database and InfoPool in sync when a CueItem is modified
 	 */
 	@Override
-	public void onCueChanged(CueItem item) {
+	public void onCueSenseCueChanged(CueItem item) {
 		Log.d(TAG, "onCueChanged()");
 		// Push to database
 		mDBHelper.updateCueItem(item);

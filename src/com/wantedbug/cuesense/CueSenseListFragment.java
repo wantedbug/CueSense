@@ -33,13 +33,13 @@ public class CueSenseListFragment extends ListFragment {
 	 */
 	public interface CueSenseListener {
 		/** Handle addition of a new cue */
-		void onCueAdded(CueItem item);
+		void onCueSenseCueAdded(CueItem item);
 		
 		/** Handle deletion of a cue */
-		void onCueDeleted(CueItem item);
+		void onCueSenseCueDeleted(CueItem item);
 		
 		/** Handle modification of a cue */
-		void onCueChanged(CueItem item);
+		void onCueSenseCueChanged(CueItem item);
 	}
 
 	/**
@@ -113,6 +113,6 @@ public class CueSenseListFragment extends ListFragment {
 		CueItem item = mCSList.get(itemPosition);
 		mCSList.remove(itemPosition);
 		mCSListAdapter.notifyDataSetChanged();
-		mListener.onCueDeleted(item);
+		mListener.onCueSenseCueDeleted(item);
 	}
 }

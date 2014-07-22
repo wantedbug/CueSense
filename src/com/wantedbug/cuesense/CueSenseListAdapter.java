@@ -55,7 +55,7 @@ public class CueSenseListAdapter extends ArrayAdapter<CueItem> {
 					CueItem item = (CueItem) viewHolder.mEditText.getTag();
 					if(item.data() != s.toString()) {
 						item.setData(s.toString());
-						mListener.onCueChanged(item);
+						mListener.onCueSenseCueChanged(item);
 					}
 				}
 				@Override
@@ -71,7 +71,7 @@ public class CueSenseListAdapter extends ArrayAdapter<CueItem> {
 						boolean isChecked) {
 					CueItem item = (CueItem) viewHolder.mCheckbox.getTag();
 					item.setChecked(buttonView.isChecked());
-					mListener.onCueChanged(item);
+					mListener.onCueSenseCueChanged(item);
 				}
 			});
 			view.setTag(viewHolder);
