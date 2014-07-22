@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.TextView;
 
 /**
  * A dialog launched to delete a new CueItem 
@@ -56,7 +55,6 @@ public class DeleteCueSenseItemDialog extends DialogFragment {
     	.setPositiveButton(R.string.delete_cuesense_item_deletebutton, new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				TextView itemData = (TextView) dialogView.findViewById(R.id.deleteCueSenseItemDescription);
 				mListener.onCueDeleted(mItemPosition);
 			}
 		})
