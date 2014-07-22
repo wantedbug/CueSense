@@ -265,41 +265,13 @@ public class FBListFragment extends ListFragment {
 		}
 		
 		/** MUSIC */
-//		JSONArray likesJSON = (JSONArray) user.getProperty("music");
-//		// Try with permissions
-//		if(session.isPermissionGranted("user_actions.music")) {
-//			// Life is going to easy if this permission is granted in the future
-//		} else {
-//			Log.i(TAG, "getUserInfo() Music permission NOT granted");
-//			// Check with a path request
-//			if(likesJSON.length() > 0) {
-//				Request.newGraphPathRequest(session, "/me/music", new Request.Callback() {
-//					@Override
-//					public void onCompleted(Response response) {
-//						if(response.getError() == null) {
-//							Log.i(TAG, response.toString());
-//							// response.getRequestForPagedResults(PagingDirection.NEXT);
-//							String rawResponse = response.getRawResponse();
-//							if(!rawResponse.isEmpty()) {
-//								GraphObject responseGraphObject = response.getGraphObject();
-//								JSONObject json = responseGraphObject.getInnerJSONObject();
-//								if(json.has("data")) {
-//									JSONArray musicJSON = null;
-//								} else {
-//									Log.e(TAG, "getUserInfo() Music list null");
-//								}
-//							} else {
-//								Log.i(TAG, "getUserInfo() Music path response empty");
-//								// Look in the list of likes
-//								
-//							}
-//						} else {
-//							Log.e(TAG, "Music path error " + response.getError());
-//						}
-//					}
-//				}).executeAsync();
-//			}
-//		}
+		// Try with permissions
+		if(session.isPermissionGranted("user_actions.music")) {
+			// Life is going to easy if this permission is granted in the future
+		} else {
+			Log.i(TAG, "getUserInfo() Music permission NOT granted");
+			Request.newGraphPathRequest(session, "/me/music", mMusicResponseCallback).executeAsync();
+		}
 		
 		/** INSPIRATIONAL PEOPLE */
 		
@@ -419,6 +391,7 @@ public class FBListFragment extends ListFragment {
 		}
 		
 		/** LIKES */
+//		JSONArray likesJSON = (JSONArray) user.getProperty("music");
 //		if(likesJSON.length() > 0) {
 			/** Check for Professional sports team likes */
 
@@ -462,6 +435,9 @@ public class FBListFragment extends ListFragment {
 	    mAdapter.notifyDataSetChanged();
 	}
 	
+	/**
+	 * Callback to handle /me/books.reads response
+	 */
 	private Request.Callback mBooksResponseCallback =  new Request.Callback() {
 		@Override
 		public void onCompleted(Response response) {
@@ -491,11 +467,11 @@ public class FBListFragment extends ListFragment {
 								bookData = booksJSON.getJSONObject(i).getJSONObject("data").getJSONObject("book");
 								if(bookData.has("title")) {
 									Map<String, String> bookChild = new HashMap<String, String>();
-									bookChild.put(ITEM_DATA, bookData.optString("title"));
+									bookChild.put(ITEM_DATA, bookData.getString("title"));
 									booksChildrenList.add(bookChild);
 									++numChildrenAdded;
 								} else {
-									Log.e(TAG, "getUserInfo() Books no title");
+									Log.e(TAG, "getUserInfo() Books[" + i + "] no title");
 								}
 							} catch(JSONException e) {
 								Log.e(TAG, "getUserInfo() Books[" + i + "] extraction error " + e);
@@ -519,4 +495,67 @@ public class FBListFragment extends ListFragment {
 			}
 		}
 	};
+	
+	/**
+	 * Callback to handle /me/music response
+	 */
+	private Request.Callback mMusicResponseCallback = new Request.Callback() {
+		@Override
+		public void onCompleted(Response response) {
+			if(response.getError() == null) {
+				Log.i(TAG, response.toString());
+				// response.getRequestForPagedResults(PagingDirection.NEXT);
+				String rawResponse = response.getRawResponse();
+				if(!rawResponse.isEmpty()) {
+					GraphObject responseGraphObject = response.getGraphObject();
+					JSONObject json = responseGraphObject.getInnerJSONObject();
+					if(json.has("data")) {
+						JSONArray musicJSON = null;
+						try {
+							musicJSON = json.getJSONArray("data");
+						} catch(JSONException e) {
+							Log.e(TAG, "getUserInfo() Music array extraction error " + e);
+							return;
+						}
+						/** 1. Add the list item header to the list view */
+						Map<String, String> musicGroupMap = new HashMap<String, String>();
+						musicGroupMap.put(ITEM_DATA, "Music");
+						/** 2. Get the children from the JSON response */
+						List<Map<String, String>> musicChildrenList = new ArrayList<Map<String, String>>();
+						int numChildrenAdded = 0;
+						for(int i = 0; i < musicJSON.length(); ++i) {
+							JSONObject musicData = null;
+							try {
+								musicData = musicJSON.getJSONObject(i);
+								if(musicData.has("name")) {
+									Map<String, String> musicChild = new HashMap<String, String>();
+									musicChild.put(ITEM_DATA, musicData.getString("name"));
+									musicChildrenList.add(musicChild);
+									++numChildrenAdded;
+								} else {
+									Log.e(TAG, "getUserInfo() Music[" + i + "] no name");
+								}
+							} catch(JSONException e) {
+								Log.e(TAG, "getUserInfo() Music[" + i + "] extraction error" + e);
+							}
+						}
+						/** 3. Add the list item's children to the list view */
+						if(numChildrenAdded > 0) {
+							mGroupData.add(musicGroupMap);
+							mChildData.add(musicChildrenList);
+						}
+						// Notify list adapter here since this is an async task
+						mAdapter.notifyDataSetChanged();
+					} else {
+						Log.e(TAG, "getUserInfo() Music list null");
+					}
+				} else {
+					Log.i(TAG, "getUserInfo() Music path response empty");
+				}
+			} else {
+				Log.e(TAG, "Music path error " + response.getError());
+			}
+		}
+	};
+	
 }
