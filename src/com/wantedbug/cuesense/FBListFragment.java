@@ -24,9 +24,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.SimpleExpandableListAdapter;
+import android.widget.TextView;
 
 public class FBListFragment extends ListFragment {
 	// Debugging
@@ -35,34 +35,40 @@ public class FBListFragment extends ListFragment {
 	/**
 	 * Constants
 	 */
-	private static final String CATEGORY_FROM = "CATEGORY";
-	private static final String CATEGORY_TO = "CATEGORY_CHILD";
+	private static final String ITEM_DATA = "CATEGORY";
 	// Activity request code to update Session info
 	private static final int REAUTH_ACTIVITY_CODE = 100;
 	// List of Facebook permissions
+	private static final int NUM_PERMISSIONS = 13;
 	private static final String[] fbPermissions = {
 		"public_profile", // Facebook public profile
-		"user_about_me", // User's 'About me' section
-		"user_activities", // 
-		"user_birthday",
-		"user_education_history",
-		"user_hometown",
-		"user_interests",
-		"user_likes", // User likes
+		"user_actions.books",
+		"user_actions.movies",
+		"user_actions.music",
 		"user_tagged_places",
-		"user_work_history"
+		"user_birthday",
+		"user_about_me",
+		"user_education_history",
+		"user_work_history",
+		"user_hometown",
+		"user_activities", 
+		"user_interests",
+		"user_likes"
 		};
 	private static final String[] fbPermissionStrings = {
 		"Profile",
-		"About me",
-		"Activities",
-		"Birthday",
-		"Education",
-		"Hometown",
-		"Interests",
-		"Likes",
+		"Books",
+		"Movies",
+		"Music",
 		"Places",
-		"Work history"
+		"Birthday",
+		"About me",
+		"Education",
+		"Work history",
+		"Hometown",
+		"Activities",
+		"Interests",
+		"Likes"
 	};
 	
 	/**
@@ -142,12 +148,12 @@ public class FBListFragment extends ListFragment {
 				getActivity(),
 				groupData,
 				android.R.layout.simple_expandable_list_item_1,
-				new String[] { CATEGORY_FROM, CATEGORY_TO },
-				new int[] { android.R.id.text1, android.R.id.text2 },
+				new String[] { ITEM_DATA },
+				new int[] { android.R.id.text1 },
 				childData,
-				android.R.layout.simple_expandable_list_item_2,
-				new String[] { CATEGORY_FROM, CATEGORY_TO },
-				new int[] { android.R.id.text1, android.R.id.text2 }
+				android.R.layout.simple_list_item_1,
+				new String[] { ITEM_DATA },
+				new int[] { android.R.id.text1 }
 				);
 		mListView.setAdapter(mAdapter);
 		// Get Facebook data
@@ -168,23 +174,6 @@ public class FBListFragment extends ListFragment {
 	public void onActivityCreated(Bundle savedInstanceState) {
 		Log.d(TAG, "onActivityCreated()");
 	    super.onActivityCreated(savedInstanceState);
-
-		// TODO remove dummy data
-//		for (int i = 0; i < 10; i++) {
-//			Map<String, String> curGroupMap = new HashMap<String, String>();
-//			groupData.add(curGroupMap);
-//			curGroupMap.put(NAME, "Group " + i);
-//			curGroupMap.put(IS_EVEN, (i % 2 == 0) ? "This group is even" : "This group is odd");
-//
-//			List<Map<String, String>> children = new ArrayList<Map<String, String>>();
-//			for (int j = 0; j < 2; j++) {
-//				Map<String, String> curChildMap = new HashMap<String, String>();
-//				children.add(curChildMap);
-//				curChildMap.put(NAME, "Child " + j);
-//				curChildMap.put(IS_EVEN, (j % 2 == 0) ? "This child is even" : "This child is odd");
-//			}
-//			childData.add(children);
-//		}
 	}
 	
 	/**
@@ -201,30 +190,6 @@ public class FBListFragment extends ListFragment {
 	}
 
 	/**
-	 * Make the /me request to the Facebook Graph API
-	 * @param session
-	 */
-	private void makeMeRequest(final Session session) {
-		Log.d(TAG, "makeMeRequest()");
-	    Request request = Request.newMeRequest(session, 
-	            new Request.GraphUserCallback() {
-	        @Override
-	        public void onCompleted(GraphUser user, Response response) {
-	            // If the response is successful
-	            if (session == Session.getActiveSession()) {
-	                if (user != null) {
-	                	getUserInfo(session, user);
-	                }
-	            }
-	            if (response.getError() != null) {
-	                // Handle errors // TODO
-	            }
-	        }
-	    });
-	    request.executeAsync();
-	}
-	
-	/**
 	 * Handle Facebook Session state change
 	 * @param session
 	 * @param state
@@ -239,25 +204,52 @@ public class FBListFragment extends ListFragment {
 	}
 	
 	/**
+	 * Make the /me request to the Facebook Graph API
+	 * @param session
+	 */
+	private void makeMeRequest(final Session session) {
+		Log.d(TAG, "makeMeRequest()");
+	    Request request = Request.newMeRequest(session, 
+	            new Request.GraphUserCallback() {
+	        @Override
+	        public void onCompleted(GraphUser user, Response response) {
+	            // If the response is successful
+	            if (session == Session.getActiveSession()) {
+	                if (user != null) {
+	                	getUserInfo(session, user);
+	                }
+	                TextView emptyMessage = (TextView) v.findViewById(android.R.id.empty);
+	                emptyMessage.setText(R.string.fb_no_data);
+	            }
+	            if (response.getError() != null) {
+	                TextView emptyMessage = (TextView) v.findViewById(android.R.id.empty);
+	                emptyMessage.setText(R.string.fb_data_error);
+	            }
+	        }
+	    });
+	    request.executeAsync();
+	}
+	
+	/**
 	 * Helper function to populate the list with user data
 	 * @param session 
 	 * @param user 
 	 */
 	protected void getUserInfo(Session session, GraphUser user) {
 		Log.d(TAG, "getUserInfo()");
-	    for(int i = 0; i < 10; ++i) {
+	    for(int i = 0; i < NUM_PERMISSIONS; ++i) {
 			if(session.isPermissionGranted(fbPermissions[i])) {
+				// Create the expandable header item
 				Log.i(TAG, "getUserInfo() " + fbPermissions[i] + " granted");
 				Map<String, String> curGroupMap = new HashMap<String, String>();
 	            groupData.add(curGroupMap);
-	            curGroupMap.put(CATEGORY_FROM, fbPermissionStrings[i]);
-	            curGroupMap.put(CATEGORY_TO, (i % 2 == 0) ? "This group is even" : "This group is odd");
-	            
+	            curGroupMap.put(ITEM_DATA, fbPermissionStrings[i]);
+	            // Create its children
 	            List<Map<String, String>> children = new ArrayList<Map<String, String>>();
 	            Map<String, String> curChildMap = new HashMap<String, String>();
 				children.add(curChildMap);
-				curChildMap.put(CATEGORY_FROM, "Child");
-				curChildMap.put(CATEGORY_TO, "text");
+//				Object data = user.getProperty(fbPermissions[i]);
+				curChildMap.put(ITEM_DATA, user.getFirstName() + " " + user.getBirthday());
 				childData.add(children);
 			} else {
 				Log.i(TAG, "getUserInfo() " + fbPermissions[i] + " NOT granted");
@@ -265,5 +257,4 @@ public class FBListFragment extends ListFragment {
 		}
 	    mAdapter.notifyDataSetChanged();
 	}
-
 }

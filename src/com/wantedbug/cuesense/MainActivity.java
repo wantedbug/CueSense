@@ -418,13 +418,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		public CharSequence getPageTitle(int position) {
 			switch (InfoType.toInfoType(position)) {
 			case INFO_CUESENSE:
-				return getString(R.string.title_section1);
+				return getString(R.string.title_cuesense);
 			case INFO_FACEBOOK:
-				return getString(R.string.title_section2);
+				return getString(R.string.title_facebook);
 			case INFO_TWITTER:
-				return getString(R.string.title_section3);
+				return getString(R.string.title_twitter);
 			case INFO_SENTINEL:
-				return getString(R.string.title_section3);
+				return getString(R.string.title_foursquare);
 			}
 			return null;
 		}

@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">CueSense</string>
-    <string name="title_section1">CueSense</string>
-    <string name="title_section2">Facebook</string>
-    <string name="title_section3">Twitter</string>
-    <string name="title_section4">Foursquare</string><string name="action_settings">Settings</string>
+    <string name="app_name">CueSense</string><string name="action_settings">Settings</string>
     
     <string name="app_id">600390553410604</string>
     <string name="title_activity_settings">Settings</string><string name="bt_not_available">Bluetooth not available</string><string name="bt_not_enabled">Bluetooth not enabled</string><string name="bt_not_connected">Wearable not connected</string>
@@ -19,5 +15,11 @@
     <string name="delete_cuesense_item_deletebutton">Delete</string>
     <string name="fb_no_data">Login to Facebook in Settings to include your Facebook data</string>
     <string name="cuesense_no_data">No Cues added. Add one using the add button above.</string>
+    <string name="fb_data_error">There was a problem getting your Facebook data. Please logout and login again.</string>
+    <string name="fb_logged_in_as">Logged in as </string>
+    <string name="title_facebook">Facebook</string>
+    <string name="title_cuesense">CueSense</string>
+    <string name="title_twitter">Twitter</string>
+    <string name="title_foursquare">Foursquare</string>
 
 </resources>

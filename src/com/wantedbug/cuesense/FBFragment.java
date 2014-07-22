@@ -4,11 +4,6 @@
 
 package com.wantedbug.cuesense;
 
-import java.util.ArrayList;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -47,15 +42,18 @@ public class FBFragment extends Fragment {
 	// List of Facebook permissions
 	private static final String[] fbPermissions = {
 		"public_profile", // Facebook public profile
-		"user_about_me", // User's 'About me' section
-		"user_activities", // 
-		"user_birthday",
-		"user_education_history",
-		"user_hometown",
-		"user_interests",
-		"user_likes", // User likes
+		"user_actions.books",
+		"user_actions.movies",
+		"user_actions.music",
 		"user_tagged_places",
-		"user_work_history"
+		"user_birthday",
+		"user_about_me",
+		"user_education_history",
+		"user_work_history",
+		"user_hometown",
+		"user_activities", 
+		"user_interests",
+		"user_likes"
 		};
 	
 	// TextView to display user's Facebook data
@@ -69,7 +67,7 @@ public class FBFragment extends Fragment {
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		Log.i(TAG, "onCreate()");
+		Log.d(TAG, "onCreate()");
 	    super.onCreate(savedInstanceState);
 	    uiHelper = new UiLifecycleHelper(getActivity(), callback);
 	    uiHelper.onCreate(savedInstanceState);
@@ -78,7 +76,7 @@ public class FBFragment extends Fragment {
 	/** BEGIN Fragment lifecycle methods*/
 	@Override
 	public void onResume() {
-		Log.i(TAG, "onResume()");
+		Log.d(TAG, "onResume()");
 	    super.onResume();
 	    
 	    // For scenarios where the main activity is launched and user
@@ -95,28 +93,28 @@ public class FBFragment extends Fragment {
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		Log.i(TAG, "onActivityResult()");
+		Log.d(TAG, "onActivityResult()");
 	    super.onActivityResult(requestCode, resultCode, data);
 	    uiHelper.onActivityResult(requestCode, resultCode, data);
 	}
 
 	@Override
 	public void onPause() {
-		Log.i(TAG, "onPause()");
+		Log.d(TAG, "onPause()");
 	    super.onPause();
 	    uiHelper.onPause();
 	}
 
 	@Override
 	public void onDestroy() {
-		Log.i(TAG, "onDestroy()");
+		Log.d(TAG, "onDestroy()");
 	    super.onDestroy();
 	    uiHelper.onDestroy();
 	}
 
 	@Override
 	public void onSaveInstanceState(Bundle outState) {
-		Log.i(TAG, "onSaveInstanceState()");
+		Log.d(TAG, "onSaveInstanceState()");
 	    super.onSaveInstanceState(outState);
 	    uiHelper.onSaveInstanceState(outState);
 	}
@@ -126,7 +124,7 @@ public class FBFragment extends Fragment {
 	public View onCreateView(LayoutInflater inflater, 
 			ViewGroup container, 
 			Bundle savedInstanceState) {
-		Log.i(TAG, "onCreateView()");
+		Log.d(TAG, "onCreateView()");
 		View view = inflater.inflate(R.layout.fragment_fb, container, false);
 
 		LoginButton authButton = (LoginButton) view.findViewById(R.id.authButton);
@@ -145,16 +143,17 @@ public class FBFragment extends Fragment {
 	 */
 	private String buildUserInfoDisplay(GraphUser user) {
 	    StringBuilder userInfo = new StringBuilder("");
+	    
+	    userInfo.append(getResources().getString(R.string.fb_logged_in_as) + " ");
 
 	    // Example: typed access (name)
 	    // - no special permissions required
-	    userInfo.append(String.format("Name: %s\n\n", 
-	        user.getName()));
+	    userInfo.append(user.getName());
 
 	    // Example: typed access (birthday)
 	    // - requires user_birthday permission
-	    userInfo.append(String.format("Birthday: %s\n\n", 
-	        user.getBirthday()));
+//	    userInfo.append(String.format("Birthday: %s\n\n", 
+//	        user.getBirthday()));
 
 	    // Example: partially typed access, to location field,
 	    // name key (location)
@@ -169,19 +168,18 @@ public class FBFragment extends Fragment {
 
 	    // Example: access via key for array (languages) 
 	    // - requires user_likes permission
-	    JSONArray languages = (JSONArray)user.getProperty("languages");
-	    if (languages.length() > 0) {
-	        ArrayList<String> languageNames = new ArrayList<String> ();
-	        for (int i=0; i < languages.length(); i++) {
-	            JSONObject language = languages.optJSONObject(i);
-	            // Add the language name to a list. Use JSON
-	            // methods to get access to the name field. 
-	            languageNames.add(language.optString("name"));
-	        }           
-	        userInfo.append(String.format("Languages: %s\n\n", 
-	        languageNames.toString()));
-	    }
-
+//	    JSONArray languages = (JSONArray)user.getProperty("languages");
+//	    if (languages.length() > 0) {
+//	        ArrayList<String> languageNames = new ArrayList<String> ();
+//	        for (int i=0; i < languages.length(); i++) {
+//	            JSONObject language = languages.optJSONObject(i);
+//	            // Add the language name to a list. Use JSON
+//	            // methods to get access to the name field. 
+//	            languageNames.add(language.optString("name"));
+//	        }           
+//	        userInfo.append(String.format("Languages: %s\n\n", 
+//	        languageNames.toString()));
+//	    }
 	    return userInfo.toString();
 	}
 	
@@ -190,12 +188,11 @@ public class FBFragment extends Fragment {
 	private void onSessionStateChange(Session session, SessionState state, Exception exception) {
 	    if (state.isOpened()) {
 	        Log.i(TAG, "Logged in...");
+	        userInfoTextView.setVisibility(View.VISIBLE);
 	        
 	        if(mSession == null || isSessionChanged(session)) {
 	        	mSession = session; // cache the session
 	        	Log.i(TAG, "Access Token: " + session.getAccessToken());
-
-	        	userInfoTextView.setVisibility(View.VISIBLE);
 
 	        	// Request user data and show the results
 	        	Request.newMeRequest(session, new GraphUserCallback() {
@@ -207,9 +204,22 @@ public class FBFragment extends Fragment {
 	        			}
 	        		}
 	        	}).executeAsync();
+	        	
+//	        	Request.newGraphPathRequest(session, "/me/books.reads", new Request.Callback() {
+//					@Override
+//					public void onCompleted(Response response) {
+//						if(response.getError() == null) {
+//							Log.i(TAG, response.toString());
+////							response.getRequestForPagedResults(PagingDirection.NEXT);
+//						} else {
+//							Log.e(TAG, "PATH error " + response.getError());
+//						}
+//					}
+//				}).executeAsync();
 	        }
 	    } else if (state.isClosed()) {
 	        Log.i(TAG, "Logged out...");
+	        userInfoTextView.setVisibility(View.GONE);
 	    }
 	}
 	

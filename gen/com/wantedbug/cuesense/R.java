@@ -230,9 +230,9 @@ containing a value of this type.
         public static final int ic_launcher=0x7f020029;
     }
     public static final class id {
-        public static final int action_add=0x7f040026;
-        public static final int action_settings=0x7f040027;
-        public static final int authButton=0x7f04001f;
+        public static final int action_add=0x7f040027;
+        public static final int action_settings=0x7f040028;
+        public static final int authButton=0x7f040020;
         public static final int com_facebook_body_frame=0x7f040016;
         public static final int com_facebook_button_xout=0x7f040018;
         public static final int com_facebook_login_activity_progress_bar=0x7f040006;
@@ -258,18 +258,19 @@ containing a value of this type.
         public static final int com_facebook_usersettingsfragment_login_button=0x7f04001d;
         public static final int com_facebook_usersettingsfragment_logo_image=0x7f04001b;
         public static final int com_facebook_usersettingsfragment_profile_name=0x7f04001c;
-        public static final int data=0x7f040022;
+        public static final int data=0x7f040023;
         public static final int deleteCueSenseItemDescription=0x7f04001e;
-        public static final int isChecked=0x7f040023;
+        public static final int facebookTitle=0x7f04001f;
+        public static final int isChecked=0x7f040024;
         public static final int large=0x7f040002;
-        public static final int newCueSenseItemData=0x7f040025;
-        public static final int newCueSenseItemDescription=0x7f040024;
+        public static final int newCueSenseItemData=0x7f040026;
+        public static final int newCueSenseItemDescription=0x7f040025;
         public static final int normal=0x7f040001;
         public static final int pager=0x7f040003;
         public static final int picker_subtitle=0x7f040013;
-        public static final int section_label=0x7f040021;
+        public static final int section_label=0x7f040022;
         public static final int small=0x7f040000;
-        public static final int userInfoTextView=0x7f040020;
+        public static final int userInfoTextView=0x7f040021;
     }
     public static final class layout {
         public static final int activity_main=0x7f030000;
@@ -301,14 +302,14 @@ containing a value of this type.
         public static final int main=0x7f090000;
     }
     public static final class string {
-        public static final int action_settings=0x7f07001f;
-        public static final int app_id=0x7f070020;
+        public static final int action_settings=0x7f07001b;
+        public static final int app_id=0x7f07001c;
         public static final int app_name=0x7f07001a;
-        public static final int bt_connection_failed=0x7f070025;
-        public static final int bt_connection_lost=0x7f070026;
-        public static final int bt_not_available=0x7f070022;
-        public static final int bt_not_connected=0x7f070024;
-        public static final int bt_not_enabled=0x7f070023;
+        public static final int bt_connection_failed=0x7f070021;
+        public static final int bt_connection_lost=0x7f070022;
+        public static final int bt_not_available=0x7f07001e;
+        public static final int bt_not_connected=0x7f070020;
+        public static final int bt_not_enabled=0x7f07001f;
         public static final int com_facebook_choose_friends=0x7f07000f;
         public static final int com_facebook_dialogloginactivity_ok_button=0x7f070000;
         public static final int com_facebook_internet_permission_error_message=0x7f070013;
@@ -335,19 +336,21 @@ containing a value of this type.
         public static final int com_facebook_usersettingsfragment_log_in_button=0x7f070008;
         public static final int com_facebook_usersettingsfragment_logged_in=0x7f070009;
         public static final int com_facebook_usersettingsfragment_not_logged_in=0x7f07000a;
-        public static final int cuesense_no_data=0x7f07002e;
-        public static final int delete_cuesense_item_deletebutton=0x7f07002c;
-        public static final int delete_cuesense_item_description=0x7f07002b;
-        public static final int fb_no_data=0x7f07002d;
-        public static final int menu_add_cue=0x7f070027;
-        public static final int new_cuesense_item_addbutton=0x7f070029;
-        public static final int new_cuesense_item_cancelbutton=0x7f07002a;
-        public static final int new_cuesense_item_description=0x7f070028;
-        public static final int title_activity_settings=0x7f070021;
-        public static final int title_section1=0x7f07001b;
-        public static final int title_section2=0x7f07001c;
-        public static final int title_section3=0x7f07001d;
-        public static final int title_section4=0x7f07001e;
+        public static final int cuesense_no_data=0x7f07002a;
+        public static final int delete_cuesense_item_deletebutton=0x7f070028;
+        public static final int delete_cuesense_item_description=0x7f070027;
+        public static final int fb_data_error=0x7f07002b;
+        public static final int fb_logged_in_as=0x7f07002c;
+        public static final int fb_no_data=0x7f070029;
+        public static final int menu_add_cue=0x7f070023;
+        public static final int new_cuesense_item_addbutton=0x7f070025;
+        public static final int new_cuesense_item_cancelbutton=0x7f070026;
+        public static final int new_cuesense_item_description=0x7f070024;
+        public static final int title_activity_settings=0x7f07001d;
+        public static final int title_cuesense=0x7f07002e;
+        public static final int title_facebook=0x7f07002d;
+        public static final int title_foursquare=0x7f070030;
+        public static final int title_twitter=0x7f07002f;
     }
     public static final class style {
         /** 

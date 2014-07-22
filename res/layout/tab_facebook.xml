@@ -15,6 +15,7 @@
         android:layout_height="fill_parent"
         android:layout_gravity="center"
         android:gravity="center"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="@string/fb_no_data" />
 
 </LinearLayout>
