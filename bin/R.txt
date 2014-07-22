@@ -187,6 +187,7 @@ int string delete_cuesense_item_deletebutton 0x7f070028
 int string delete_cuesense_item_description 0x7f070027
 int string fb_data_error 0x7f07002b
 int string fb_logged_in_as 0x7f07002c
+int string fb_login_explanation 0x7f070031
 int string fb_no_data 0x7f070029
 int string menu_add_cue 0x7f070023
 int string new_cuesense_item_addbutton 0x7f070025

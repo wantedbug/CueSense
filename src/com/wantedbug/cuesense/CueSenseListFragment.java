@@ -6,20 +6,17 @@ package com.wantedbug.cuesense;
 
 import java.util.List;
 
-import com.wantedbug.cuesense.DeleteCueSenseItemDialog.DeleteCueSenseItemListener;
 import com.wantedbug.cuesense.MainActivity.InfoType;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.ListFragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 /**
  * List view of the user's CueSense profile data 
