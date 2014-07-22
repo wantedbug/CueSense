@@ -7,8 +7,6 @@ package com.wantedbug.cuesense;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 
 /**
  * This class is for the Settings view 
