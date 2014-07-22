@@ -61,7 +61,9 @@ public class FBListFragment extends ListFragment {
 	// Expandable list data
 	List<Map<String, String>> mGroupData = new ArrayList<Map<String, String>>();
 	List<List<Map<String, String>>> mChildData = new ArrayList<List<Map<String, String>>>();
-		
+	
+	// Facebook session cached
+	private Session mSession;
 	// Facebook UI lifecycle helper to complement Activity lifecycle methods
 	UiLifecycleHelper mUiLifecycleHelper;
 	// Callback to handle Session state change
@@ -155,10 +157,10 @@ public class FBListFragment extends ListFragment {
 	private void getData() {
 		Log.d(TAG, "getData()");
 	    // Check for an open session
-	    Session session = Session.getActiveSession();
-	    if (session != null && session.isOpened()) {
+		mSession = Session.getActiveSession();
+	    if (mSession != null && mSession.isOpened()) {
 	        // Get the user's data
-	        makeMeRequest(session);
+	        makeMeRequest(mSession);
 	    }
 	}
 
@@ -227,6 +229,8 @@ public class FBListFragment extends ListFragment {
 				Map<String, String> birthdayString = new HashMap<String, String>();
 				birthdayString.put(ITEM_DATA, user.getBirthday());
 				bdayChildrenList.add(birthdayString);
+//				CueItem birthdayStringItem = new CueItem(0, InfoType.INFO_FACEBOOK, user.getBirthday(), true);
+//				mFBList.add(birthdayStringItem);
 				// Child 2: the birthday month
 				int month = Integer.parseInt(user.getBirthday().substring(0, 2));
 				String bdayMonth = "";
@@ -247,6 +251,8 @@ public class FBListFragment extends ListFragment {
 				Map<String, String> birthdayMonth = new HashMap<String, String>();
 				birthdayMonth.put(ITEM_DATA, "Child of " + bdayMonth);
 				bdayChildrenList.add(birthdayMonth);
+//				CueItem birthdayMonthItem = new CueItem(0, InfoType.INFO_FACEBOOK, "Child of " + bdayMonth, true);
+//				mFBList.add(birthdayMonthItem);
 				/** 3. Add the list item's children to the list view */
 				mChildData.add(bdayChildrenList);
 			} else {
@@ -261,6 +267,7 @@ public class FBListFragment extends ListFragment {
 			// Life is going to easy if this permission is granted in the future
 		} else {
 			Log.i(TAG, "getUserInfo() Books permission NOT granted");
+			// Try with a Graph path request
 			Request.newGraphPathRequest(session, "/me/books.reads", mBooksResponseCallback).executeAsync();
 		}
 		
@@ -270,10 +277,42 @@ public class FBListFragment extends ListFragment {
 			// Life is going to easy if this permission is granted in the future
 		} else {
 			Log.i(TAG, "getUserInfo() Music permission NOT granted");
+			// Try with a Graph path request
 			Request.newGraphPathRequest(session, "/me/music", mMusicResponseCallback).executeAsync();
 		}
 		
 		/** INSPIRATIONAL PEOPLE */
+		JSONArray peopleJSONArray = (JSONArray) user.getProperty("inspirational_people");
+		if(peopleJSONArray.length() > 0 ) {
+			/** 1. Add the list item header to the list view */
+			Map<String, String> peopleGroupMap = new HashMap<String, String>();
+			peopleGroupMap.put(ITEM_DATA, "Inspirational people");
+			/** 2. Get the children from the JSON response */
+			List<Map<String, String>> peopleList = new ArrayList<Map<String, String>>();
+			int numChildrenAdded = 0;
+			for (int j = 0; j < peopleJSONArray.length(); ++j) {
+				try {
+					JSONObject personJSON = peopleJSONArray.getJSONObject(j);
+					if(personJSON.has("name")) {
+						Map<String, String> personChild = new HashMap<String, String>();
+						personChild.put(ITEM_DATA, personJSON.getString("name"));
+						peopleList.add(personChild);
+						++numChildrenAdded;
+					} else {
+						Log.e(TAG, "getUserInfo() Inspirational people[" + j + "] no name");
+					}
+				} catch(JSONException e) {
+					Log.e(TAG, "getUserInfo() Inspirational people[" + j + "] extraction error");
+				}
+			}
+			/** 3. Add the list item's children to the list view */
+			if(numChildrenAdded > 0) {
+				mGroupData.add(peopleGroupMap);
+				mChildData.add(peopleList);
+			}
+		} else {
+			Log.e(TAG, "getUserInfo() Inspirational people list empty");
+		}
 		
 		/** ACTORS/DIRECTORS */
 		
@@ -289,15 +328,15 @@ public class FBListFragment extends ListFragment {
 				int numChildrenAdded = 0;
 				// Add all schools as children
 				for (int j = 0; j < schoolsJSON.length(); ++j) {
-					JSONObject schoolJSON = schoolsJSON.optJSONObject(j);
 					try {
+						JSONObject schoolJSON = schoolsJSON.getJSONObject(j);
 						JSONObject school = schoolJSON.getJSONObject("school");
 						Map<String, String> schoolChild = new HashMap<String, String>();
-						schoolChild.put(ITEM_DATA, school.optString("name"));
+						schoolChild.put(ITEM_DATA, school.getString("name"));
 						schoolsList.add(schoolChild);
 						++numChildrenAdded;
 					} catch(JSONException e) {
-						Log.e(TAG, "getUserInfo() school error");
+						Log.e(TAG, "getUserInfo() School[" + j + "] extraction error");
 					}
 				}
 				/** 3. Add the list item's children to the list view */
@@ -390,12 +429,12 @@ public class FBListFragment extends ListFragment {
 			Log.i(TAG, "getUserInfo() Hometown permission NOT granted");
 		}
 		
-		/** LIKES */
+//		/** LIKES */
 //		JSONArray likesJSON = (JSONArray) user.getProperty("music");
 //		if(likesJSON.length() > 0) {
-			/** Check for Professional sports team likes */
-
-			/** Check for Actor and Actor/director likes */
+//			/** Check for Professional sports team likes */
+//
+//			/** Check for Actor and Actor/director likes */
 //		}
 		
 		/** LANGUAGES */
