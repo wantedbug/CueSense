@@ -309,9 +309,46 @@ public class FBListFragment extends ListFragment {
 			if(numChildrenAdded > 0) {
 				mGroupData.add(peopleGroupMap);
 				mChildData.add(peopleList);
+			} else {
+				Log.e(TAG, "getUserInfo() Inspirational people extraction error");
 			}
 		} else {
 			Log.e(TAG, "getUserInfo() Inspirational people list empty");
+		}
+		
+		/** FAVOURITE SPORTS TEAMS */
+		JSONArray teamsJSONArray = (JSONArray) user.getProperty("favorite_teams");
+		if(teamsJSONArray.length() > 0 ) {
+			/** 1. Add the list item header to the list view */
+			Map<String, String> teamsGroupMap = new HashMap<String, String>();
+			teamsGroupMap.put(ITEM_DATA, "Sports teams");
+			/** 2. Get the children from the JSON response */
+			List<Map<String, String>> teamsList = new ArrayList<Map<String, String>>();
+			int numChildrenAdded = 0;
+			for (int j = 0; j < teamsJSONArray.length(); ++j) {
+				try {
+					JSONObject teamJSON = teamsJSONArray.getJSONObject(j);
+					if(teamJSON.has("name")) {
+						Map<String, String> teamChild = new HashMap<String, String>();
+						teamChild.put(ITEM_DATA, teamJSON.getString("name"));
+						teamsList.add(teamChild);
+						++numChildrenAdded;
+					} else {
+						Log.e(TAG, "getUserInfo() Sports teams[" + j + "] no name");
+					}
+				} catch(JSONException e) {
+					Log.e(TAG, "getUserInfo() Sports teams[" + j + "] extraction error");
+				}
+			}
+			/** 3. Add the list item's children to the list view */
+			if(numChildrenAdded > 0) {
+				mGroupData.add(teamsGroupMap);
+				mChildData.add(teamsList);
+			} else {
+				Log.e(TAG, "getUserInfo() Sports teams extraction error");
+			}
+		} else {
+			Log.e(TAG, "getUserInfo() Sports teams list empty");
 		}
 		
 		/** ACTORS/DIRECTORS */
@@ -369,11 +406,11 @@ public class FBListFragment extends ListFragment {
 					try {
 						JSONObject company = companyJSON.getJSONObject("employer");
 						Map<String, String> companyChild = new HashMap<String, String>();
-						companyChild.put(ITEM_DATA, company.optString("name"));
+						companyChild.put(ITEM_DATA, company.getString("name"));
 						companiesList.add(companyChild);
 						++numChildrenAdded;
 					} catch(JSONException e) {
-						Log.e(TAG, "getUserInfo() work error");
+						Log.e(TAG, "getUserInfo() Work [" + j + "] extraction error" + e);
 					}
 				}
 				/** 3. Add the list item's children to the list view */
@@ -387,10 +424,10 @@ public class FBListFragment extends ListFragment {
 				Log.e(TAG, "getUserInfo() Work list empty");
 			}
 		} else {
-			Log.i(TAG, "getUserInfo() Work permission NOT granted");
+			Log.e(TAG, "getUserInfo() Work permission NOT granted");
 		}
 		
-		/** INTERESTS */
+//		/** INTERESTS */
 //		Request.newGraphPathRequest(session, "/me/interests", new Request.Callback() {
 //			@Override
 //			public void onCompleted(Response response) {
@@ -426,7 +463,7 @@ public class FBListFragment extends ListFragment {
 				Log.e(TAG, "getUserInfo() Hometown field empty");
 			}
 		} else {
-			Log.i(TAG, "getUserInfo() Hometown permission NOT granted");
+			Log.e(TAG, "getUserInfo() Hometown permission NOT granted");
 		}
 		
 //		/** LIKES */
@@ -451,7 +488,7 @@ public class FBListFragment extends ListFragment {
 				try {
 					languageJSON = languages.getJSONObject(i);
 				} catch(JSONException e) {
-					Log.e(TAG, "getUserInfo() Language[" + i + "] extraction error");
+					Log.e(TAG, "getUserInfo() Language[" + i + "] extraction error" + e);
 					continue;
 				}
 				Map<String, String> languageChild = new HashMap<String, String>();
@@ -467,7 +504,7 @@ public class FBListFragment extends ListFragment {
 				Log.e(TAG, "getUserInfo() Languages extraction error");
 			}
 		} else {
-			Log.i(TAG, "getUserInfo() Languages list empty");
+			Log.e(TAG, "getUserInfo() Languages list empty");
 		}
 
 	    // Notify that the list contents have changed
@@ -520,9 +557,11 @@ public class FBListFragment extends ListFragment {
 						if(numChildrenAdded > 0) {
 							mGroupData.add(booksGroupMap);
 							mChildData.add(booksChildrenList);
+							// Notify list adapter here since this is an async task
+							mAdapter.notifyDataSetChanged();
+						} else {
+							Log.e(TAG, "getUserInfo() Books extraction error ");
 						}
-						// Notify list adapter here since this is an async task
-						mAdapter.notifyDataSetChanged();
 					} else {
 						Log.e(TAG, "getUserInfo() Books data empty");
 					}
@@ -582,14 +621,16 @@ public class FBListFragment extends ListFragment {
 						if(numChildrenAdded > 0) {
 							mGroupData.add(musicGroupMap);
 							mChildData.add(musicChildrenList);
+							// Notify list adapter here since this is an async task
+							mAdapter.notifyDataSetChanged();
+						} else {
+							Log.e(TAG, "getUserInfo() Music extraction error");
 						}
-						// Notify list adapter here since this is an async task
-						mAdapter.notifyDataSetChanged();
 					} else {
 						Log.e(TAG, "getUserInfo() Music list null");
 					}
 				} else {
-					Log.i(TAG, "getUserInfo() Music path response empty");
+					Log.e(TAG, "getUserInfo() Music path response empty");
 				}
 			} else {
 				Log.e(TAG, "Music path error " + response.getError());
