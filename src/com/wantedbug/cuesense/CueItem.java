@@ -9,7 +9,6 @@ import com.wantedbug.cuesense.MainActivity.InfoType;
 /**
  * Encapsulates an item in the list views
  * @author vikasprabhu
- *
  */
 public class CueItem {
 	/**

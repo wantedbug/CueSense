@@ -19,6 +19,10 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 
+/**
+ * ArrayAdapter-based list adapter for the CueSense list items 
+ * @author vikasprabhu
+ */
 public class CueSenseListAdapter extends ArrayAdapter<CueItem> {
 	/**
 	 * Members

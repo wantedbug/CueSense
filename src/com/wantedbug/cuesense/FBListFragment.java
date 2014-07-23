@@ -33,6 +33,10 @@ import android.widget.ExpandableListView;
 import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 
+/**
+ * Fragment that holds the list view of data from the user's Facebook profile 
+ * @author vikasprabhu
+ */
 public class FBListFragment extends ListFragment {
 	// Debugging
 	private static final String TAG = "FBListFragment";
@@ -175,9 +179,10 @@ public class FBListFragment extends ListFragment {
 	 */
 	private void onSessionStateChange(final Session session, SessionState state, Exception exception) {
 		Log.d(TAG, "onSessionStateChange()");
-	    if (session != null && session.isOpened()) {
+	    if (session != null && session.isOpened() && !mFBRequestSubmitted) {
 	        // Get the user's data.
 	        makeMeRequest(session);
+	        mFBRequestSubmitted = true;
 	    }
 	}
 	
