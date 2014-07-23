@@ -73,6 +73,8 @@ public class FBListFragment extends ListFragment {
 	        onSessionStateChange(session, state, exception);
 	    }
 	};
+	// Flag to check if data request has already been submitted to avoid duplication
+	private boolean mFBRequestSubmitted = false;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -158,9 +160,10 @@ public class FBListFragment extends ListFragment {
 		Log.d(TAG, "getData()");
 	    // Check for an open session
 		mSession = Session.getActiveSession();
-	    if (mSession != null && mSession.isOpened()) {
+	    if (mSession != null && mSession.isOpened() && !mFBRequestSubmitted) {
 	        // Get the user's data
 	        makeMeRequest(mSession);
+	        mFBRequestSubmitted = true;
 	    }
 	}
 
