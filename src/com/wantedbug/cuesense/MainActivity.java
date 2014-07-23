@@ -504,7 +504,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	@Override
 	public void onCueSenseCueChanged(CueItem item) {
-		Log.d(TAG, "onCueChanged()");
+		Log.d(TAG, "onCueSenseCueChanged()");
 		// Push to database
 		mDBHelper.updateCueItem(item);
 		// Push to InfoPool

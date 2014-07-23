@@ -220,76 +220,8 @@ public class FBListFragment extends ListFragment {
 	 */
 	protected void getUserInfo(Session session, GraphUser user) {
 		Log.d(TAG, "getUserInfo()");
-		// Go through all the data returned in the /me request
-		/** PERSONAL DETAILS */
-		/** 1. Add the list item header to the list view */
-		Map<String, String> aboutMeGroupMap = new HashMap<String, String>();
-		aboutMeGroupMap.put(ITEM_DATA, "About me");
-		List<Map<String, String>> aboutMeList = new ArrayList<Map<String, String>>();
 		int numChildrenAdded = 0;
-		/** BIRTHDAY */
-		if(session.isPermissionGranted("user_birthday")) {
-			if(!user.getBirthday().isEmpty()) {
-				/** 2. Get the children from the JSON response */
-				// Child 1: the actual birthday as returned by Facebook
-				Map<String, String> birthdayString = new HashMap<String, String>();
-				birthdayString.put(ITEM_DATA, user.getBirthday());
-				aboutMeList.add(birthdayString);
-				++numChildrenAdded;
-//				CueItem birthdayStringItem = new CueItem(0, InfoType.INFO_FACEBOOK, user.getBirthday(), true);
-//				mFBList.add(birthdayStringItem);
-				// Child 2: the birthday month
-				int month = Integer.parseInt(user.getBirthday().substring(0, 2));
-				String bdayMonth = "";
-				switch(month) {
-				case 1: bdayMonth = "January"; break;
-				case 2: bdayMonth = "February"; break;
-				case 3: bdayMonth = "March"; break;
-				case 4: bdayMonth = "April"; break;
-				case 5: bdayMonth = "May"; break;
-				case 6: bdayMonth = "June"; break;
-				case 7: bdayMonth = "July"; break;
-				case 8: bdayMonth = "August"; break;
-				case 9: bdayMonth = "September"; break;
-				case 10: bdayMonth = "October"; break;
-				case 11: bdayMonth = "November"; break;
-				case 12: bdayMonth = "December"; break;
-				}
-				Map<String, String> birthdayMonth = new HashMap<String, String>();
-				birthdayMonth.put(ITEM_DATA, "Child of " + bdayMonth);
-				aboutMeList.add(birthdayMonth);
-				++numChildrenAdded;
-//				CueItem birthdayMonthItem = new CueItem(0, InfoType.INFO_FACEBOOK, "Child of " + bdayMonth, true);
-//				mFBList.add(birthdayMonthItem);
-			} else {
-				Log.e(TAG, "getUserInfo() Birthday field empty");
-			}
-		} else {
-			Log.i(TAG, "getUserInfo() Birthday permission NOT granted");
-		}
-		/** HOMETOWN */
-		if(session.isPermissionGranted("user_hometown")) {
-			JSONObject hometownJSON = (JSONObject)user.getProperty("hometown");
-			if(hometownJSON.has("name")) {
-				/** 2. Get the children from the JSON response */
-				Map<String, String> hometownChild = new HashMap<String, String>();
-				hometownChild.put(ITEM_DATA, hometownJSON.optString("name"));
-				aboutMeList.add(hometownChild);
-				++numChildrenAdded;
-			} else {
-				Log.e(TAG, "getUserInfo() Hometown field empty");
-			}
-		} else {
-			Log.e(TAG, "getUserInfo() Hometown permission NOT granted");
-		}
-		/** 3. Add the list item's children to the list view */
-		if(numChildrenAdded > 0) {
-			mGroupData.add(aboutMeGroupMap);
-			mChildData.add(aboutMeList);
-			// Notify that the list contents have changed
-		    mAdapter.notifyDataSetChanged();
-		}
-		
+		// Go through all the data returned in the /me request
 		/** BOOKS */
 		if(session.isPermissionGranted("user_actions.books")) {
 			// Life is going to easy if this permission is granted in the future
@@ -325,6 +257,9 @@ public class FBListFragment extends ListFragment {
 						Map<String, String> personChild = new HashMap<String, String>();
 						personChild.put(ITEM_DATA, personJSON.getString("name"));
 						peopleList.add(personChild);
+						CueItem personItem = new CueItem(-1, InfoType.INFO_FACEBOOK, personJSON.getString("name"), true);
+						mFBList.add(personItem);
+						InfoPool.INSTANCE.addCueItem(personItem);
 						++numChildrenAdded;
 					} else {
 						Log.e(TAG, "getUserInfo() Inspirational people[" + j + "] no name");
@@ -362,6 +297,9 @@ public class FBListFragment extends ListFragment {
 						Map<String, String> teamChild = new HashMap<String, String>();
 						teamChild.put(ITEM_DATA, teamJSON.getString("name"));
 						teamsList.add(teamChild);
+						CueItem teamItem = new CueItem(-1, InfoType.INFO_FACEBOOK, teamJSON.getString("name"), true);
+						mFBList.add(teamItem);
+						InfoPool.INSTANCE.addCueItem(teamItem);
 						++numChildrenAdded;
 					} else {
 						Log.e(TAG, "getUserInfo() Sports teams[" + j + "] no name");
@@ -403,6 +341,9 @@ public class FBListFragment extends ListFragment {
 						Map<String, String> schoolChild = new HashMap<String, String>();
 						schoolChild.put(ITEM_DATA, school.getString("name"));
 						schoolsList.add(schoolChild);
+						CueItem schoolItem = new CueItem(-1, InfoType.INFO_FACEBOOK, school.getString("name"), true);
+						mFBList.add(schoolItem);
+						InfoPool.INSTANCE.addCueItem(schoolItem);
 						++numChildrenAdded;
 					} catch(JSONException e) {
 						Log.e(TAG, "getUserInfo() School[" + j + "] extraction error");
@@ -442,6 +383,9 @@ public class FBListFragment extends ListFragment {
 						Map<String, String> companyChild = new HashMap<String, String>();
 						companyChild.put(ITEM_DATA, company.getString("name"));
 						companiesList.add(companyChild);
+						CueItem companyItem = new CueItem(-1, InfoType.INFO_FACEBOOK, company.getString("name"), true);
+						mFBList.add(companyItem);
+						InfoPool.INSTANCE.addCueItem(companyItem);
 						++numChildrenAdded;
 					} catch(JSONException e) {
 						Log.e(TAG, "getUserInfo() Work [" + j + "] extraction error" + e);
@@ -508,6 +452,9 @@ public class FBListFragment extends ListFragment {
 				Map<String, String> languageChild = new HashMap<String, String>();
 				languageChild.put(ITEM_DATA, languageJSON.optString("name"));
 				languagesList.add(languageChild);
+				CueItem languageItem = new CueItem(-1, InfoType.INFO_FACEBOOK, languageJSON.optString("name"), true);
+				mFBList.add(languageItem);
+				InfoPool.INSTANCE.addCueItem(languageItem);
 				++numChildrenAdded;
 			}
 			/** 3. Add the list item's children to the list view */
@@ -521,6 +468,79 @@ public class FBListFragment extends ListFragment {
 			}
 		} else {
 			Log.e(TAG, "getUserInfo() Languages list empty");
+		}
+		
+		/** PERSONAL DETAILS */
+		/** 1. Add the list item header to the list view */
+		Map<String, String> aboutMeGroupMap = new HashMap<String, String>();
+		aboutMeGroupMap.put(ITEM_DATA, "About me");
+		List<Map<String, String>> aboutMeList = new ArrayList<Map<String, String>>();
+		numChildrenAdded = 0;
+		/** BIRTHDAY */
+		if(session.isPermissionGranted("user_birthday")) {
+			if(!user.getBirthday().isEmpty()) {
+				/** 2. Get the children from the JSON response */
+				// Child 1: the actual birthday as returned by Facebook
+				Map<String, String> birthdayString = new HashMap<String, String>();
+				birthdayString.put(ITEM_DATA, user.getBirthday());
+				aboutMeList.add(birthdayString);
+				++numChildrenAdded;
+				CueItem birthdayStringItem = new CueItem(-1, InfoType.INFO_FACEBOOK, user.getBirthday(), true);
+				InfoPool.INSTANCE.addCueItem(birthdayStringItem);
+				// Child 2: the birthday month
+				int month = Integer.parseInt(user.getBirthday().substring(0, 2));
+				String bdayMonth = "";
+				switch(month) {
+				case 1: bdayMonth = "January"; break;
+				case 2: bdayMonth = "February"; break;
+				case 3: bdayMonth = "March"; break;
+				case 4: bdayMonth = "April"; break;
+				case 5: bdayMonth = "May"; break;
+				case 6: bdayMonth = "June"; break;
+				case 7: bdayMonth = "July"; break;
+				case 8: bdayMonth = "August"; break;
+				case 9: bdayMonth = "September"; break;
+				case 10: bdayMonth = "October"; break;
+				case 11: bdayMonth = "November"; break;
+				case 12: bdayMonth = "December"; break;
+				}
+				Map<String, String> birthdayMonth = new HashMap<String, String>();
+				birthdayMonth.put(ITEM_DATA, "Child of " + bdayMonth);
+				aboutMeList.add(birthdayMonth);
+				++numChildrenAdded;
+				CueItem birthdayMonthItem = new CueItem(-1, InfoType.INFO_FACEBOOK, "Child of " + bdayMonth, true);
+				mFBList.add(birthdayMonthItem);
+				InfoPool.INSTANCE.addCueItem(birthdayMonthItem);
+			} else {
+				Log.e(TAG, "getUserInfo() Birthday field empty");
+			}
+		} else {
+			Log.i(TAG, "getUserInfo() Birthday permission NOT granted");
+		}
+		/** HOMETOWN */
+		if(session.isPermissionGranted("user_hometown")) {
+			JSONObject hometownJSON = (JSONObject)user.getProperty("hometown");
+			if(hometownJSON.has("name")) {
+				/** 2. Get the children from the JSON response */
+				Map<String, String> hometownChild = new HashMap<String, String>();
+				hometownChild.put(ITEM_DATA, hometownJSON.optString("name"));
+				aboutMeList.add(hometownChild);
+				CueItem hometownItem = new CueItem(-1, InfoType.INFO_FACEBOOK, hometownJSON.optString("name"), true);
+				mFBList.add(hometownItem);
+				InfoPool.INSTANCE.addCueItem(hometownItem);
+				++numChildrenAdded;
+			} else {
+				Log.e(TAG, "getUserInfo() Hometown field empty");
+			}
+		} else {
+			Log.e(TAG, "getUserInfo() Hometown permission NOT granted");
+		}
+		/** 3. Add the list item's children to the list view */
+		if(numChildrenAdded > 0) {
+			mGroupData.add(aboutMeGroupMap);
+			mChildData.add(aboutMeList);
+			// Notify that the list contents have changed
+		    mAdapter.notifyDataSetChanged();
 		}
 	}
 	
@@ -558,6 +578,9 @@ public class FBListFragment extends ListFragment {
 									Map<String, String> bookChild = new HashMap<String, String>();
 									bookChild.put(ITEM_DATA, bookData.getString("title"));
 									booksChildrenList.add(bookChild);
+									CueItem bookItem = new CueItem(-1, InfoType.INFO_FACEBOOK, bookData.getString("title"), true);
+									mFBList.add(bookItem);
+									InfoPool.INSTANCE.addCueItem(bookItem);
 									++numChildrenAdded;
 								} else {
 									Log.e(TAG, "getUserInfo() Books[" + i + "] no title");
@@ -568,8 +591,8 @@ public class FBListFragment extends ListFragment {
 						}
 						/** 3. Add the list item's children to the list view */
 						if(numChildrenAdded > 0) {
-							mGroupData.add(booksGroupMap);
-							mChildData.add(booksChildrenList);
+							mGroupData.add(0, booksGroupMap);
+							mChildData.add(0, booksChildrenList);
 							// Notify list adapter here since this is an async task
 							mAdapter.notifyDataSetChanged();
 						} else {
@@ -621,6 +644,9 @@ public class FBListFragment extends ListFragment {
 									Map<String, String> musicChild = new HashMap<String, String>();
 									musicChild.put(ITEM_DATA, musicData.getString("name"));
 									musicChildrenList.add(musicChild);
+									CueItem musicItem = new CueItem(-1, InfoType.INFO_FACEBOOK, musicData.getString("name"), true);
+									mFBList.add(musicItem);
+									InfoPool.INSTANCE.addCueItem(musicItem);
 									++numChildrenAdded;
 								} else {
 									Log.e(TAG, "getUserInfo() Music[" + i + "] no name");
@@ -631,8 +657,8 @@ public class FBListFragment extends ListFragment {
 						}
 						/** 3. Add the list item's children to the list view */
 						if(numChildrenAdded > 0) {
-							mGroupData.add(musicGroupMap);
-							mChildData.add(musicChildrenList);
+							mGroupData.add(0, musicGroupMap);
+							mChildData.add(0, musicChildrenList);
 							// Notify list adapter here since this is an async task
 							mAdapter.notifyDataSetChanged();
 						} else {
