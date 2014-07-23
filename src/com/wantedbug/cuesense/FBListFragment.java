@@ -219,19 +219,21 @@ public class FBListFragment extends ListFragment {
 	protected void getUserInfo(Session session, GraphUser user) {
 		Log.d(TAG, "getUserInfo()");
 		// Go through all the data returned in the /me request
+		/** PERSONAL DETAILS */
+		/** 1. Add the list item header to the list view */
+		Map<String, String> aboutMeGroupMap = new HashMap<String, String>();
+		aboutMeGroupMap.put(ITEM_DATA, "About me");
+		List<Map<String, String>> aboutMeList = new ArrayList<Map<String, String>>();
+		int numChildrenAdded = 0;
 		/** BIRTHDAY */
 		if(session.isPermissionGranted("user_birthday")) {
 			if(!user.getBirthday().isEmpty()) {
-				/** 1. Add the list item header to the list view */
-				Map<String, String> bdayGroupMap = new HashMap<String, String>();
-				bdayGroupMap.put(ITEM_DATA, "Birthday");
-				mGroupData.add(bdayGroupMap);
 				/** 2. Get the children from the JSON response */
-				List<Map<String, String>> bdayChildrenList = new ArrayList<Map<String, String>>();
 				// Child 1: the actual birthday as returned by Facebook
 				Map<String, String> birthdayString = new HashMap<String, String>();
 				birthdayString.put(ITEM_DATA, user.getBirthday());
-				bdayChildrenList.add(birthdayString);
+				aboutMeList.add(birthdayString);
+				++numChildrenAdded;
 //				CueItem birthdayStringItem = new CueItem(0, InfoType.INFO_FACEBOOK, user.getBirthday(), true);
 //				mFBList.add(birthdayStringItem);
 				// Child 2: the birthday month
@@ -253,16 +255,35 @@ public class FBListFragment extends ListFragment {
 				}
 				Map<String, String> birthdayMonth = new HashMap<String, String>();
 				birthdayMonth.put(ITEM_DATA, "Child of " + bdayMonth);
-				bdayChildrenList.add(birthdayMonth);
+				aboutMeList.add(birthdayMonth);
+				++numChildrenAdded;
 //				CueItem birthdayMonthItem = new CueItem(0, InfoType.INFO_FACEBOOK, "Child of " + bdayMonth, true);
 //				mFBList.add(birthdayMonthItem);
-				/** 3. Add the list item's children to the list view */
-				mChildData.add(bdayChildrenList);
 			} else {
 				Log.e(TAG, "getUserInfo() Birthday field empty");
 			}
 		} else {
 			Log.i(TAG, "getUserInfo() Birthday permission NOT granted");
+		}
+		/** HOMETOWN */
+		if(session.isPermissionGranted("user_hometown")) {
+			JSONObject hometownJSON = (JSONObject)user.getProperty("hometown");
+			if(hometownJSON.has("name")) {
+				/** 2. Get the children from the JSON response */
+				Map<String, String> hometownChild = new HashMap<String, String>();
+				hometownChild.put(ITEM_DATA, hometownJSON.optString("name"));
+				aboutMeList.add(hometownChild);
+				++numChildrenAdded;
+			} else {
+				Log.e(TAG, "getUserInfo() Hometown field empty");
+			}
+		} else {
+			Log.e(TAG, "getUserInfo() Hometown permission NOT granted");
+		}
+		/** 3. Add the list item's children to the list view */
+		if(numChildrenAdded > 0) {
+			mGroupData.add(aboutMeGroupMap);
+			mChildData.add(aboutMeList);
 		}
 		
 		/** BOOKS */
@@ -292,7 +313,7 @@ public class FBListFragment extends ListFragment {
 			peopleGroupMap.put(ITEM_DATA, "Inspirational people");
 			/** 2. Get the children from the JSON response */
 			List<Map<String, String>> peopleList = new ArrayList<Map<String, String>>();
-			int numChildrenAdded = 0;
+			numChildrenAdded = 0;
 			for (int j = 0; j < peopleJSONArray.length(); ++j) {
 				try {
 					JSONObject personJSON = peopleJSONArray.getJSONObject(j);
@@ -327,7 +348,7 @@ public class FBListFragment extends ListFragment {
 			teamsGroupMap.put(ITEM_DATA, "Sports teams");
 			/** 2. Get the children from the JSON response */
 			List<Map<String, String>> teamsList = new ArrayList<Map<String, String>>();
-			int numChildrenAdded = 0;
+			numChildrenAdded = 0;
 			for (int j = 0; j < teamsJSONArray.length(); ++j) {
 				try {
 					JSONObject teamJSON = teamsJSONArray.getJSONObject(j);
@@ -365,7 +386,7 @@ public class FBListFragment extends ListFragment {
 				educationGroupMap.put(ITEM_DATA, "Education");
 				/** 2. Get the children from the JSON response */
 				List<Map<String, String>> schoolsList = new ArrayList<Map<String, String>>();
-				int numChildrenAdded = 0;
+				numChildrenAdded = 0;
 				// Add all schools as children
 				for (int j = 0; j < schoolsJSON.length(); ++j) {
 					try {
@@ -402,7 +423,7 @@ public class FBListFragment extends ListFragment {
 				workGroupMap.put(ITEM_DATA, "Work history");
 				/** 2. Get the children from the JSON response */
 				List<Map<String, String>> companiesList = new ArrayList<Map<String, String>>();
-				int numChildrenAdded = 0;
+				numChildrenAdded = 0;
 				// Add all companies as children
 				for (int j = 0; j < companiesJSON.length(); ++j) {
 					JSONObject companyJSON = companiesJSON.optJSONObject(j);
@@ -447,28 +468,6 @@ public class FBListFragment extends ListFragment {
 //			}
 //		}).executeAsync();
 		
-		/** PERSONAL DETAILS */
-		if(session.isPermissionGranted("user_hometown")) {
-			JSONObject hometownJSON = (JSONObject)user.getProperty("hometown");
-			if(hometownJSON.has("name")) {
-				/** 1. Add the list item header to the list view */
-				Map<String, String> hometownGroupMap = new HashMap<String, String>();
-				hometownGroupMap.put(ITEM_DATA, "Hometown");
-				mGroupData.add(hometownGroupMap);
-				/** 2. Get the children from the JSON response */
-				List<Map<String, String>> hometownList = new ArrayList<Map<String, String>>();
-				Map<String, String> hometownChild = new HashMap<String, String>();
-				hometownChild.put(ITEM_DATA, hometownJSON.optString("name"));
-				hometownList.add(hometownChild);
-				/** 3. Add the list item's children to the list view */
-				mChildData.add(hometownList);
-			} else {
-				Log.e(TAG, "getUserInfo() Hometown field empty");
-			}
-		} else {
-			Log.e(TAG, "getUserInfo() Hometown permission NOT granted");
-		}
-		
 //		/** LIKES */
 //		JSONArray likesJSON = (JSONArray) user.getProperty("music");
 //		if(likesJSON.length() > 0) {
@@ -485,7 +484,7 @@ public class FBListFragment extends ListFragment {
 			languageGroupMap.put(ITEM_DATA, "Languages");
 			/** 2. Get the children from the JSON response */
 			List<Map<String, String>> languagesList = new ArrayList<Map<String, String>>();
-			int numChildrenAdded = 0;
+			numChildrenAdded = 0;
 			for (int i = 0; i < languages.length(); i++) {
 				JSONObject languageJSON = null;
 				try {
