@@ -56,8 +56,6 @@ public class FBListFragment extends ListFragment {
 	// View for the fragment
 	View v;
 	
-	// Handle to database
-	private DBHelper mDBHelper;
 	// Data for the list views
 	private List<CueItem> mFBList;
 	// Expandable list view
@@ -84,8 +82,7 @@ public class FBListFragment extends ListFragment {
 	public void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreate()");
 	    super.onCreate(savedInstanceState);
-	    mDBHelper = new DBHelper(getActivity());
-	    mFBList = mDBHelper.getItems(InfoType.INFO_FACEBOOK);
+	    mFBList = new ArrayList<CueItem>();
 	    mUiLifecycleHelper = new UiLifecycleHelper(getActivity(), mFBCallback);
 	    mUiLifecycleHelper.onCreate(savedInstanceState);
 	}
@@ -289,6 +286,8 @@ public class FBListFragment extends ListFragment {
 		if(numChildrenAdded > 0) {
 			mGroupData.add(aboutMeGroupMap);
 			mChildData.add(aboutMeList);
+			// Notify that the list contents have changed
+		    mAdapter.notifyDataSetChanged();
 		}
 		
 		/** BOOKS */
@@ -338,6 +337,8 @@ public class FBListFragment extends ListFragment {
 			if(numChildrenAdded > 0) {
 				mGroupData.add(peopleGroupMap);
 				mChildData.add(peopleList);
+				// Notify that the list contents have changed
+			    mAdapter.notifyDataSetChanged();
 			} else {
 				Log.e(TAG, "getUserInfo() Inspirational people extraction error");
 			}
@@ -373,6 +374,8 @@ public class FBListFragment extends ListFragment {
 			if(numChildrenAdded > 0) {
 				mGroupData.add(teamsGroupMap);
 				mChildData.add(teamsList);
+				// Notify that the list contents have changed
+			    mAdapter.notifyDataSetChanged();
 			} else {
 				Log.e(TAG, "getUserInfo() Sports teams extraction error");
 			}
@@ -409,6 +412,8 @@ public class FBListFragment extends ListFragment {
 				if(numChildrenAdded > 0) {
 					mGroupData.add(educationGroupMap);
 					mChildData.add(schoolsList);
+					// Notify that the list contents have changed
+				    mAdapter.notifyDataSetChanged();
 				} else {
 					Log.e(TAG, "getUserInfo() Education extraction error");
 				}
@@ -446,6 +451,8 @@ public class FBListFragment extends ListFragment {
 				if(numChildrenAdded > 0) {
 					mGroupData.add(workGroupMap);
 					mChildData.add(companiesList);
+					// Notify that the list contents have changed
+				    mAdapter.notifyDataSetChanged();
 				} else {
 					Log.e(TAG, "getUserInfo() Work extraction error");
 				}
@@ -507,15 +514,14 @@ public class FBListFragment extends ListFragment {
 			if(numChildrenAdded > 0) {
 				mGroupData.add(languageGroupMap);
 				mChildData.add(languagesList);
+				// Notify that the list contents have changed
+			    mAdapter.notifyDataSetChanged();
 			} else {
 				Log.e(TAG, "getUserInfo() Languages extraction error");
 			}
 		} else {
 			Log.e(TAG, "getUserInfo() Languages list empty");
 		}
-
-	    // Notify that the list contents have changed
-	    mAdapter.notifyDataSetChanged();
 	}
 	
 	/**
@@ -588,7 +594,6 @@ public class FBListFragment extends ListFragment {
 		@Override
 		public void onCompleted(Response response) {
 			if(response.getError() == null) {
-				Log.i(TAG, response.toString());
 				// response.getRequestForPagedResults(PagingDirection.NEXT);
 				String rawResponse = response.getRawResponse();
 				if(!rawResponse.isEmpty()) {

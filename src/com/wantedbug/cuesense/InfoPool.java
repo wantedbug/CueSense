@@ -32,12 +32,21 @@ public class InfoPool {
 	// Static singleton instance
 	public static final InfoPool INSTANCE = new InfoPool();
 	
-	// TODO test stuff to send messages
-	private int counter = 0;
-	
 	// List for the data
 	// Note: using Vector for its inbuilt thread safety
-	private Vector<CueItem> mList = new Vector<CueItem>(INIT_SIZE);
+	private Vector<CueItem> mGlobalList = new Vector<CueItem>(INIT_SIZE);
+	// Global list counter
+	private int mGlobalCounter = 0;
+	
+	// List for newly added CueSense cues
+	private Vector<CueItem> mNewCuesList = new Vector<CueItem>();
+	// New cues list counter
+	private int mNewCuesCounter = 0;
+	
+	// List for cues matched with another user
+	private Vector<CueItem> mMatchedCuesList = new Vector<CueItem>(INIT_SIZE);
+	// Matched cues list counter
+	private int mMatchedCuesCounter = 0;
 	
 	/**
 	 * Private c'tor to defeat instantiation
@@ -45,13 +54,13 @@ public class InfoPool {
 	private InfoPool() { }
 	
 	/**
-	 * Adds an InfoItem to the pool
+	 * Adds a new Cue to the pool
 	 * @param item
 	 * @return
 	 */
 	public synchronized void addCueItem(CueItem item) {
 		Log.d(TAG, "add: " + item.type() + item.data());
-		mList.add(item);
+		mNewCuesList.add(0, item);
 		Log.i(TAG, "adding " + item.type() + item.data());
 	}
 	
@@ -59,8 +68,8 @@ public class InfoPool {
 	 * Clears the InfoPool
 	 */
 	public void clear() {
-		Log.d(TAG, "clear(): " + mList.size());
-		mList.clear();
+		Log.d(TAG, "clear(): " + mGlobalList.size());
+		mGlobalList.clear();
 	}
 	
 	/**
@@ -69,7 +78,7 @@ public class InfoPool {
 	 */
 	public synchronized void addCueItems(List<CueItem> items) {
 		Log.d(TAG, "addCueItems(): " + items.size());
-		mList.addAll(items);
+		mGlobalList.addAll(items);
 	}
 	
 	/**
@@ -79,7 +88,7 @@ public class InfoPool {
 	 */
 	public synchronized void deleteCueItem(CueItem item) {
 		Log.d(TAG, "deleteCueItem(): " + item.id());
-		Iterator<CueItem> it = mList.iterator();
+		Iterator<CueItem> it = mGlobalList.iterator();
 		while(it.hasNext()) {
 			CueItem temp = it.next();
 			if(item.id() == temp.id()) {
@@ -97,7 +106,7 @@ public class InfoPool {
 	 */
 	public synchronized void updateCueItem(CueItem item) {
 		Log.d(TAG, "updateCueItem(): " + item.id());
-		for(CueItem it : mList) {
+		for(CueItem it : mGlobalList) {
 			if(it.id() == item.id()) {
 				Log.i(TAG, "updating " + item.type() + item.data());
 				it.setType(item.type());
@@ -116,13 +125,13 @@ public class InfoPool {
 		Log.d(TAG, "deleteType(): " + type.toString());
 		
 		// Nothing to do with an empty list
-		if(mList.isEmpty()) {
+		if(mGlobalList.isEmpty()) {
 			Log.i(TAG, "deleteType() - list empty");
 			return;
 		}
 		// Iterate through the list weeding out items with type
 		else {
-			Iterator<CueItem> it = mList.iterator();
+			Iterator<CueItem> it = mGlobalList.iterator();
 			while(it.hasNext()) {
 				CueItem item = it.next();
 				if(item.type().equals(type)) {
@@ -138,15 +147,24 @@ public class InfoPool {
 	 * @return
 	 */
 	public synchronized String getNext() {
-		if(mList.size() == 0) {
+		if(mNewCuesList.isEmpty() && mGlobalList.isEmpty()) {
 			return "CueSense";
 		}
 		
-		if(counter >= mList.size()) {
-			counter = 0;
+		// If there's a new Cue that the user just entered, send that
+		// and add the same to the end of the global list
+		if(!mNewCuesList.isEmpty()) {
+			String temp = mNewCuesList.elementAt(0).data();
+			mGlobalList.add(mNewCuesList.elementAt(0));
+			mNewCuesList.remove(0);
+			return temp;
 		}
-		String temp = mList.elementAt(counter).data();
-		++counter;
+		
+		if(mGlobalCounter >= mGlobalList.size()) {
+			mGlobalCounter = 0;
+		}
+		String temp = mGlobalList.elementAt(mGlobalCounter).data();
+		++mGlobalCounter;
 		return temp;
 	}
 }

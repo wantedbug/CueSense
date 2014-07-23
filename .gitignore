@@ -50,3 +50,6 @@ $RECYCLE.BIN/
 *.msi
 *.msm
 *.msp
+bin/classes.dex
+bin/CueSense.apk
+bin/resources.ap_
