@@ -170,8 +170,6 @@ public class FBFragment extends Fragment {
 	// For instance, change the UI
 	private void onSessionStateChange(Session session, SessionState state, Exception exception) {
 	    if (state.isOpened()) {
-	        Log.i(TAG, "Logged in...");
-	        
 	        if(mSession == null || isSessionChanged(session)) {
 	        	mSession = session; // cache the session
 	        	Log.i(TAG, "Access Token: " + session.getAccessToken());
@@ -182,13 +180,14 @@ public class FBFragment extends Fragment {
 	        		@Override
 	        		public void onCompleted(GraphUser user, Response response) {
 	        			if(user != null) {
+	        				Log.i(TAG, "Logged in, /me complete");
 	        				userInfoTextView.setText(buildUserInfoDisplay(user));
 	        			}
 	        		}
 	        	}).executeAsync();
 	        }
 	    } else if (state.isClosed()) {
-	        Log.i(TAG, "Logged out...");
+	        Log.i(TAG, "Facebook logged out");
 	        userInfoTextView.setText(R.string.fb_login_explanation);
 	    }
 	}

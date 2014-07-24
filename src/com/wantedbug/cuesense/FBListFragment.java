@@ -407,31 +407,6 @@ public class FBListFragment extends ListFragment {
 			Log.e(TAG, "getUserInfo() Work permission NOT granted");
 		}
 		
-//		/** INTERESTS */
-//		Request.newGraphPathRequest(session, "/me/interests", new Request.Callback() {
-//			@Override
-//			public void onCompleted(Response response) {
-//				if(response.getError() == null) {
-//					Log.i(TAG, response.toString());
-//					// response.getRequestForPagedResults(PagingDirection.NEXT);
-//					String rawResponse = response.getRawResponse();
-//					if(!rawResponse.isEmpty()) {
-//						
-//					}
-//				} else {
-//					Log.e(TAG, "PATH error " + response.getError());
-//				}
-//			}
-//		}).executeAsync();
-		
-//		/** LIKES */
-//		JSONArray likesJSON = (JSONArray) user.getProperty("music");
-//		if(likesJSON.length() > 0) {
-//			/** Check for Professional sports team likes */
-//
-//			/** Check for Actor and Actor/director likes */
-//		}
-		
 		/** LANGUAGES */
 		JSONArray languages = (JSONArray) user.getProperty("languages");
 		if (languages.length() > 0) {
@@ -578,9 +553,6 @@ public class FBListFragment extends ListFragment {
 									Map<String, String> bookChild = new HashMap<String, String>();
 									bookChild.put(ITEM_DATA, bookData.getString("title"));
 									booksChildrenList.add(bookChild);
-									CueItem bookItem = new CueItem(-1, InfoType.INFO_FACEBOOK, bookData.getString("title"), true);
-									mFBList.add(bookItem);
-									InfoPool.INSTANCE.addCueItem(bookItem);
 									++numChildrenAdded;
 								} else {
 									Log.e(TAG, "getUserInfo() Books[" + i + "] no title");
@@ -593,6 +565,13 @@ public class FBListFragment extends ListFragment {
 						if(numChildrenAdded > 0) {
 							mGroupData.add(0, booksGroupMap);
 							mChildData.add(0, booksChildrenList);
+							List<CueItem> items = new ArrayList<CueItem>();
+							for(int i = 0; i < numChildrenAdded; ++i) {
+								CueItem bookItem = new CueItem(-1, InfoType.INFO_FACEBOOK, booksChildrenList.get(i).get(ITEM_DATA), true);
+								mFBList.add(bookItem);
+								items.add(bookItem);
+							}
+							InfoPool.INSTANCE.addCueItemsToTop(items, InfoType.INFO_FACEBOOK);
 							// Notify list adapter here since this is an async task
 							mAdapter.notifyDataSetChanged();
 						} else {
@@ -644,9 +623,6 @@ public class FBListFragment extends ListFragment {
 									Map<String, String> musicChild = new HashMap<String, String>();
 									musicChild.put(ITEM_DATA, musicData.getString("name"));
 									musicChildrenList.add(musicChild);
-									CueItem musicItem = new CueItem(-1, InfoType.INFO_FACEBOOK, musicData.getString("name"), true);
-									mFBList.add(musicItem);
-									InfoPool.INSTANCE.addCueItem(musicItem);
 									++numChildrenAdded;
 								} else {
 									Log.e(TAG, "getUserInfo() Music[" + i + "] no name");
@@ -659,6 +635,13 @@ public class FBListFragment extends ListFragment {
 						if(numChildrenAdded > 0) {
 							mGroupData.add(0, musicGroupMap);
 							mChildData.add(0, musicChildrenList);
+							List<CueItem> items = new ArrayList<CueItem>();
+							for(int i = 0; i < numChildrenAdded; ++i) {
+								CueItem musicItem = new CueItem(-1, InfoType.INFO_FACEBOOK, musicChildrenList.get(i).get(ITEM_DATA), true);
+								mFBList.add(musicItem);
+								items.add(musicItem);
+							}
+							InfoPool.INSTANCE.addCueItemsToTop(items, InfoType.INFO_FACEBOOK);
 							// Notify list adapter here since this is an async task
 							mAdapter.notifyDataSetChanged();
 						} else {

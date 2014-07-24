@@ -266,6 +266,7 @@ public class BluetoothManager {
 		
 		public void run() {
 			Log.d(TAG, "ConnectThread::run()");
+			mAdapter.cancelDiscovery();
 			if(mSocket != null)
 		    {
 				// Try to connect to the device
@@ -282,7 +283,7 @@ public class BluetoothManager {
 		    		connectionFailed();
 		    		return;
 				}
-		    	
+		    	mAdapter.startDiscovery();
 		    	// Reset the ConnectThread because we're done
 	            synchronized (BluetoothManager.this) {
 	                mConnectThread = null;

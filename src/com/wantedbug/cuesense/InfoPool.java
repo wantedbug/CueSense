@@ -90,7 +90,31 @@ public class InfoPool {
 	 */
 	public synchronized void addCueItems(List<CueItem> items) {
 		Log.d(TAG, "addCueItems(): " + items.size());
+		if(items.isEmpty()) {
+			return;
+		}
 		mGlobalList.addAll(items);
+	}
+	
+	/**
+	 * Adds a list of InfoItems to the InfoPool at the top of other items
+	 * of the same type.
+	 * @param items
+	 * @param type
+	 */
+	public synchronized void addCueItemsToTop(List<CueItem> items, InfoType type) {
+		Log.d(TAG, "addCueItems(): " + items.size() + "," + type);
+		if(items.isEmpty()) {
+			return;
+		}
+		
+		int pos = 0;
+		for(; pos < mGlobalList.size(); ++pos) {
+			if(mGlobalList.elementAt(pos).type().equals(type)) {
+				break;
+			}
+		}
+		mGlobalList.addAll(pos, items);
 	}
 	
 	/**
