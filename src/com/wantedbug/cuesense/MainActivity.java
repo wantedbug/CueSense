@@ -7,7 +7,7 @@ package com.wantedbug.cuesense;
 import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
 import com.wantedbug.cuesense.DeleteCueSenseItemDialog.DeleteCueSenseItemListener;
 import com.wantedbug.cuesense.NewCueSenseItemDialog.NewCueSenseItemListener;
-
+import android.annotation.SuppressLint;
 import android.app.ActionBar.Tab;
 import android.app.Activity;
 import android.app.ActionBar;
@@ -96,7 +96,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private BluetoothAdapter mBTAdapter = null;
 	private BluetoothManager mBTManager = null;
 	// A handler to deal with callbacks from BTManager
-    private final Handler mHandler = new Handler() {
+    @SuppressLint("HandlerLeak")
+	private final Handler mBTMessageHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
@@ -112,8 +113,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     };
 
     // A Handler and Runnable to keep pushing messages to the wearable device
-    Handler timerHandler = new Handler();
-    Runnable timerRunnable = new Runnable() {
+    Handler mSendCueHandler = new Handler();
+    Runnable mSendCueRunnable = new Runnable() {
         @Override
         public void run() {
         	Log.d(TAG, "Runnable::run()");
@@ -122,7 +123,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         		Log.d(TAG, "BT is connected and ready");
         		sendToBT(InfoPool.INSTANCE.getNext());
         	}
-            timerHandler.postDelayed(this, PUSH_INTERVAL_MS);
+            mSendCueHandler.postDelayed(this, PUSH_INTERVAL_MS);
         }
     };
 
@@ -253,7 +254,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         super.onDestroy();
         // Stop the Bluetooth threads
         if (mBTManager != null) mBTManager.stop();
-        timerHandler.removeCallbacks(timerRunnable);
+        mSendCueHandler.removeCallbacks(mSendCueRunnable);
     }
 	/** End MainActivity lifecycle methods*/
 	
@@ -275,12 +276,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         Log.d(TAG, "setupBTLink()");
 
         // Initialize BluetoothManager
-        mBTManager = new BluetoothManager(this, mHandler);
+        mBTManager = new BluetoothManager(this, mBTMessageHandler);
 
         // Connect to the Bluetooth device
         connectDevice();
         
-        timerHandler.postDelayed(timerRunnable, PUSH_INTERVAL_MS);
+        mSendCueHandler.postDelayed(mSendCueRunnable, PUSH_INTERVAL_MS);
     }
 	
 	/**
@@ -424,7 +425,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			case INFO_TWITTER:
 				return getString(R.string.title_twitter);
 			case INFO_SENTINEL:
-				return getString(R.string.title_foursquare);
+				break;
+			default:
+				break;
 			}
 			return null;
 		}

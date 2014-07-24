@@ -11,16 +11,15 @@
     <string name="new_cuesense_item_description">Add a new Cue</string>
     <string name="new_cuesense_item_addbutton">Add</string>
     <string name="new_cuesense_item_cancelbutton">Cancel</string>
-    <string name="delete_cuesense_item_description">Delete this Cue?</string>
+    <string name="cuesense_no_data">No Cues added. Add one using the add button above.</string><string name="delete_cuesense_item_description">Delete this Cue?</string>
     <string name="delete_cuesense_item_deletebutton">Delete</string>
     <string name="fb_no_data">Login to Facebook in Settings to include your Facebook data</string>
-    <string name="cuesense_no_data">No Cues added. Add one using the add button above.</string>
+    
     <string name="fb_data_error">There was a problem getting your Facebook data. Please logout and login again.</string>
     <string name="fb_logged_in_as">Logged in as </string>
-    <string name="title_facebook">Facebook</string>
-    <string name="title_cuesense">CueSense</string>
-    <string name="title_twitter">Twitter</string>
-    <string name="title_foursquare">Foursquare</string>
-    <string name="fb_login_explanation">Note: CueSense does not post anything to Facebook.</string>
+    <string name="fb_login_explanation">Note: CueSense does not post anything to Facebook.</string><string name="title_cuesense">CueSense</string><string name="title_facebook">Facebook</string><string name="title_twitter">Twitter</string>
+    
+    
+    
 
 </resources>
