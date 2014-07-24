@@ -7,6 +7,7 @@ package com.wantedbug.cuesense;
 import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
 import com.wantedbug.cuesense.DeleteCueSenseItemDialog.DeleteCueSenseItemListener;
 import com.wantedbug.cuesense.NewCueSenseItemDialog.NewCueSenseItemListener;
+
 import android.annotation.SuppressLint;
 import android.app.ActionBar.Tab;
 import android.app.Activity;
@@ -20,7 +21,11 @@ import android.support.v4.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 //import android.support.v4.app.FragmentTransaction;
 //import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -49,8 +54,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	/**
 	 * Constants
 	 */
-	// Time interval to keep trying to push messages to the wearable device
-	private static final int PUSH_INTERVAL_MS = 5000;
+	// Time interval between successive data push attempts to the wearable device
+	private static final int PUSH_INTERVAL_MS = 8000;
+	// Time interval between successive Bluetooth discovery scans
+	private static final int SCAN_INTERVAL_MS = 5000;
 	// Tab content identifiers
 	public enum InfoType {
 		INFO_CUESENSE(0),
@@ -93,7 +100,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private static final int REQUEST_ENABLE_BT = 1;	
 
 	// Members
-	private BluetoothAdapter mBTAdapter = null;
+	private BluetoothAdapter mBTAdapter = BluetoothAdapter.getDefaultAdapter();;
 	private BluetoothManager mBTManager = null;
 	// A handler to deal with callbacks from BTManager
     @SuppressLint("HandlerLeak")
@@ -117,13 +124,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     Runnable mSendCueRunnable = new Runnable() {
         @Override
         public void run() {
-        	Log.d(TAG, "Runnable::run()");
+        	Log.d(TAG, "mSendCueRunnable::run()");
         	if(mBTManager.getState() == BluetoothManager.STATE_CONNECTED &&
         			mBTManager.isDeviceReady()) {
         		Log.d(TAG, "BT is connected and ready");
         		sendToBT(InfoPool.INSTANCE.getNext());
         	}
-            mSendCueHandler.postDelayed(this, PUSH_INTERVAL_MS);
+        	mSendCueHandler.postDelayed(this, PUSH_INTERVAL_MS);
         }
     };
 
@@ -145,7 +152,36 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// Reference to Add Cue menu item to set its visibility when needed
 	private MenuItem mAddMenuItem;
 	
-
+	// BroadcastReceiver to listen for another user's Bluetooth device
+	private final BroadcastReceiver mBTScanReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if(BluetoothDevice.ACTION_FOUND.equals(action)) {
+                int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI,Short.MIN_VALUE);
+                String name = intent.getStringExtra(BluetoothDevice.EXTRA_NAME);
+                Log.i(TAG, "onReceive() " + name + "," + rssi + "dBm");
+                mBTScanHandler.postDelayed(mBTScanRunnable, SCAN_INTERVAL_MS);
+            }
+        }
+    };
+    // A Handler and Runnable to continuously scan for another user's Bluetooth device
+    // specifically for signal strength
+    Handler mBTScanHandler = new Handler();
+    Runnable mBTScanRunnable = new Runnable() {
+        @Override
+        public void run() {
+        	Log.d(TAG, "mBTScanRunnable::run()");
+        	if(mBTAdapter != null) {
+        		Log.d(TAG, "performing BT scan");
+        		if(!mBTAdapter.isDiscovering()) {
+        			mBTAdapter.cancelDiscovery();
+        			mBTAdapter.startDiscovery();
+        		}
+        	}
+            mBTScanHandler.postDelayed(this, SCAN_INTERVAL_MS);
+        }
+    };
 
 	/** MainActivity lifecycle methods*/
 	@Override
@@ -154,9 +190,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		setContentView(R.layout.activity_main);
 		
 		/** Bluetooth setup */
-		// Get the default Bluetooth adapter
-	    mBTAdapter = BluetoothAdapter.getDefaultAdapter();
-	    
 	    // If the adapter is null, then Bluetooth is not supported
         if (mBTAdapter == null) {
         	Log.e(TAG, "BT not available");
@@ -164,44 +197,35 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             finish();
             return;
         }
-        
+        // Register the BroadcastReceiver
+        registerReceiver(mBTScanReceiver, new IntentFilter(BluetoothDevice.ACTION_FOUND));
+		
 		/** Action bar and tabs setup */
 		// Set up the action bar.
 		final ActionBar actionBar = getActionBar();
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-
 		// Create the adapter that will return a fragment for each of the three
 		// primary sections of the activity.
 		mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-
 		// Set up the ViewPager with the sections adapter.
 		mViewPager = (ViewPager) findViewById(R.id.pager);
 		mViewPager.setAdapter(mSectionsPagerAdapter);
 		mViewPager.setOffscreenPageLimit(3);
-
-		// When swiping between different sections, select the corresponding
-		// tab. We can also use ActionBar.Tab#select() to do this if we have
-		// a reference to the Tab.
-		mViewPager
-				.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-					@Override
-					public void onPageSelected(int position) {
-						actionBar.setSelectedNavigationItem(position);
-					}
-				});
-
+		mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+			@Override
+			public void onPageSelected(int position) {
+				actionBar.setSelectedNavigationItem(position);
+			}
+		});
 		// For each of the sections in the app, add a tab to the action bar.
 		for (int i = 0; i < mSectionsPagerAdapter.getCount(); i++) {
-			// Create a tab with text corresponding to the page title defined by
-			// the adapter. Also specify this Activity object, which implements
-			// the TabListener interface, as the callback (listener) for when
-			// this tab is selected.
 			Tab newTab = actionBar.newTab()
 					.setText(mSectionsPagerAdapter.getPageTitle(i))
 					.setTabListener(this);
 			actionBar.addTab(newTab);
 		}
 		
+		/** Database and InfoPool setup */
 		mDBHelper = new DBHelper(getApplication());
 		mPool.addCueItems(mDBHelper.getItems(InfoType.INFO_CUESENSE));
 	}
@@ -228,7 +252,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public synchronized void onPause() {
 		super.onPause();
         Log.d(TAG, "onPause()");
-//		timerHandler.removeCallbacks(timerRunnable);
 	}
 	
 	@Override
@@ -254,7 +277,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         super.onDestroy();
         // Stop the Bluetooth threads
         if (mBTManager != null) mBTManager.stop();
+        // Stop the send and scan handler runnables
         mSendCueHandler.removeCallbacks(mSendCueRunnable);
+        mBTScanHandler.removeCallbacks(mBTScanRunnable);
     }
 	/** End MainActivity lifecycle methods*/
 	
@@ -281,7 +306,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         // Connect to the Bluetooth device
         connectDevice();
         
+        // Start the runnable to keep pushing data, if available, to the wearable
         mSendCueHandler.postDelayed(mSendCueRunnable, PUSH_INTERVAL_MS);
+        
+        // Start Bluetooth discovery to continuously monitor signal strength of
+        // the nearby user
+        // Note: This is being run on a GS3Mini with 4.1.2 JellyBean which does not
+        // support Bluetooth LE. Therefore discovery being started is MANDATORY.
+		mBTAdapter.startDiscovery();
     }
 	
 	/**

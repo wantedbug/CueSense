@@ -266,7 +266,6 @@ public class BluetoothManager {
 		
 		public void run() {
 			Log.d(TAG, "ConnectThread::run()");
-			mAdapter.cancelDiscovery();
 			if(mSocket != null)
 		    {
 				// Try to connect to the device
