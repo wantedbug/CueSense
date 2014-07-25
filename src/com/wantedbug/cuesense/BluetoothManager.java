@@ -41,10 +41,8 @@ public class BluetoothManager {
     
     // UUID for serial connection
     private static final UUID SERIAL_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-    
-    // Bluetooth device properties
+    // Bluetooth address of the wearable
 	public static final String DEVICE_MAC = "00:06:66:60:1D:07";
-	
 	// Termination character to append to a Bluetooth transmission to
 	// signify the end of the same
 	private static final String TERM_CHAR = "|";
@@ -57,18 +55,18 @@ public class BluetoothManager {
 	
 	// Handler from the UI
 	private final Handler mHandler;
-	
+
+	// The wearable device
+	private BluetoothDevice mWearable;
 	// Thread to create the connection to the wearable device
 	private ConnectThread mConnectThread;
-	
 	// Thread to transmit and listen to the wearable device
 	private ConnectedThread mConnectedThread;
-	
-	// Bluetooth connection state
-	private int mState;
+	// Bluetooth connection state of the wearable device
+	private int mWearableState;
 	
 	// Flag that specifies whether device is ready to receive new data
-	private boolean mDeviceReady;
+	private boolean mWearableReady;
 	
     /**
      * C'tor
@@ -77,46 +75,61 @@ public class BluetoothManager {
 	public BluetoothManager(Context context, Handler handler) {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mHandler = handler;
-        mState = STATE_NONE;
+        mWearableState = STATE_NONE;
 	}
 	
 	/**
-	 * Return current state of the connection
+	 * Return current state of the wearable connection
 	 * @return
 	 */
-	public synchronized int getState() {
-        return mState;
+	public synchronized int getWearableState() {
+        return mWearableState;
     }
 	
 	/**
-	 * Set current state of the connection
+	 * Set current state of the wearable connection
 	 * @param state
 	 */
-	private synchronized void setState(int state) {
-        Log.d(TAG, "setState() " + mState + " -> " + state);
-        mState = state;
+	private synchronized void setWearableState(int state) {
+        Log.d(TAG, "setWearableState() " + mWearableState + " -> " + state);
+        mWearableState = state;
 	}
 	
+	/**
+	 * Returns true if wearable is ready to receive data
+	 * @return
+	 */
 	public synchronized boolean isDeviceReady() {
-		return mDeviceReady;
+		return mWearableReady;
 	}
 	
+	/**
+	 * Sets the ready status of the wearable
+	 */
 	private synchronized void setDeviceReadyStatus(boolean status) {
-		mDeviceReady = status;
+		mWearableReady = status;
 	}
 	
 	/**
 	 * Start all the threads
 	 */
-	public synchronized void start() {
+	public synchronized void setup() {
         Log.d(TAG, "start");
 
-        stopConnectedThreads();
+        stopWearableThreads();
+        setWearableState(STATE_CONNECTING);
+	}
+	
+	/**
+	 * Kill existing connections and retry
+	 */
+	public synchronized void restart() {
+        Log.d(TAG, "restart()");
 
-        // TODO: May have to launch a listener thread to listen for another user's
-        // Bluetooth-enabled smartphone
-        
-        setState(STATE_LISTEN);
+        // Stop connection threads and retry connecting
+        stopWearableThreads();
+        setWearableState(STATE_CONNECTING);
+        connectWearable(mWearable);
 	}
 	
 	/**
@@ -125,15 +138,14 @@ public class BluetoothManager {
 	public synchronized void stop() {
         Log.d(TAG, "stop");
 
-        stopConnectedThreads();
-
-        setState(STATE_NONE);
+        stopWearableThreads();
+        setWearableState(STATE_NONE);
     }
 	
 	/**
 	 * Stops ConnectThread and ConnectedThread
 	 */
-	private synchronized void stopConnectedThreads() {
+	private synchronized void stopWearableThreads() {
 		if (mConnectThread != null) {
             mConnectThread.cancel();
             mConnectThread = null;
@@ -149,11 +161,12 @@ public class BluetoothManager {
 	 * Start the ConnectThread to initiate a connection to a remote device.
 	 * @param device BluetoothDevice to connect
 	 */
-	public synchronized void connect(BluetoothDevice device) {
+	public synchronized void connectWearable(BluetoothDevice device) {
         Log.d(TAG, "connect to: " + device);
+        mWearable = device;
 
         // Cancel any thread attempting to make a connection
-        if (mState == STATE_CONNECTING) {
+        if (mWearableState == STATE_CONNECTING) {
             if (mConnectThread != null) {
             	mConnectThread.cancel();
             	mConnectThread = null;
@@ -169,7 +182,7 @@ public class BluetoothManager {
         // Start the thread to connect with the given device
         mConnectThread = new ConnectThread(device);
         mConnectThread.start();
-        setState(STATE_CONNECTING);
+        setWearableState(STATE_CONNECTING);
     }
 	
 	/**
@@ -177,22 +190,22 @@ public class BluetoothManager {
 	 * @param socket BluetoothSocket on which the connection was made
 	 * @param device BluetoothDevice that has been connected
 	 */
-	public synchronized void connected(BluetoothSocket socket, BluetoothDevice device) {
+	public synchronized void wearableConnected(BluetoothSocket socket, BluetoothDevice device) {
         Log.d(TAG, "connected");
 
-        stopConnectedThreads();
+        stopWearableThreads();
 
         // Start the thread to manage the connection and perform transmissions
         mConnectedThread = new ConnectedThread(socket);
         mConnectedThread.start();
 
-        setState(STATE_CONNECTED);
+        setWearableState(STATE_CONNECTED);
     }
 	
 	/**
      * Indicate that the connection attempt failed and notify the UI
      */
-    private void connectionFailed() {
+    private void wearableConnectionFailed() {
         // Send a failure message back to the UI
         Message msg = mHandler.obtainMessage(MainActivity.BT_MSG_TOAST);
         Bundle bundle = new Bundle();
@@ -201,13 +214,13 @@ public class BluetoothManager {
         mHandler.sendMessage(msg);
 
         // Start the service over to restart listening mode
-        BluetoothManager.this.start();
+        BluetoothManager.this.restart();
     }
     
     /**
      * Indicate that the connection was lost and notify the UI
      */
-    private void connectionLost() {
+    private void wearableConnectionLost() {
         // Send a failure message back to the Activity
         Message msg = mHandler.obtainMessage(MainActivity.BT_MSG_TOAST);
         Bundle bundle = new Bundle();
@@ -216,19 +229,19 @@ public class BluetoothManager {
         mHandler.sendMessage(msg);
 
         // Start the service over to restart listening mode
-        BluetoothManager.this.start();
+        BluetoothManager.this.restart();
     }
     
 	/**
 	 * Write to ConnectedThread
 	 * @param out
 	 */
-	public void write(String message) {
+	public void writeToWearable(String message) {
         // Create temporary object
         ConnectedThread r;
         // Synchronize a copy of the ConnectedThread
         synchronized (this) {
-            if (mState != STATE_CONNECTED) return;
+            if (mWearableState != STATE_CONNECTED) return;
             r = mConnectedThread;
         }
         // Append termination character
@@ -280,7 +293,7 @@ public class BluetoothManager {
 		    		} catch(IOException closeException) {
 		    			Log.e(TAG, "Socket close error in Thread run()" + closeException);
 		    		}
-		    		connectionFailed();
+		    		wearableConnectionFailed();
 		    		return;
 				}
 		    	mAdapter.startDiscovery();
@@ -290,7 +303,7 @@ public class BluetoothManager {
 	            }
 
 	            // Start the connected thread to be able to send data
-	            connected(mSocket, mDevice);
+	            wearableConnected(mSocket, mDevice);
 		    }
 		}
 		
@@ -333,7 +346,7 @@ public class BluetoothManager {
             mSocket = socket;
             OutputStream tmpOut = null;
             InputStream tmpIn = null;
-            mDeviceReady = false;
+            mWearableReady = false;
 
             // Get the BluetoothSocket input and output streams
             try {
@@ -345,7 +358,7 @@ public class BluetoothManager {
 
             mOutStream = tmpOut;
             mInStream = tmpIn;
-            mDeviceReady = true;
+            mWearableReady = true;
         }
         
         /**
@@ -367,7 +380,7 @@ public class BluetoothManager {
             		}
             	} catch(IOException e) {
             		Log.e(TAG, "Read error: " + e);
-            		connectionLost();
+            		wearableConnectionLost();
             		break;
             	}
             }
@@ -401,4 +414,5 @@ public class BluetoothManager {
             }
         }
 	}
+	
 }

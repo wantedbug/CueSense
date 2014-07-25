@@ -25,7 +25,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 //import android.support.v4.app.FragmentTransaction;
 //import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -125,7 +124,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         @Override
         public void run() {
         	Log.d(TAG, "mSendCueRunnable::run()");
-        	if(mBTManager.getState() == BluetoothManager.STATE_CONNECTED &&
+        	if(mBTManager.getWearableState() == BluetoothManager.STATE_CONNECTED &&
         			mBTManager.isDeviceReady()) {
         		Log.d(TAG, "BT is connected and ready");
         		sendToBT(InfoPool.INSTANCE.getNext());
@@ -264,9 +263,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         // onResume() will be called when ACTION_REQUEST_ENABLE activity returns.
         if (mBTManager != null) {
             // Only if the state is STATE_NONE, do we know that we haven't started already
-            if (mBTManager.getState() == BluetoothManager.STATE_NONE) {
+            if (mBTManager.getWearableState() == BluetoothManager.STATE_NONE) {
               // Start the Bluetooth threads
-              mBTManager.start();
+              mBTManager.setup();
             }
         }
     }
@@ -291,7 +290,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         // Get the BluetoothDevice object
         BluetoothDevice device = mBTAdapter.getRemoteDevice(BluetoothManager.DEVICE_MAC);
         // Attempt to connect to the device
-        mBTManager.connect(device);
+        mBTManager.connectWearable(device);
     }
 	
 	/**
@@ -324,14 +323,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	{
 		Log.d(TAG, "sendToBT() " + text);
         // Check that we're actually connected before trying anything
-        if (mBTManager.getState() != BluetoothManager.STATE_CONNECTED) {
+        if (mBTManager.getWearableState() != BluetoothManager.STATE_CONNECTED) {
             Toast.makeText(this, R.string.bt_not_connected, Toast.LENGTH_LONG).show();
             return;
         }
 
         // Check that there's actually something to send
         if (text.length() > 0) {
-            mBTManager.write(text);
+            mBTManager.writeToWearable(text);
         }
     }
 	
