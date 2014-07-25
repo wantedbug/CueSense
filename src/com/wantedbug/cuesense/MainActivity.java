@@ -49,6 +49,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		CueSenseListener, NewCueSenseItemListener, DeleteCueSenseItemListener {
 	// Debugging
 	private static final String TAG = "MainActivity";
+	public static final boolean DEBUG = true;
 
 	/**
 	 * Constants
@@ -170,7 +171,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     Runnable mBTScanRunnable = new Runnable() {
         @Override
         public void run() {
-        	Log.d(TAG, "mBTScanRunnable::run()");
         	if(mBTAdapter != null) {
         		Log.d(TAG, "performing BT scan");
         		if(!mBTAdapter.isDiscovering()) {
@@ -279,6 +279,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         // Stop the send and scan handler runnables
         mSendCueHandler.removeCallbacks(mSendCueRunnable);
         mBTScanHandler.removeCallbacks(mBTScanRunnable);
+        unregisterReceiver(mBTScanReceiver);
     }
 	/** End MainActivity lifecycle methods*/
 	
@@ -313,6 +314,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         // Note: This is being run on a GS3Mini with 4.1.2 JellyBean which does not
         // support Bluetooth LE. Therefore discovery being started is MANDATORY.
 		mBTAdapter.startDiscovery();
+		mBTScanHandler.post(mBTScanRunnable);
     }
 	
 	/**

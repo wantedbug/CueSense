@@ -213,8 +213,8 @@ public class BluetoothManager {
         msg.setData(bundle);
         mHandler.sendMessage(msg);
 
-        // Start the service over to restart listening mode
-        BluetoothManager.this.restart();
+//        // Start the service over to restart listening mode
+//        BluetoothManager.this.restart(); // probably not a good idea
     }
     
     /**
@@ -287,6 +287,7 @@ public class BluetoothManager {
 		    		mSocket.connect(); // blocking call
 		    	} catch (IOException connectException) {
 		    		Log.e(TAG, "Socket connect error in Thread run()" + connectException);
+		    		if(MainActivity.DEBUG) mAdapter.startDiscovery();
 		    		// Try to close the socket
 		    		try {
 		    			mSocket.close();
