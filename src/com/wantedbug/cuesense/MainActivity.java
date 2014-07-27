@@ -4,6 +4,9 @@
 
 package com.wantedbug.cuesense;
 
+import java.lang.reflect.Method;
+import java.util.Set;
+
 import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
 import com.wantedbug.cuesense.DeleteCueSenseItemDialog.DeleteCueSenseItemListener;
 import com.wantedbug.cuesense.NewCueSenseItemDialog.NewCueSenseItemListener;
@@ -57,7 +60,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// Time interval between successive data push attempts to the wearable device
 	private static final int PUSH_INTERVAL_MS = 8000;
 	// Time interval between successive Bluetooth discovery scans
-	private static final int SCAN_INTERVAL_MS = 5000;
+	private static final int SCAN_INTERVAL_MS = 8000;
 	// Tab content identifiers
 	public enum InfoType {
 		INFO_CUESENSE(0),
@@ -87,6 +90,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	
 	// Types of messages that can be handled from the BTManager
 	public static final int BT_MSG_TOAST = 1;
+	public static final int BT_MSG_SENDRECV_DONE = 2;
 	// Key message names received from BTManager
 	public static final String BT_MSG_ERROR = "error";
 	// Error message values
@@ -100,13 +104,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private static final int REQUEST_ENABLE_BT = 1;	
 
 	// Members
-	private BluetoothAdapter mBTAdapter = BluetoothAdapter.getDefaultAdapter();;
+	private BluetoothAdapter mBTAdapter = BluetoothAdapter.getDefaultAdapter();
 	private BluetoothManager mBTManager = null;
 	// A handler to deal with callbacks from BTManager
     @SuppressLint("HandlerLeak")
 	private final Handler mBTMessageHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
+        	Log.d(TAG, "handleMessage()");
             switch (msg.what) {
             case BT_MSG_TOAST:
             	int msgData = msg.getData().getInt(BT_MSG_ERROR);
@@ -115,6 +120,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             	} else if(BT_ERR_CONN_LOST == msgData) {
             		Toast.makeText(getApplicationContext(), R.string.bt_connection_lost, Toast.LENGTH_LONG).show();
             	}
+            	break;
+            case BT_MSG_SENDRECV_DONE:
+            	// Restart listening
+            	Log.i(TAG, "restarting user threads");
+            	mBTManager.stopPairedUserThreads();
+            	mBTManager.startPairedUserThreads();
+            	break;
             }
         }
     };
@@ -152,16 +164,61 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// Reference to Add Cue menu item to set its visibility when needed
 	private MenuItem mAddMenuItem;
 	
+	private boolean mDataSent = false;
+	
+//	private static final String TARGET_USER = "nikkis@s3mini";
+	private static final String TARGET_USER = "GT-I8190N";
+	
 	// BroadcastReceiver to listen for another user's Bluetooth device
 	private final BroadcastReceiver mBTScanReceiver = new BroadcastReceiver() {
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public synchronized void onReceive(Context context, Intent intent) {
+        	Log.d(TAG, "BroadcastReceiver::onReceive()");
             String action = intent.getAction();
             if(BluetoothDevice.ACTION_FOUND.equals(action)) {
                 int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI,Short.MIN_VALUE);
                 String name = intent.getStringExtra(BluetoothDevice.EXTRA_NAME);
-                Log.i(TAG, "onReceive() " + name + "," + rssi + "dBm");
-                mBTScanHandler.postDelayed(mBTScanRunnable, SCAN_INTERVAL_MS);
+                Log.i(TAG, "onReceive() " + name + "," + rssi + "dBm, " + mBTManager.getPairedUserState());
+                final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                if(device != null && device.getName().equals(TARGET_USER) && mBTManager.getPairedUserState() >= BluetoothManager.STATE_LISTEN && !mDataSent) {
+                	Log.i(TAG, "Sending to " + device.getName() + "," + device.getAddress());
+                	// Stop discovery
+//                	mBTAdapter.cancelDiscovery();
+                	mBTScanHandler.removeCallbacks(mBTScanRunnable);
+                	// Connect and send
+                	String msg = "yo";
+                	synchronized (this) {
+                		mBTManager.connectAndSend(device, false, msg);
+                		mDataSent = true;
+                		if(device.getBondState() == BluetoothDevice.BOND_BONDED) {
+	                		Log.i(TAG, device.getName() + " bonded 1");
+	                		try {
+                	            Method method = device.getClass().getMethod("removeBond", (Class[]) null);
+                	            method.invoke(device, (Object[]) null);
+                	            Log.i(TAG, device.getName() + " unbonded");
+                	        } catch (Exception e) {
+                	            Log.e(TAG, "Could not unpair " + e);
+                	        }
+	                	}
+	                	Set<BluetoothDevice> devices = mBTAdapter.getBondedDevices();
+	                	for(BluetoothDevice dev : devices) {
+	                		if(dev.getName() == device.getName()) {
+	                			Log.i(TAG, dev.getName() + " bonded 2");
+	                			try {
+	                	            Method method = device.getClass().getMethod("removeBond", (Class[]) null);
+	                	            method.invoke(device, (Object[]) null);
+	                	            Log.i(TAG, device.getName() + " unbonded");
+	                	        } catch (Exception e) {
+	                	            Log.e(TAG, "Could not unpair " + e);
+	                	        }
+	                			break;
+	                		}
+	                	}
+                	}
+                	// Restart discovery
+                	mBTAdapter.startDiscovery();
+            		mBTScanHandler.post(mBTScanRunnable);
+                }
             }
         }
     };
@@ -196,8 +253,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             finish();
             return;
         }
-        // Register the BroadcastReceiver
-        registerReceiver(mBTScanReceiver, new IntentFilter(BluetoothDevice.ACTION_FOUND));
 		
 		/** Action bar and tabs setup */
 		// Set up the action bar.
@@ -267,6 +322,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
               // Start the Bluetooth threads
               mBTManager.setup();
             }
+            if (mBTManager.getPairedUserState() == BluetoothManager.STATE_NONE) {
+            	mBTManager.startPairedUserThreads();
+            }
         }
     }
 	
@@ -275,7 +333,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		Log.d(TAG, "onDestroy()");
         super.onDestroy();
         // Stop the Bluetooth threads
-        if (mBTManager != null) mBTManager.stop();
+        if (mBTManager != null) {
+        	mBTManager.stop();
+        	mBTManager.stopPairedUserThreads();
+        }
         // Stop the send and scan handler runnables
         mSendCueHandler.removeCallbacks(mSendCueRunnable);
         mBTScanHandler.removeCallbacks(mBTScanRunnable);
@@ -313,6 +374,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         // the nearby user
         // Note: This is being run on a GS3Mini with 4.1.2 JellyBean which does not
         // support Bluetooth LE. Therefore discovery being started is MANDATORY.
+        // Register the BroadcastReceiver
+        registerReceiver(mBTScanReceiver, new IntentFilter(BluetoothDevice.ACTION_FOUND));
 		mBTAdapter.startDiscovery();
 		mBTScanHandler.post(mBTScanRunnable);
     }
