@@ -250,12 +250,14 @@ public class InfoPool {
 	}
 	
 	/**
-	 * Gets next message from the appropriate list
+	 * Gets next Cue from the appropriate list
 	 * @return
-	 * Priority order for search:
+	 * Returns only checked Cues. Priority order for the search:
 	 * 1. New cues list
 	 * 2. Matched list
 	 * 3. Global list
+	 * If there is any data in the matched list, the global list will never
+	 * be searched.
 	 */
 	public synchronized String getNext() {
 		Log.d(TAG, "getNext()");
@@ -264,14 +266,25 @@ public class InfoPool {
 			return "CueSense";
 		}
 		
-		// If there's a new Cue that the user just entered, return that
+		// Return the first encountered checked Cue that the user entered
 		// and add the same to the end of the global list
 		if(!mNewCuesList.isEmpty()) {
-			String ret = mNewCuesList.elementAt(0).data();
-			mGlobalList.add(mNewCuesList.elementAt(0));
-			mNewCuesList.remove(0);
-			Log.i(TAG, "getNext() from new list " + ret);
-			return ret;
+			boolean found = false;
+			String ret = "";
+			Iterator<CueItem> it = mNewCuesList.iterator();
+			while(!found && it.hasNext()) {
+				CueItem item = it.next();
+				if(item.isChecked()) {
+					ret = item.data();
+					mGlobalList.add(item);
+					it.remove();
+					found = true;
+				}
+			}
+			if(found) {
+				Log.i(TAG, "getNext() from new list " + ret);
+				return ret;
+			}
 		}
 		
 		// If there's a matched Cue, return that
@@ -285,9 +298,15 @@ public class InfoPool {
 			return ret;
 		}
 		
-		// If not, then return one from the global list
+		// If not, then return the first checked item from the global list
 		if(mGlobalCounter >= mGlobalList.size()) {
 			mGlobalCounter = 0;
+		}
+		for(int i = 0; i < mGlobalCounter; ++i) {
+			CueItem item = mGlobalList.elementAt(i);
+			if(item.isChecked()) {
+				mGlobalCounter = i;
+			}
 		}
 		String ret = mGlobalList.elementAt(mGlobalCounter).data();
 		++mGlobalCounter;
