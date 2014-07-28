@@ -96,6 +96,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// Error message values
 	public static final int BT_ERR_CONN_LOST = 1;
 	public static final int BT_ERR_CONN_FAILED = 2;
+	
+	// Distance levels
+	private static final int DISTANCE_OUTOFRANGE = 0;
+	private static final int DISTANCE_NEAR = 1;
+	private static final int DISTANCE_INTERMEDIATE = 2;
+	private static final int DISTANCE_FAR = 3;
 
 	/**
 	 * Members
@@ -122,8 +128,24 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             	}
             	break;
             case BT_MSG_SENDRECV_DONE:
+    			// Unpair the users' phones
+            	Log.i(TAG, "Unpairing phones");
+    			Set<BluetoothDevice> devices = mBTAdapter.getBondedDevices();
+    			for(BluetoothDevice dev : devices) {
+    				if(dev.getName().equals(TARGET_USER)) {
+    					Log.i(TAG, dev.getName() + " bonded 2");
+    					try {
+    						Method method = dev.getClass().getMethod("removeBond", (Class[]) null);
+    						method.invoke(dev, (Object[]) null);
+    						Log.i(TAG, "unbonded");
+    					} catch (Exception e) {
+    						Log.e(TAG, "Could not unpair " + e);
+    					}
+    					break;
+    				}
+    			}
             	// Restart listening
-            	Log.i(TAG, "restarting user threads");
+            	Log.i(TAG, "Restarting user threads");
             	mBTManager.stopPairedUserThreads();
             	mBTManager.startPairedUserThreads();
             	break;
@@ -164,64 +186,79 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// Reference to Add Cue menu item to set its visibility when needed
 	private MenuItem mAddMenuItem;
 	
-	private boolean mDataSent = false;
+	// Distance levels to determine what data to send
+	private int mPrevDistance = DISTANCE_OUTOFRANGE;
+	private int mCurrDistance;
 	
 //	private static final String TARGET_USER = "nikkis@s3mini";
 	private static final String TARGET_USER = "GT-I8190N";
 	
 	// BroadcastReceiver to listen for another user's Bluetooth device
-	private final BroadcastReceiver mBTScanReceiver = new BroadcastReceiver() {
+	private BroadcastReceiver mBTScanReceiver = new BroadcastReceiver() {
         @Override
         public synchronized void onReceive(Context context, Intent intent) {
         	Log.d(TAG, "BroadcastReceiver::onReceive()");
             String action = intent.getAction();
             if(BluetoothDevice.ACTION_FOUND.equals(action)) {
+            	// Get signal strength and device details
                 int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI,Short.MIN_VALUE);
                 String name = intent.getStringExtra(BluetoothDevice.EXTRA_NAME);
-                Log.i(TAG, "onReceive() " + name + "," + rssi + "dBm, " + mBTManager.getPairedUserState());
+                Log.i(TAG, "onReceive() " + name + "," + rssi + "dBm, paired=" + mBTManager.getPairedUserState());
                 final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                if(device != null && device.getName().equals(TARGET_USER) && mBTManager.getPairedUserState() >= BluetoothManager.STATE_LISTEN && !mDataSent) {
-                	Log.i(TAG, "Sending to " + device.getName() + "," + device.getAddress());
+                // Send if we find the right device and if we're ready to accept the connection
+                if(device != null && device.getName().equals(TARGET_USER) && mBTManager.getPairedUserState() >= BluetoothManager.STATE_LISTEN) {
                 	// Stop discovery
-//                	mBTAdapter.cancelDiscovery();
                 	mBTScanHandler.removeCallbacks(mBTScanRunnable);
-                	// Connect and send
-                	String msg = "yo";
+                	String msg = "";
+                	mCurrDistance = getDistanceFromRSSI(rssi);
                 	synchronized (this) {
-                		mBTManager.connectAndSend(device, false, msg);
-                		mDataSent = true;
-                		if(device.getBondState() == BluetoothDevice.BOND_BONDED) {
-	                		Log.i(TAG, device.getName() + " bonded 1");
-	                		try {
-                	            Method method = device.getClass().getMethod("removeBond", (Class[]) null);
-                	            method.invoke(device, (Object[]) null);
-                	            Log.i(TAG, device.getName() + " unbonded");
-                	        } catch (Exception e) {
-                	            Log.e(TAG, "Could not unpair " + e);
-                	        }
-	                	}
-	                	Set<BluetoothDevice> devices = mBTAdapter.getBondedDevices();
-	                	for(BluetoothDevice dev : devices) {
-	                		if(dev.getName() == device.getName()) {
-	                			Log.i(TAG, dev.getName() + " bonded 2");
-	                			try {
-	                	            Method method = device.getClass().getMethod("removeBond", (Class[]) null);
-	                	            method.invoke(device, (Object[]) null);
-	                	            Log.i(TAG, device.getName() + " unbonded");
-	                	        } catch (Exception e) {
-	                	            Log.e(TAG, "Could not unpair " + e);
-	                	        }
-	                			break;
-	                		}
-	                	}
+                		// Send if in range
+                		if(mCurrDistance != DISTANCE_OUTOFRANGE && mCurrDistance != mPrevDistance) {
+                			Log.i(TAG, "Sending to " + device.getName() + "," + device.getAddress());
+                			mPrevDistance = mCurrDistance;
+                			// Get data to be sent
+                			if(mCurrDistance == DISTANCE_NEAR) {
+                				msg = "NEAR";
+                			} else if(mCurrDistance == DISTANCE_INTERMEDIATE) {
+                				msg = "INTERMEDIATE";
+                			} else if(mCurrDistance == DISTANCE_FAR) {
+                				msg = "FAR";
+                			}
+                			// Connect and send
+                			mBTManager.connectAndSend(device, false, msg);
+                			// Unpair later after send/receive succeeds
+                			// Unpair the devices
+                			if(device.getBondState() == BluetoothDevice.BOND_BONDED) {
+                				Log.i(TAG, device.getName() + " bonded 1");
+                			}
+                		}
                 	}
                 	// Restart discovery
-                	mBTAdapter.startDiscovery();
-            		mBTScanHandler.post(mBTScanRunnable);
+                	mBTScanHandler.postDelayed(mBTScanRunnable, SCAN_INTERVAL_MS);
                 }
             }
         }
     };
+    
+    /**
+     * Converts RSSI to distance level
+     * @param rssi
+     * @return
+     */
+    private int getDistanceFromRSSI(int rssi) {
+    	rssi = java.lang.Math.abs(rssi);
+    	if(rssi < 40) {
+    		return DISTANCE_NEAR;
+    	} else if(rssi >=40 && rssi < 60) {
+    		return DISTANCE_INTERMEDIATE;
+    	} else if(rssi >= 60 && rssi < 80) {
+    		return DISTANCE_FAR;
+    	} else {
+    		return DISTANCE_OUTOFRANGE;
+    	}
+    }
+    
+    
     // A Handler and Runnable to continuously scan for another user's Bluetooth device
     // specifically for signal strength
     Handler mBTScanHandler = new Handler();
@@ -340,7 +377,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         // Stop the send and scan handler runnables
         mSendCueHandler.removeCallbacks(mSendCueRunnable);
         mBTScanHandler.removeCallbacks(mBTScanRunnable);
-        unregisterReceiver(mBTScanReceiver);
+        if(mBTScanReceiver != null) {
+        	try {
+        		unregisterReceiver(mBTScanReceiver);
+        	} catch(IllegalArgumentException e) {
+        		Log.d(TAG, "receiver not registered");
+        		mBTScanReceiver = null;
+        	}
+        }
     }
 	/** End MainActivity lifecycle methods*/
 	

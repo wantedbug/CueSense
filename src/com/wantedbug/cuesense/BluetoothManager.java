@@ -422,8 +422,8 @@ public class BluetoothManager {
 	
 	
 	// Name for the SDP record when creating server socket
-    private static final String NAME_SECURE = "BluetoothChatSecure";
-    private static final String NAME_INSECURE = "BluetoothChatInsecure";
+    private static final String NAME_SECURE = "CueSenseSecure";
+    private static final String NAME_INSECURE = "CueSenseInsecure";
 
     // Unique UUID for this application
     private static final UUID MY_UUID_SECURE =
@@ -503,8 +503,7 @@ public class BluetoothManager {
      * @param socket  The BluetoothSocket on which the connection was made
      * @param device  The BluetoothDevice that has been connected
      */
-    public synchronized void pairedUserConnected(BluetoothSocket socket, BluetoothDevice
-            device, final String socketType) {
+    public synchronized void pairedUserConnected(BluetoothSocket socket, BluetoothDevice device, final String socketType) {
         Log.d(TAG, "connected, Socket Type: " + socketType);
 
         // Cancel the thread that completed the connection
@@ -518,6 +517,10 @@ public class BluetoothManager {
             mInsecureAcceptThread = null;
         }
 
+        if(mMsg == null) {
+        	Log.i(TAG, "mMsg = null");
+        	mMsg = "pfft"; // TODO
+        }
         // Start the thread to manage the connection and perform transmissions
         mPairedUserConnectedThread = new PairedUserConnectedThread(socket, socketType, mMsg);
         mPairedUserConnectedThread.start();
@@ -602,11 +605,9 @@ public class BluetoothManager {
             // Create a new listening server socket
             try {
                 if (secure) {
-                    tmp = mAdapter.listenUsingRfcommWithServiceRecord(NAME_SECURE,
-                        MY_UUID_SECURE);
+                    tmp = mAdapter.listenUsingRfcommWithServiceRecord(NAME_SECURE, MY_UUID_SECURE);
                 } else {
-                    tmp = mAdapter.listenUsingInsecureRfcommWithServiceRecord(
-                            NAME_INSECURE, MY_UUID_INSECURE);
+                    tmp = mAdapter.listenUsingInsecureRfcommWithServiceRecord(NAME_INSECURE, MY_UUID_INSECURE);
                 }
             } catch (IOException e) {
                 Log.e(TAG, "Socket Type: " + mSocketType + "listen() failed", e);
@@ -615,8 +616,7 @@ public class BluetoothManager {
         }
 
         public void run() {
-            Log.d(TAG, "Socket Type: " + mSocketType +
-                    "BEGIN mAcceptThread" + this);
+            Log.d(TAG, "Socket Type: " + mSocketType + "BEGIN mAcceptThread" + this);
             setName("AcceptThread" + mSocketType);
 
             BluetoothSocket socket = null;
@@ -640,8 +640,7 @@ public class BluetoothManager {
                         case STATE_CONNECTING:
                         	Log.i(TAG, "accept() succeeded, listen/connecting");
                             // Situation normal. Start the connected thread.
-                            pairedUserConnected(socket, socket.getRemoteDevice(),
-                                    mSocketType);
+                            pairedUserConnected(socket, socket.getRemoteDevice(), mSocketType);
                             break;
                         case STATE_NONE:
                         case STATE_CONNECTED:
@@ -658,7 +657,6 @@ public class BluetoothManager {
                 }
             }
             Log.i(TAG, "END mAcceptThread, socket Type: " + mSocketType);
-
         }
 
         public void cancel() {
@@ -721,8 +719,7 @@ public class BluetoothManager {
                 try {
                     mmSocket.close();
                 } catch (IOException e2) {
-                    Log.e(TAG, "unable to close() " + mSocketType +
-                            " socket during connection failure", e2);
+                    Log.e(TAG, "unable to close() " + mSocketType + " socket during connection failure", e2);
                 }
                 pairedUserConnectionFailed();
                 return;
