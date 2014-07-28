@@ -5,10 +5,12 @@
 package com.wantedbug.cuesense;
 
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Set;
 
 import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
 import com.wantedbug.cuesense.DeleteCueSenseItemDialog.DeleteCueSenseItemListener;
+import com.wantedbug.cuesense.FBListFragment.FacebookCueListener;
 import com.wantedbug.cuesense.NewCueSenseItemDialog.NewCueSenseItemListener;
 
 import android.annotation.SuppressLint;
@@ -49,7 +51,8 @@ import android.widget.Toast;
  * @author vikasprabhu
  */
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener,
-		CueSenseListener, NewCueSenseItemListener, DeleteCueSenseItemListener {
+		CueSenseListener, NewCueSenseItemListener, DeleteCueSenseItemListener,
+		FacebookCueListener {
 	// Debugging
 	private static final String TAG = "MainActivity";
 	public static final boolean DEBUG = true;
@@ -652,5 +655,55 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		mDBHelper.updateCueItem(item);
 		// Push to InfoPool
 		mPool.updateCueItem(item);
+	}
+
+	/**
+	 * Keep InfoPool updated when a Facebook cue is added
+	 */
+	@Override
+	public void onFacebookCueAdded(CueItem item) {
+		Log.d(TAG, "onFacebookCueAdded()");
+		// Push to InfoPool
+		mPool.addCueItem(item);
+	}
+
+	/**
+	 * Keep InfoPool updated when a Facebook cue is deleted
+	 */
+	@Override
+	public void onFacebookCueDeleted(CueItem item) {
+		Log.d(TAG, "onFacebookCueDeleted()");
+		// Push to InfoPool
+		mPool.deleteCueItem(item);
+	}
+
+	/**
+	 * Keep InfoPool updated when a Facebook cue is changed
+	 */
+	@Override
+	public void onFacebookCueChanged(CueItem item) {
+		Log.d(TAG, "onFacebookCueChanged()");
+		// Push to InfoPool
+		mPool.updateCueItem(item);
+	}
+	
+	/**
+	 * Keep InfoPool updated when the user logs out of Facebook
+	 */
+	@Override
+	public void onFacebookLogout() {
+		Log.d(TAG, "onFacebookCueChanged()");
+		// Remove Facebook items from InfoPool
+		mPool.deleteType(InfoType.INFO_FACEBOOK);
+	}
+	
+	/**
+	 * Keep InfoPool updated when the user logs out of Facebook
+	 */
+	@Override
+	public void onFacebookPriorityCuesAdded(List<CueItem> items) {
+		Log.d(TAG, "onFacebookPriorityCuesAdded()");
+		// Remove Facebook items from InfoPool
+		mPool.addCueItemsToTop(items, InfoType.INFO_FACEBOOK);
 	}
 }

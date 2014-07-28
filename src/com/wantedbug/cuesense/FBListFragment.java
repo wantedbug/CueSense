@@ -20,8 +20,10 @@ import com.facebook.SessionState;
 import com.facebook.UiLifecycleHelper;
 import com.facebook.model.GraphObject;
 import com.facebook.model.GraphUser;
+import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
 import com.wantedbug.cuesense.MainActivity.InfoType;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
@@ -42,6 +44,26 @@ public class FBListFragment extends ListFragment {
 	private static final String TAG = "FBListFragment";
 	
 	/**
+	 * Interfaces
+	 */
+	public interface FacebookCueListener {
+		/** Handle addition of a new Facebook cue */
+		void onFacebookCueAdded(CueItem item);
+		
+		/** Handle addition of priority Facebook cues */
+		void onFacebookPriorityCuesAdded(List<CueItem> items);
+		
+		/** Handle deletion of a Facebook cue */
+		void onFacebookCueDeleted(CueItem item);
+		
+		/** Handle modification of a Facebook cue */
+		void onFacebookCueChanged(CueItem item);
+		
+		/** Handle logging out of Facebook */
+		void onFacebookLogout();
+	}
+	
+	/**
 	 * Constants
 	 */
 	private static final String ITEM_DATA = "CATEGORY";
@@ -51,6 +73,9 @@ public class FBListFragment extends ListFragment {
 	/**
 	 * Members
 	 */
+	// Listener to handle cue addition, deletion and modification
+	private FacebookCueListener mListener;
+	
 	// Expandable list view
 	private SimpleExpandableListAdapter mAdapter;
 	// View for the fragment
@@ -91,8 +116,16 @@ public class FBListFragment extends ListFragment {
 	public void onResume() {
 	    super.onResume();
 	    mUiLifecycleHelper.onResume();
-	    // Get Facebook data
-	    if(mGroupData.isEmpty()) getData();
+	    // Refresh Facebook data
+	    mSession = Session.getActiveSession();
+	    if(mSession != null && mSession.isClosed()) {
+	    	mGroupData.clear();
+    		mChildData.clear();
+    		if(mAdapter != null) mAdapter.notifyDataSetChanged();
+	    	if(mListener != null) mListener.onFacebookLogout();
+	    } else {
+	    	getData();
+	    }
 	}
 
 	@Override
@@ -140,6 +173,17 @@ public class FBListFragment extends ListFragment {
 	}
 	
 	@Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        
+        if(!(activity instanceof CueSenseListener)) {
+            throw new RuntimeException("Activity must implement FacebookCueListener interface!");
+        }
+        
+        mListener = (FacebookCueListener) activity;
+    }
+	
+	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		Log.d(TAG, "onActivityResult()");
 	    super.onActivityResult(requestCode, resultCode, data);
@@ -176,10 +220,17 @@ public class FBListFragment extends ListFragment {
 	 */
 	private void onSessionStateChange(final Session session, SessionState state, Exception exception) {
 		Log.d(TAG, "onSessionStateChange()");
-	    if (session != null && session.isOpened() && !mFBRequestSubmitted) {
-	        // Get the user's data.
-	        makeMeRequest(session);
-	        mFBRequestSubmitted = true;
+	    if (session != null) {
+	    	if(session.isOpened() && !mFBRequestSubmitted) {
+	    		// Get the user's data.
+	    		makeMeRequest(session);
+	    		mFBRequestSubmitted = true;
+	    	} else if(session.isClosed()) {
+	    		mGroupData.clear();
+	    		mChildData.clear();
+	    		if(mAdapter != null) mAdapter.notifyDataSetChanged();
+	    		if(mListener!= null) mListener.onFacebookLogout();
+	    	}
 	    }
 	}
 	
@@ -259,7 +310,7 @@ public class FBListFragment extends ListFragment {
 						peopleList.add(personChild);
 						CueItem personItem = new CueItem(-1, InfoType.INFO_FACEBOOK, personJSON.getString("name"), true);
 						mFBList.add(personItem);
-						InfoPool.INSTANCE.addCueItem(personItem);
+						mListener.onFacebookCueAdded(personItem);
 						++numChildrenAdded;
 					} else {
 						Log.e(TAG, "getUserInfo() Inspirational people[" + j + "] no name");
@@ -299,7 +350,7 @@ public class FBListFragment extends ListFragment {
 						teamsList.add(teamChild);
 						CueItem teamItem = new CueItem(-1, InfoType.INFO_FACEBOOK, teamJSON.getString("name"), true);
 						mFBList.add(teamItem);
-						InfoPool.INSTANCE.addCueItem(teamItem);
+						mListener.onFacebookCueAdded(teamItem);
 						++numChildrenAdded;
 					} else {
 						Log.e(TAG, "getUserInfo() Sports teams[" + j + "] no name");
@@ -343,7 +394,7 @@ public class FBListFragment extends ListFragment {
 						schoolsList.add(schoolChild);
 						CueItem schoolItem = new CueItem(-1, InfoType.INFO_FACEBOOK, school.getString("name"), true);
 						mFBList.add(schoolItem);
-						InfoPool.INSTANCE.addCueItem(schoolItem);
+						mListener.onFacebookCueAdded(schoolItem);
 						++numChildrenAdded;
 					} catch(JSONException e) {
 						Log.e(TAG, "getUserInfo() School[" + j + "] extraction error");
@@ -385,7 +436,7 @@ public class FBListFragment extends ListFragment {
 						companiesList.add(companyChild);
 						CueItem companyItem = new CueItem(-1, InfoType.INFO_FACEBOOK, company.getString("name"), true);
 						mFBList.add(companyItem);
-						InfoPool.INSTANCE.addCueItem(companyItem);
+						mListener.onFacebookCueAdded(companyItem);
 						++numChildrenAdded;
 					} catch(JSONException e) {
 						Log.e(TAG, "getUserInfo() Work [" + j + "] extraction error" + e);
@@ -429,7 +480,7 @@ public class FBListFragment extends ListFragment {
 				languagesList.add(languageChild);
 				CueItem languageItem = new CueItem(-1, InfoType.INFO_FACEBOOK, languageJSON.optString("name"), true);
 				mFBList.add(languageItem);
-				InfoPool.INSTANCE.addCueItem(languageItem);
+				mListener.onFacebookCueAdded(languageItem);
 				++numChildrenAdded;
 			}
 			/** 3. Add the list item's children to the list view */
@@ -461,7 +512,7 @@ public class FBListFragment extends ListFragment {
 				aboutMeList.add(birthdayString);
 				++numChildrenAdded;
 				CueItem birthdayStringItem = new CueItem(-1, InfoType.INFO_FACEBOOK, user.getBirthday(), true);
-				InfoPool.INSTANCE.addCueItem(birthdayStringItem);
+				mListener.onFacebookCueAdded(birthdayStringItem);
 				// Child 2: the birthday month
 				int month = Integer.parseInt(user.getBirthday().substring(0, 2));
 				String bdayMonth = "";
@@ -485,7 +536,7 @@ public class FBListFragment extends ListFragment {
 				++numChildrenAdded;
 				CueItem birthdayMonthItem = new CueItem(-1, InfoType.INFO_FACEBOOK, "Child of " + bdayMonth, true);
 				mFBList.add(birthdayMonthItem);
-				InfoPool.INSTANCE.addCueItem(birthdayMonthItem);
+				mListener.onFacebookCueAdded(birthdayMonthItem);
 			} else {
 				Log.e(TAG, "getUserInfo() Birthday field empty");
 			}
@@ -502,7 +553,7 @@ public class FBListFragment extends ListFragment {
 				aboutMeList.add(hometownChild);
 				CueItem hometownItem = new CueItem(-1, InfoType.INFO_FACEBOOK, hometownJSON.optString("name"), true);
 				mFBList.add(hometownItem);
-				InfoPool.INSTANCE.addCueItem(hometownItem);
+				mListener.onFacebookCueAdded(hometownItem);
 				++numChildrenAdded;
 			} else {
 				Log.e(TAG, "getUserInfo() Hometown field empty");
@@ -571,7 +622,7 @@ public class FBListFragment extends ListFragment {
 								mFBList.add(bookItem);
 								items.add(bookItem);
 							}
-							InfoPool.INSTANCE.addCueItemsToTop(items, InfoType.INFO_FACEBOOK);
+							mListener.onFacebookPriorityCuesAdded(items);
 							// Notify list adapter here since this is an async task
 							mAdapter.notifyDataSetChanged();
 						} else {
@@ -641,7 +692,7 @@ public class FBListFragment extends ListFragment {
 								mFBList.add(musicItem);
 								items.add(musicItem);
 							}
-							InfoPool.INSTANCE.addCueItemsToTop(items, InfoType.INFO_FACEBOOK);
+							mListener.onFacebookPriorityCuesAdded(items);
 							// Notify list adapter here since this is an async task
 							mAdapter.notifyDataSetChanged();
 						} else {
