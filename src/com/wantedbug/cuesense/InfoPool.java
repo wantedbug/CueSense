@@ -4,9 +4,11 @@
 
 package com.wantedbug.cuesense;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
+
+import org.json.JSONArray;
 
 import com.wantedbug.cuesense.MainActivity.InfoType;
 
@@ -33,17 +35,38 @@ public class InfoPool {
 	public static final InfoPool INSTANCE = new InfoPool();
 	
 	// List for newly added CueSense cues - highest priority
-	private Vector<CueItem> mNewCuesList = new Vector<CueItem>();
+	private ArrayList<CueItem> mNewCuesList = new ArrayList<CueItem>();
 	
 	// List for cues matched with another user - next highest priority
-	private Vector<CueItem> mMatchedCuesList = new Vector<CueItem>(INIT_SIZE);
+	private ArrayList<CueItem> mMatchedCuesList = new ArrayList<CueItem>(INIT_SIZE);
 	// Global list counter
 	private int mMatchedCounter = 0;
 	
 	// Global list for everything else - lowest priority
-	private Vector<CueItem> mGlobalList = new Vector<CueItem>(INIT_SIZE);
+	private ArrayList<CueItem> mGlobalList = new ArrayList<CueItem>(INIT_SIZE);
 	// Global list counter
 	private int mGlobalCounter = 0;
+	
+	// Lists that contain appropriate CueItems for the respective distance levels
+	// See MainActivity.BT_RSSI_NEAR etc.
+	// Note 1: These lists are converted to JSONArrays for transmitting.
+	// Note 2: Instead of creating lists while transmitting, we instead go for creating
+	// them earlier (i.e. as and when Cues are added/deleted/modified) to make the
+	// transmission quick.
+	// Note 3: The decision about which kind of information goes to which
+	// list (i.e. which information is transmitted at which range)
+	// has to be made. Currently, this is how it's done:
+	// 1. User-added Cues are treated as the most personal to be transmitted at near range
+	// 2. Facebook Cues are transmitted at intermediate range
+	// 3. Twitter Cues are transmitted at far range
+	private ArrayList<CueItem> mNearList = new ArrayList<CueItem>();
+	private ArrayList<CueItem> mIntermediateList = new ArrayList<CueItem>();
+	private ArrayList<CueItem> mFarList = new ArrayList<CueItem>();
+	
+	// JSONArrays actually used for transmission based on the above lists
+	private JSONArray mNearDataArray;
+	private JSONArray mIntermediateDataArray;
+	private JSONArray mFarDataArray;
 	
 	/**
 	 * Private c'tor to defeat instantiation
@@ -57,11 +80,14 @@ public class InfoPool {
 	 */
 	public synchronized void addCueItem(CueItem item) {
 		Log.d(TAG, "add: " + item.type() + "," + item.data());
+		// Add to appropriate list
 		if(item.type() == InfoType.INFO_CUESENSE) {
 			mNewCuesList.add(0, item);
 		} else {
 			mGlobalList.add(item);
 		}
+		// Add to data package
+		onCueAdded(item);
 	}
 	
 	/**
@@ -69,9 +95,11 @@ public class InfoPool {
 	 */
 	public void clear() {
 		Log.d(TAG, "clear()");
+		// Clear lists
 		mGlobalList.clear();
 		mNewCuesList.clear();
 		mMatchedCuesList.clear();
+		// Clear data package
 	}
 	
 	/**
@@ -93,7 +121,10 @@ public class InfoPool {
 		if(items.isEmpty()) {
 			return;
 		}
+		// Add to the global list
 		mGlobalList.addAll(items);
+		// Add to the data package
+		onCuesAdded(items);
 	}
 	
 	/**
@@ -104,17 +135,21 @@ public class InfoPool {
 	 */
 	public synchronized void addCueItemsToTop(List<CueItem> items, InfoType type) {
 		Log.d(TAG, "addCueItems(): " + items.size() + "," + type);
+		
 		if(items.isEmpty()) {
 			return;
 		}
 		
+		// Add to the global list
 		int pos = 0;
 		for(; pos < mGlobalList.size(); ++pos) {
-			if(mGlobalList.elementAt(pos).type().equals(type)) {
+			if(mGlobalList.get(pos).type().equals(type)) {
 				break;
 			}
 		}
 		mGlobalList.addAll(pos, items);
+		// Add to the data package
+		onCuesAdded(items);
 	}
 	
 	/**
@@ -129,9 +164,13 @@ public class InfoPool {
 		Iterator<CueItem> it = mNewCuesList.iterator();
 		while(it.hasNext()) {
 			CueItem temp = it.next();
-			if(item.id() == temp.id()) {
+			if(item.id() == temp.id() ||
+					(item.data().equals(temp.data()) && item.type().equals(temp.type())) ) {
 				Log.i(TAG, "removing from new list " + item.type() + "," + item.data());
+				// Remove from the list
 				it.remove();
+				// Remove from the data package
+				onCueDeleted(item);
 				wasInNewList = true;
 				break;
 			}
@@ -141,9 +180,13 @@ public class InfoPool {
 		it = mMatchedCuesList.iterator();
 		while(it.hasNext()) {
 			CueItem temp = it.next();
-			if(item.id() == temp.id()) {
+			if(item.id() == temp.id() ||
+					(item.data().equals(temp.data()) && item.type().equals(temp.type())) ) {
 				Log.i(TAG, "removing from matched list " + item.type() + "," + item.data());
+				// Remove from the list
 				it.remove();
+				// Remove from the data package
+				onCueDeleted(item);
 				break;
 			}
 		}
@@ -156,9 +199,13 @@ public class InfoPool {
 		it = mGlobalList.iterator();
 		while(it.hasNext()) {
 			CueItem temp = it.next();
-			if(item.id() == temp.id()) {
+			if(item.id() == temp.id() ||
+					(item.data().equals(temp.data()) && item.type().equals(temp.type())) ) {
 				Log.i(TAG, "removing from global list " + item.type() + "," + item.data());
+				// Remove from the list
 				it.remove();
+				// Remove from the data package
+				onCueDeleted(item);
 				break;
 			}
 		}
@@ -175,10 +222,12 @@ public class InfoPool {
 		// Search in new list, and return if found
 		boolean wasInNewList = false;
 		for(CueItem it : mNewCuesList) {
-			if(it.id() == item.id()) {
+			if(it.id() == item.id() ||
+					(item.data().equals(it.data()) && item.type().equals(it.type())) ) {
 				it.setType(item.type());
 				it.setData(item.data());
 				it.setChecked(item.isChecked());
+				onCueUpdated(item);
 				wasInNewList = true;
 				break;
 			}
@@ -188,10 +237,12 @@ public class InfoPool {
 		// it doesn't match so well any more?
 		// Search in matched list as well
 		for(CueItem it : mMatchedCuesList) {
-			if(it.id() == item.id()) {
+			if(it.id() == item.id() ||
+					(item.data().equals(it.data()) && item.type().equals(it.type())) ) {
 				it.setType(item.type());
 				it.setData(item.data());
 				it.setChecked(item.isChecked());
+				onCueUpdated(item);
 				break;
 			}
 		}
@@ -201,10 +252,12 @@ public class InfoPool {
 			return;
 		}
 		for(CueItem it : mGlobalList) {
-			if(it.id() == item.id()) {
+			if(it.id() == item.id() ||
+					(item.data().equals(it.data()) && item.type().equals(it.type())) ) {
 				it.setType(item.type());
 				it.setData(item.data());
 				it.setChecked(item.isChecked());
+				onCueUpdated(item);
 				break;
 			}
 		}
@@ -292,7 +345,7 @@ public class InfoPool {
 			if(mMatchedCounter >= mMatchedCuesList.size()) {
 				mMatchedCounter = 0;
 			}
-			String ret = mMatchedCuesList.elementAt(mMatchedCounter).data();
+			String ret = mMatchedCuesList.get(mMatchedCounter).data();
 			++mMatchedCounter;
 			Log.i(TAG, "getNext() from matched list " + ret);
 			return ret;
@@ -303,14 +356,153 @@ public class InfoPool {
 			mGlobalCounter = 0;
 		}
 		for(int i = 0; i < mGlobalCounter; ++i) {
-			CueItem item = mGlobalList.elementAt(i);
+			CueItem item = mGlobalList.get(i);
 			if(item.isChecked()) {
 				mGlobalCounter = i;
 			}
 		}
-		String ret = mGlobalList.elementAt(mGlobalCounter).data();
+		String ret = mGlobalList.get(mGlobalCounter).data();
 		++mGlobalCounter;
 		Log.i(TAG, "getNext() from global list " + ret);
 		return ret;
+	}
+	
+	/**
+	 * Adds a Cue to the appropriate data package
+	 * @param item
+	 * The Cue is not added if it's unchecked.
+	 */
+	private void onCueAdded(CueItem item) {
+		Log.d(TAG, "onCueAdded()");
+		
+		if(!item.isChecked()) return;
+		
+		switch(item.type()) {
+		case INFO_CUESENSE: 
+			mNearList.add(item);
+			break;
+		case INFO_FACEBOOK: 
+			mIntermediateList.add(item);
+			break;
+		case INFO_TWITTER:
+			mFarList.add(item);
+			break;
+		case INFO_SENTINEL:
+		default:
+			Log.e(TAG, "onCueAdded: Something wrong with indexes");
+			break;
+		}
+	}
+	
+	/**
+	 * Adds the Cues to the appropriate data package
+	 * @param items
+	 * Only checked Cues are added to the data package
+	 */
+	private void onCuesAdded(List<CueItem> items) {
+		Log.d(TAG, "onCuesAdded()");
+		for(CueItem item : items) {
+			if(item.isChecked()) onCueAdded(item);
+		}
+	}
+	
+	/**
+	 * Deletes a Cue from the appropriate data package
+	 * @param item
+	 */
+	private void onCueDeleted(CueItem item) {
+		Log.d(TAG, "onCueDeleted()");
+		switch(item.type()) {
+		case INFO_CUESENSE: {
+			Iterator<CueItem> it = mNearList.iterator();
+			while(it.hasNext()) {
+				CueItem temp = it.next();
+				if(item.id() == temp.id() ||
+						(item.data().equals(temp) && item.type().equals(temp.type())) ) {
+					it.remove();
+					break;
+				}
+			}
+		}
+			break;
+		case INFO_FACEBOOK: {
+			Iterator<CueItem> it = mIntermediateList.iterator();
+			while(it.hasNext()) {
+				CueItem temp = it.next();
+				if(item.id() == temp.id() ||
+						(item.data().equals(temp) && item.type().equals(temp.type())) ) {
+					it.remove();
+					break;
+				}
+			}
+		}
+			break;
+		case INFO_TWITTER: {
+			Iterator<CueItem> it = mFarList.iterator();
+			while(it.hasNext()) {
+				CueItem temp = it.next();
+				if(item.id() == temp.id() ||
+						(item.data().equals(temp) && item.type().equals(temp.type())) ) {
+					it.remove();
+					break;
+				}
+			}
+		}
+			break;
+		case INFO_SENTINEL:
+		default:
+			Log.e(TAG, "onCueDeleted: Something wrong with indexes");
+			break;
+		}
+	}
+	
+	/**
+	 * Modifies a Cue from the appropriate data package
+	 * @param item
+	 * A Cue may end up being deleted from the data package if the user has unchecked
+	 * it in the app. On the same lines, it can also end up being added back if it
+	 * was previously unchecked and gets checked again.
+	 */
+	private void onCueUpdated(CueItem item) {
+		Log.d(TAG, "onCueUpdated()");
+		if(!item.isChecked()) {
+			onCueDeleted(item);
+		} else if(item.isChecked()) {
+			onCueAdded(item);
+		} else {
+			switch(item.type()) {
+			case INFO_CUESENSE:
+				for(CueItem it : mNearList) {
+					if(it.id() == item.id() ||
+							(item.data().equals(it.data()) && item.type().equals(it.type())) ) {
+						it.setData(item.data());
+						break;
+					}
+				}
+				break;
+			case INFO_FACEBOOK:
+				for(CueItem it : mIntermediateList) {
+					if(it.id() == item.id() ||
+							(item.data().equals(it.data()) && item.type().equals(it.type())) ) {
+						it.setData(item.data());
+						break;
+					}
+				}
+				break;
+			case INFO_TWITTER:
+				for(CueItem it : mFarList) {
+					if(it.id() == item.id() ||
+							(item.data().equals(it.data()) && item.type().equals(it.type())) ) {
+						it.setData(item.data());
+						break;
+					}
+				}
+				break;
+			case INFO_SENTINEL:
+			default:
+				Log.e(TAG, "onCueUpdated: Something wrong with indexes");
+				break;
+			}
+		}
 	}
 }
