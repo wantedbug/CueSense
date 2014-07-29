@@ -9,6 +9,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
@@ -79,6 +82,7 @@ public class BluetoothManager {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mHandler = handler;
         mWearableState = STATE_NONE;
+        mPairedUserState = STATE_NONE;
 	}
 	
 	/**
@@ -436,7 +440,8 @@ public class BluetoothManager {
     private PairedUserConnectThread mPairedUserConnectThread;
     private PairedUserConnectedThread mPairedUserConnectedThread;
     private int mPairedUserState;
-    private String mMsg;
+    private JSONObject mSendData;
+    private int mDistanceRange;
     
     
 	/**
@@ -461,10 +466,16 @@ public class BluetoothManager {
         Log.d(TAG, "startPairedUserThreads");
 
         // Cancel any thread attempting to make a connection
-        if (mPairedUserConnectThread != null) {mPairedUserConnectThread.cancel(); mPairedUserConnectThread = null;}
+        if (mPairedUserConnectThread != null) {
+        	mPairedUserConnectThread.cancel();
+        	mPairedUserConnectThread = null;
+        }
 
         // Cancel any thread currently running a connection
-        if (mPairedUserConnectedThread != null) {mPairedUserConnectedThread.cancel(); mPairedUserConnectedThread = null;}
+        if (mPairedUserConnectedThread != null) {
+        	mPairedUserConnectedThread.cancel();
+        	mPairedUserConnectedThread = null;
+        }
 
         setPairedUserState(STATE_LISTEN);
 
@@ -479,18 +490,26 @@ public class BluetoothManager {
      * @param device  The BluetoothDevice to connect
      * @param secure Socket Security type - Secure (true) , Insecure (false)
      */
-    public synchronized void connectAndSend(BluetoothDevice device, boolean secure, String msg) {
+    public synchronized void connectAndSend(BluetoothDevice device, boolean secure, JSONObject data) {
         Log.d(TAG, "connectAndSend " + device);
+
         // Cache data to be sent
-        mMsg = msg;
+        mSendData = null;
+        mSendData = data;
         
         // Cancel any thread attempting to make a connection
         if (mPairedUserState == STATE_CONNECTING) {
-            if (mPairedUserConnectThread != null) {mPairedUserConnectThread.cancel(); mPairedUserConnectThread = null;}
+            if (mPairedUserConnectThread != null) {
+            	mPairedUserConnectThread.cancel();
+            	mPairedUserConnectThread = null;
+            }
         }
 
         // Cancel any thread currently running a connection
-        if (mPairedUserConnectedThread != null) {mPairedUserConnectedThread.cancel(); mPairedUserConnectedThread = null;}
+        if (mPairedUserConnectedThread != null) {
+        	mPairedUserConnectedThread.cancel();
+        	mPairedUserConnectedThread = null;
+        }
 
         // Start the thread to connect with the given device
         mPairedUserConnectThread = new PairedUserConnectThread(device, secure);
@@ -507,22 +526,30 @@ public class BluetoothManager {
         Log.d(TAG, "connected, Socket Type: " + socketType);
 
         // Cancel the thread that completed the connection
-        if (mPairedUserConnectThread != null) {mPairedUserConnectThread.cancel(); mPairedUserConnectThread = null;}
+        if (mPairedUserConnectThread != null) {
+        	mPairedUserConnectThread.cancel();
+        	mPairedUserConnectThread = null;
+        }
 
         // Cancel any thread currently running a connection
-        if (mPairedUserConnectedThread != null) {mPairedUserConnectedThread.cancel(); mPairedUserConnectedThread = null;}
+        if (mPairedUserConnectedThread != null) {
+        	mPairedUserConnectedThread.cancel();
+        	mPairedUserConnectedThread = null;
+        }
 
+        // Cancel listening to incoming connections as well
         if (mInsecureAcceptThread != null) {
             mInsecureAcceptThread.cancel();
             mInsecureAcceptThread = null;
         }
-
-        if(mMsg == null) {
-        	Log.i(TAG, "mMsg = null");
-        	mMsg = "pfft"; // TODO
-        }
+        
+        // We may not yet have the data available, for e.g. if the other user's device
+        // initiated the connection
+//        if(null == mSendData) {
+//        	mSendData = InfoPool.INSTANCE.getData(mDistanceRange);
+//        }
         // Start the thread to manage the connection and perform transmissions
-        mPairedUserConnectedThread = new PairedUserConnectedThread(socket, socketType, mMsg);
+        mPairedUserConnectedThread = new PairedUserConnectedThread(socket, socketType, mSendData);
         mPairedUserConnectedThread.start();
 
         setPairedUserState(STATE_CONNECTED);
@@ -616,8 +643,8 @@ public class BluetoothManager {
         }
 
         public void run() {
-            Log.d(TAG, "Socket Type: " + mSocketType + "BEGIN mAcceptThread" + this);
-            setName("AcceptThread" + mSocketType);
+            Log.d(TAG, "Socket Type: " + mSocketType + "BEGIN PairedUserAcceptThread" + this);
+            setName("PairedUserAcceptThread" + mSocketType);
 
             BluetoothSocket socket = null;
 
@@ -656,7 +683,7 @@ public class BluetoothManager {
                     }
                 }
             }
-            Log.i(TAG, "END mAcceptThread, socket Type: " + mSocketType);
+            Log.i(TAG, "END PairedUserAcceptThread, socket Type: " + mSocketType);
         }
 
         public void cancel() {
@@ -702,8 +729,8 @@ public class BluetoothManager {
         }
 
         public void run() {
-            Log.i(TAG, "BEGIN mConnectThread SocketType:" + mSocketType);
-            setName("ConnectThread" + mSocketType);
+            Log.i(TAG, "BEGIN PairedUserConnectThread SocketType:" + mSocketType);
+            setName("PairedUserConnectThread" + mSocketType);
 
             // Always cancel discovery because it will slow down a connection
             mAdapter.cancelDiscovery();
@@ -752,15 +779,17 @@ public class BluetoothManager {
         private final BluetoothSocket mmSocket;
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
-        private final String mmMsg;
+        private JSONObject mmData;
+        private boolean mHaveData;
 
-        public PairedUserConnectedThread(BluetoothSocket socket, String socketType, String msg) {
-            Log.d(TAG, "create ConnectedThread: " + socketType);
+        public PairedUserConnectedThread(BluetoothSocket socket, String socketType, JSONObject data) {
+            Log.d(TAG, "create PairedUserConnectedThread: " + socketType);
             mmSocket = socket;
-            mmMsg = msg;
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
-
+            mmData = data;
+            mHaveData = (mmData == null) ? false : true;
+            
             // Get the BluetoothSocket input and output streams
             try {
                 tmpIn = socket.getInputStream();
@@ -771,13 +800,15 @@ public class BluetoothManager {
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
-            // Send the data
-            write(mmMsg.getBytes());
+            // Send the data, if any
+            if(mmData != null) {
+            	write(mmData.toString().getBytes());
+            }
         }
 
         public void run() {
-            Log.i(TAG, "BEGIN mConnectedThread");
-            byte[] buffer = new byte[4096];
+            Log.i(TAG, "BEGIN PairedUserConnectedThread");
+            byte[] buffer = new byte[BUFFER_SIZE];
             int bytes;
 
             // Keep listening to the InputStream while connected
@@ -786,12 +817,20 @@ public class BluetoothManager {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
                     String rcvd = new String(buffer);
-                    Log.i(TAG, "DATA " + rcvd);
+                    Log.i(TAG, bytes + " bytes " + rcvd.length() + " characters data received");
+                    // If we didn't have data earlier, we need to send it now
+                    if(!mHaveData) {
+                    	JSONObject data = new JSONObject(rcvd);
+                    	int distance = data.optInt("distance");
+                    	mmData = InfoPool.INSTANCE.getData(distance);
+                    	mHaveData = true;
+                    	write(mmData.toString().getBytes());
+                    }
                     // Notify MainActivity that send/receive is done
                     Message msg = mHandler.obtainMessage(MainActivity.BT_MSG_SENDRECV_DONE);
                     mHandler.sendMessage(msg);
-                } catch (IOException e) {
-                    Log.e(TAG, "disconnected", e);
+                } catch (IOException | JSONException e) {
+                    Log.e(TAG, "PairedUserConnectedThread::run() error", e);
                     pairedUserConnectionLost();
                     // Start the service over to restart listening mode
                     BluetoothManager.this.startPairedUserThreads();
@@ -805,7 +844,7 @@ public class BluetoothManager {
          * @param buffer  The bytes to write
          */
         public void write(byte[] buffer) {
-        	Log.d(TAG, "write" + buffer);
+        	Log.d(TAG, "write() " + buffer);
             try {
                 mmOutStream.write(buffer);
             } catch (IOException e) {

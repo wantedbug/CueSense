@@ -8,6 +8,8 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Set;
 
+import org.json.JSONObject;
+
 import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
 import com.wantedbug.cuesense.DeleteCueSenseItemDialog.DeleteCueSenseItemListener;
 import com.wantedbug.cuesense.FBListFragment.FacebookCueListener;
@@ -196,12 +198,18 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// Reference to Add Cue menu item to set its visibility when needed
 	private MenuItem mAddMenuItem;
 	
+	// Cues data wrapped in JSONObjects to be transmitted to the nearby user
+	// Note: one object for each distance range
+	private JSONObject mNearData;
+	private JSONObject mIntermediateData;
+	private JSONObject mFarData;
+	
 	// Distance levels to determine what data to send
 	private int mPrevDistance = DISTANCE_OUTOFRANGE;
 	private int mCurrDistance;
 	
-//	private static final String TARGET_USER = "nikkis@s3mini";
-	private static final String TARGET_USER = "GT-I8190N";
+//	private static final String TARGET_USER = "6C:F3:73:65:66:A3"; // nikkis@s3mini, nikkis@s3mini
+	private static final String TARGET_USER = "6C:F3:73:65:65:19"; // timo@s3mini, GT-I8190N
 	
 	// BroadcastReceiver to listen for another user's Bluetooth device
 	private BroadcastReceiver mBTScanReceiver = new BroadcastReceiver() {
@@ -213,10 +221,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             	// Get signal strength and device details
                 int rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI,Short.MIN_VALUE);
                 String name = intent.getStringExtra(BluetoothDevice.EXTRA_NAME);
-                Log.i(TAG, "onReceive() " + name + "," + rssi + "dBm, paired=" + mBTManager.getPairedUserState());
+                Log.i(TAG, "onReceive() " + name + "," + rssi + "dBm" +
+                		", pairedState=" + mBTManager.getPairedUserState());
                 final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 // Send if we find the right device and if we're ready to accept the connection
-                if(device != null && device.getName().equals(TARGET_USER) && mBTManager.getPairedUserState() >= BluetoothManager.STATE_LISTEN) {
+                if(device != null && device.getAddress().equals(TARGET_USER) &&
+                		mBTManager.getPairedUserState() >= BluetoothManager.STATE_LISTEN) {
                 	// Stop discovery
                 	mBTScanHandler.removeCallbacks(mBTScanRunnable);
                 	String msg = "";
@@ -227,19 +237,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 			Log.i(TAG, "Sending to " + device.getName() + "," + device.getAddress());
                 			mPrevDistance = mCurrDistance;
                 			// Get data to be sent
-                			if(mCurrDistance == DISTANCE_NEAR) {
-                				msg = "NEAR";
-                			} else if(mCurrDistance == DISTANCE_INTERMEDIATE) {
-                				msg = "INTERMEDIATE";
-                			} else if(mCurrDistance == DISTANCE_FAR) {
-                				msg = "FAR";
-                			}
-                			// Connect and send
-                			mBTManager.connectAndSend(device, false, msg);
-                			// Unpair later after send/receive succeeds
-                			// Unpair the devices
-                			if(device.getBondState() == BluetoothDevice.BOND_BONDED) {
-                				Log.i(TAG, device.getName() + " bonded 1");
+                			JSONObject data = getCuesData(mCurrDistance);
+                			if(null != data) {
+                				// Connect and send
+                				mBTManager.connectAndSend(device, false, data);
+                				// Note: Devices are unbonded later after send/receive succeeds
+                				if(device.getBondState() == BluetoothDevice.BOND_BONDED) {
+                					Log.i(TAG, device.getName() + " bonded 1");
+                				}
                 			}
                 		}
                 	}
@@ -611,7 +616,64 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			return rootView;
 		}
 	}
+	
+	/**
+	 * Returns the appropriate Cues JSONObject
+	 * @param distanceRange
+	 */
+	private JSONObject getCuesData(int distanceRange) {
+		switch(distanceRange) {
+		case DISTANCE_NEAR:
+			if(null == mNearData) refreshCuesData(distanceRange);
+			return mNearData;
+		case DISTANCE_INTERMEDIATE:
+			if(null == mIntermediateData) refreshCuesData(distanceRange);
+			return mIntermediateData;
+		case DISTANCE_FAR:
+			if(null == mFarData) refreshCuesData(distanceRange);
+			return mFarData;
+		case DISTANCE_OUTOFRANGE:
+		default:
+			Log.e(TAG, "refreshCuesData() ruh-roh");
+			break;
+		}
+		return null;
+	}
+	
+	/**
+	 * Refreshes all the Cues JSONObjects
+	 */
+	private void refreshCuesData() {
+		refreshCuesData(DISTANCE_NEAR);
+		refreshCuesData(DISTANCE_INTERMEDIATE);
+		refreshCuesData(DISTANCE_FAR);
+	}
 
+	/**
+	 * Refreshes the appropriate Cues JSONObject
+	 * @param distanceRange
+	 */
+	private void refreshCuesData(int distanceRange) {
+		switch(distanceRange) {
+		case DISTANCE_NEAR:
+			mNearData = null;
+			mNearData = mPool.getData(distanceRange);
+			break;
+		case DISTANCE_INTERMEDIATE:
+			mIntermediateData = null;
+			mIntermediateData = mPool.getData(distanceRange);
+			break;
+		case DISTANCE_FAR:
+			mFarData = null;
+			mFarData = mPool.getData(distanceRange);
+			break;
+		case DISTANCE_OUTOFRANGE:
+		default:
+			Log.e(TAG, "refreshCuesData() ruh-roh");
+			break;
+		}
+	}
+	
 	/**
 	 * Constructs a new CueItem and adds it to the database and InfoPool
 	 */
@@ -627,13 +689,15 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	@Override
 	public void onCueSenseCueAdded(CueItem item) {
-		Log.d(TAG, "onCueAdded()");
+//		Log.d(TAG, "onCueAdded()");
 		// Push to database
 		mDBHelper.addCueItem(item);
 		// Push to InfoPool
 		mPool.addCueItem(item);
 		// Refresh CueSense list
 		mCSListFragment.refreshList();
+		// Refresh Cues data
+		refreshCuesData(DISTANCE_NEAR);
 	}
 
 	@Override
@@ -646,11 +710,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	@Override
 	public void onCueSenseCueDeleted(CueItem item) {
-		Log.d(TAG, "onCueDeleted()");
+//		Log.d(TAG, "onCueDeleted()");
 		// Push to database
 		mDBHelper.deleteCueItem(item);
 		// Push to InfoPool
 		mPool.deleteCueItem(item);
+		// Refresh Cues data
+		refreshCuesData(DISTANCE_NEAR);
 	}
 
 	/**
@@ -658,7 +724,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	@Override
 	public void onCueSenseCueChanged(CueItem item) {
-		Log.d(TAG, "onCueSenseCueChanged()");
+//		Log.d(TAG, "onCueSenseCueChanged()");
 		// Push to database
 		mDBHelper.updateCueItem(item);
 		// Push to InfoPool
@@ -670,7 +736,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	@Override
 	public void onFacebookCueAdded(CueItem item) {
-		Log.d(TAG, "onFacebookCueAdded()");
+//		Log.d(TAG, "onFacebookCueAdded()");
 		// Push to InfoPool
 		mPool.addCueItem(item);
 	}
@@ -680,7 +746,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	@Override
 	public void onFacebookCueDeleted(CueItem item) {
-		Log.d(TAG, "onFacebookCueDeleted()");
+//		Log.d(TAG, "onFacebookCueDeleted()");
 		// Push to InfoPool
 		mPool.deleteCueItem(item);
 	}
@@ -690,7 +756,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	@Override
 	public void onFacebookCueChanged(CueItem item) {
-		Log.d(TAG, "onFacebookCueChanged()");
+//		Log.d(TAG, "onFacebookCueChanged()");
 		// Push to InfoPool
 		mPool.updateCueItem(item);
 	}
@@ -700,7 +766,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	@Override
 	public void onFacebookLogout() {
-		Log.d(TAG, "onFacebookCueChanged()");
+//		Log.d(TAG, "onFacebookCueChanged()");
 		// Remove Facebook items from InfoPool
 		mPool.deleteType(InfoType.INFO_FACEBOOK);
 	}
@@ -710,7 +776,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	@Override
 	public void onFacebookPriorityCuesAdded(List<CueItem> items) {
-		Log.d(TAG, "onFacebookPriorityCuesAdded()");
+//		Log.d(TAG, "onFacebookPriorityCuesAdded()");
 		// Remove Facebook items from InfoPool
 		mPool.addCueItemsToTop(items, InfoType.INFO_FACEBOOK);
 	}

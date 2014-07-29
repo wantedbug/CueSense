@@ -4,6 +4,11 @@
 
 package com.wantedbug.cuesense;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.util.Log;
+
 import com.wantedbug.cuesense.MainActivity.InfoType;
 
 /**
@@ -11,6 +16,8 @@ import com.wantedbug.cuesense.MainActivity.InfoType;
  * @author vikasprabhu
  */
 public class CueItem {
+	// Debugging
+	private static final String TAG = "CueItem";
 	/**
 	 * Members
 	 */
@@ -43,4 +50,23 @@ public class CueItem {
     public void setData(String data) { this.mData = data; }
 	public boolean isChecked() { return mChecked; }
 	public void setChecked(boolean checked) { mChecked = checked; }
+	
+	/**
+	 * Creates a JSONObject out of this CueItem
+	 * @return
+	 */
+	public JSONObject toJSONObject() {
+		JSONObject obj = new JSONObject();
+        try {
+            obj.put("id", mId);
+            obj.put("type", mType);
+            obj.put("data", mData);
+            obj.put("isChecked", mChecked);
+        } catch (JSONException e) {
+            Log.e(TAG, "CueItem JSON creation error " + e);
+            obj = null;
+            return null;
+        }
+        return obj;
+	}
 }

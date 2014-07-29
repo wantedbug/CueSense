@@ -9,6 +9,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.wantedbug.cuesense.MainActivity.InfoType;
 
@@ -27,6 +29,10 @@ public class InfoPool {
 	 * Constants
 	 */
 	private static final int INIT_SIZE = 50;
+	
+	// Name identifiers for the JSONArray
+	private static final String JSON_DISTANCE_NAME = "distance";
+	private static final String JSON_ARRAY_NAME = "data";
 	
 	/**
 	 * Members
@@ -62,11 +68,6 @@ public class InfoPool {
 	private ArrayList<CueItem> mNearList = new ArrayList<CueItem>();
 	private ArrayList<CueItem> mIntermediateList = new ArrayList<CueItem>();
 	private ArrayList<CueItem> mFarList = new ArrayList<CueItem>();
-	
-	// JSONArrays actually used for transmission based on the above lists
-	private JSONArray mNearDataArray;
-	private JSONArray mIntermediateDataArray;
-	private JSONArray mFarDataArray;
 	
 	/**
 	 * Private c'tor to defeat instantiation
@@ -373,7 +374,7 @@ public class InfoPool {
 	 * The Cue is not added if it's unchecked.
 	 */
 	private void onCueAdded(CueItem item) {
-		Log.d(TAG, "onCueAdded()");
+//		Log.d(TAG, "onCueAdded()");
 		
 		if(!item.isChecked()) return;
 		
@@ -400,7 +401,7 @@ public class InfoPool {
 	 * Only checked Cues are added to the data package
 	 */
 	private void onCuesAdded(List<CueItem> items) {
-		Log.d(TAG, "onCuesAdded()");
+//		Log.d(TAG, "onCuesAdded()");
 		for(CueItem item : items) {
 			if(item.isChecked()) onCueAdded(item);
 		}
@@ -411,7 +412,7 @@ public class InfoPool {
 	 * @param item
 	 */
 	private void onCueDeleted(CueItem item) {
-		Log.d(TAG, "onCueDeleted()");
+//		Log.d(TAG, "onCueDeleted()");
 		switch(item.type()) {
 		case INFO_CUESENSE: {
 			Iterator<CueItem> it = mNearList.iterator();
@@ -464,45 +465,117 @@ public class InfoPool {
 	 * was previously unchecked and gets checked again.
 	 */
 	private void onCueUpdated(CueItem item) {
-		Log.d(TAG, "onCueUpdated()");
-		if(!item.isChecked()) {
-			onCueDeleted(item);
-		} else if(item.isChecked()) {
-			onCueAdded(item);
-		} else {
-			switch(item.type()) {
-			case INFO_CUESENSE:
-				for(CueItem it : mNearList) {
-					if(it.id() == item.id() ||
-							(item.data().equals(it.data()) && item.type().equals(it.type())) ) {
-						it.setData(item.data());
-						break;
-					}
+		switch(item.type()) {
+		case INFO_CUESENSE:
+			for(CueItem it : mNearList) {
+				if(it.id() == item.id() ||
+						(item.data().equals(it.data()) && item.type().equals(it.type())) ) {
+					it.setData(item.data());
+					break;
 				}
-				break;
-			case INFO_FACEBOOK:
-				for(CueItem it : mIntermediateList) {
-					if(it.id() == item.id() ||
-							(item.data().equals(it.data()) && item.type().equals(it.type())) ) {
-						it.setData(item.data());
-						break;
-					}
-				}
-				break;
-			case INFO_TWITTER:
-				for(CueItem it : mFarList) {
-					if(it.id() == item.id() ||
-							(item.data().equals(it.data()) && item.type().equals(it.type())) ) {
-						it.setData(item.data());
-						break;
-					}
-				}
-				break;
-			case INFO_SENTINEL:
-			default:
-				Log.e(TAG, "onCueUpdated: Something wrong with indexes");
-				break;
 			}
+			break;
+		case INFO_FACEBOOK:
+			for(CueItem it : mIntermediateList) {
+				if(it.id() == item.id() ||
+						(item.data().equals(it.data()) && item.type().equals(it.type())) ) {
+					it.setData(item.data());
+					break;
+				}
+			}
+			break;
+		case INFO_TWITTER:
+			for(CueItem it : mFarList) {
+				if(it.id() == item.id() ||
+						(item.data().equals(it.data()) && item.type().equals(it.type())) ) {
+					it.setData(item.data());
+					break;
+				}
+			}
+			break;
+		case INFO_SENTINEL:
+		default:
+			Log.e(TAG, "onCueUpdated: Something wrong with indexes");
+			break;
 		}
+	}
+	
+	/**
+	 * Returns a JSONObject constructed from the appropriate distance level list
+	 * @param distanceRange
+	 * @return
+	 */
+	public JSONObject getData(int distanceRange) {
+		Log.d(TAG, "getData()");
+		
+		// Construct a JSONArray from the appropriate Cues list. Then put that
+		// into a JSONObject and return that.
+		// If the respective list is empty, return null.
+		JSONObject dataObject = null;
+		JSONArray dataArray = null;
+		switch(distanceRange) {
+		case MainActivity.DISTANCE_NEAR:
+			if(mNearList != null && mNearList.isEmpty()) {
+				return null;
+			}
+			dataArray = new JSONArray();
+			for(CueItem item : mNearList) {
+				JSONObject itemJSON = item.toJSONObject();
+				if(itemJSON != null) dataArray.put(itemJSON);
+			}
+			if(dataArray.length() == 0) return null;
+			dataObject = new JSONObject();
+			try {
+				dataObject.put(JSON_DISTANCE_NAME, distanceRange);
+				dataObject.put(JSON_ARRAY_NAME, dataArray);
+			} catch(JSONException e) {
+				Log.e(TAG, "DISTANCE_NEAR JSON creation error " + e);
+				return null;
+			}
+			return dataObject;
+		case MainActivity.DISTANCE_INTERMEDIATE:
+			if(mIntermediateList != null && mIntermediateList.isEmpty()) {
+				return null;
+			}
+			dataArray = new JSONArray();
+			for(CueItem item : mIntermediateList) {
+				JSONObject itemJSON = item.toJSONObject();
+				if(itemJSON != null) dataArray.put(itemJSON);
+			}
+			if(dataArray.length() == 0) return null;
+			dataObject = new JSONObject();
+			try {
+				dataObject.put(JSON_DISTANCE_NAME, distanceRange);
+				dataObject.put(JSON_ARRAY_NAME, dataArray);
+			} catch(JSONException e) {
+				Log.e(TAG, "DISTANCE_INTERMEDIATE JSON creation error " + e);
+				return null;
+			}
+			return dataObject;
+		case MainActivity.DISTANCE_FAR:
+			if(mFarList != null && mFarList.isEmpty()) {
+				return null;
+			}
+			dataArray = new JSONArray();
+			for(CueItem item : mFarList) {
+				JSONObject itemJSON = item.toJSONObject();
+				if(itemJSON != null) dataArray.put(itemJSON);
+			}
+			if(dataArray.length() == 0) return null;
+			dataObject = new JSONObject();
+			try {
+				dataObject.put(JSON_DISTANCE_NAME, distanceRange);
+				dataObject.put(JSON_ARRAY_NAME, dataArray);
+			} catch(JSONException e) {
+				Log.e(TAG, "DISTANCE_FAR JSON creation error " + e);
+				return null;
+			}
+			return dataObject;
+		case MainActivity.DISTANCE_OUTOFRANGE:
+		default:
+			Log.e(TAG, "getData() ruh-roh");
+			break;
+		}
+		return null;
 	}
 }
