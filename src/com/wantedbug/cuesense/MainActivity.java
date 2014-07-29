@@ -60,6 +60,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	/**
 	 * Constants
 	 */
+	// Bluetooth RSSI range values
+	// Note: calibrate these for every test environment since Bluetooth RSSI
+	// values are dependent on the surroundings, surfaces, objects, obstacles, etc.
+	private static final int BT_RSSI_NEAR = 45;
+	private static final int BT_RSSI_INTERMEDIATE = 65;
+	private static final int BT_RSSI_FAR = 85;
+
 	// Time interval between successive data push attempts to the wearable device
 	private static final int PUSH_INTERVAL_MS = 8000;
 	// Time interval between successive Bluetooth discovery scans
@@ -101,11 +108,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public static final int BT_ERR_CONN_FAILED = 2;
 	
 	// Distance levels
-	private static final int DISTANCE_OUTOFRANGE = 0;
-	private static final int DISTANCE_NEAR = 1;
-	private static final int DISTANCE_INTERMEDIATE = 2;
-	private static final int DISTANCE_FAR = 3;
-
+	public static final int DISTANCE_OUTOFRANGE = 0;
+	public static final int DISTANCE_NEAR = 1;
+	public static final int DISTANCE_INTERMEDIATE = 2;
+	public static final int DISTANCE_FAR = 3;
+	
 	/**
 	 * Members
 	 */
@@ -250,11 +257,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
      */
     private int getDistanceFromRSSI(int rssi) {
     	rssi = java.lang.Math.abs(rssi);
-    	if(rssi < 40) {
+    	if(rssi < BT_RSSI_NEAR) {
     		return DISTANCE_NEAR;
-    	} else if(rssi >=40 && rssi < 60) {
+    	} else if(rssi >=BT_RSSI_NEAR && rssi < BT_RSSI_INTERMEDIATE) {
     		return DISTANCE_INTERMEDIATE;
-    	} else if(rssi >= 60 && rssi < 80) {
+    	} else if(rssi >= BT_RSSI_INTERMEDIATE && rssi < BT_RSSI_FAR) {
     		return DISTANCE_FAR;
     	} else {
     		return DISTANCE_OUTOFRANGE;
@@ -388,6 +395,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         		mBTScanReceiver = null;
         	}
         }
+        mPool.clear();
     }
 	/** End MainActivity lifecycle methods*/
 	
