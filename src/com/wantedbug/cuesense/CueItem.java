@@ -59,7 +59,7 @@ public class CueItem {
 		JSONObject obj = new JSONObject();
         try {
             obj.put("id", mId);
-            obj.put("type", mType);
+            obj.put("type", mType.value());
             obj.put("data", mData);
             obj.put("isChecked", mChecked);
         } catch (JSONException e) {
