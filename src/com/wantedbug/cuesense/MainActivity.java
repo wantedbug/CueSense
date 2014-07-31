@@ -65,9 +65,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// Bluetooth RSSI range values
 	// Note: calibrate these for every test environment since Bluetooth RSSI
 	// values are dependent on the surroundings, surfaces, objects, obstacles, etc.
-	private static final int BT_RSSI_NEAR = 45;
-	private static final int BT_RSSI_INTERMEDIATE = 65;
-	private static final int BT_RSSI_FAR = 85;
+	private static final int BT_RSSI_NEAR = 70;
+	private static final int BT_RSSI_INTERMEDIATE = 90;
+	private static final int BT_RSSI_FAR = 110;
 
 	// Time interval between successive data push attempts to the wearable device
 	private static final int PUSH_INTERVAL_MS = 8000;
@@ -103,8 +103,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// Types of messages that can be handled from the BTManager
 	public static final int BT_MSG_TOAST = 1;
 	public static final int BT_MSG_SENDRECV_DONE = 2;
+	public static final int BT_MSG_PAIREDUSERCONNECTED = 3;
 	// Key message names received from BTManager
 	public static final String BT_MSG_ERROR = "error";
+	public static final String BT_MSG_SENDRECV_DATA = "data";
 	// Error message values
 	public static final int BT_ERR_CONN_LOST = 1;
 	public static final int BT_ERR_CONN_FAILED = 2;
@@ -139,13 +141,23 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             		Toast.makeText(getApplicationContext(), R.string.bt_connection_lost, Toast.LENGTH_LONG).show();
             	}
             	break;
+            case BT_MSG_PAIREDUSERCONNECTED:
+            	Log.i(TAG, "users connected");
+            	if(mBTAdapter.getAddress().equals(USER1))
+            		mBTManager.writeToPairedUser(getCuesData(mCurrDistance).toString().getBytes());
+            	break;
             case BT_MSG_SENDRECV_DONE:
-    			// Unpair the users' phones
+            	// Send received data to InfoPool for matching
+            	String data = msg.getData().getString(BT_MSG_SENDRECV_DATA);
+            	if(!data.isEmpty()) mPool.matchData(data);
+    			// Unpair the users' phones if they were bonded
+            	// Note: we have to do this because the low level implementation may change between
+            	// device manufacturers
             	Log.i(TAG, "Unpairing phones");
     			Set<BluetoothDevice> devices = mBTAdapter.getBondedDevices();
     			for(BluetoothDevice dev : devices) {
-    				if(dev.getName().equals(TARGET_USER)) {
-    					Log.i(TAG, dev.getName() + " bonded 2");
+    				if(dev.getName().equals(USER1) || dev.getName().equals(USER2)) {
+    					Log.i(TAG, dev.getName() + " bonded after BT_MSG_SENDRECV_DONE");
     					try {
     						Method method = dev.getClass().getMethod("removeBond", (Class[]) null);
     						method.invoke(dev, (Object[]) null);
@@ -156,16 +168,18 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     					break;
     				}
     			}
-            	// Restart listening
-            	Log.i(TAG, "Restarting user threads");
-            	mBTManager.stopPairedUserThreads();
+            	// Restart listening and discovery
+            	Log.i(TAG, "Restarting user threads and discovery");
+//            	mBTManager.stopPairedUserThreads();
             	mBTManager.startPairedUserThreads();
+            	if(mBTAdapter.getAddress().equals(USER1))
+            		mBTScanHandler.postDelayed(mBTScanRunnable, SCAN_INTERVAL_MS);
             	break;
             }
         }
     };
 
-    // A Handler and Runnable to keep pushing messages to the wearable device
+    // A Handler and Runnable to periodically keep pushing messages to the wearable device
     Handler mSendCueHandler = new Handler();
     Runnable mSendCueRunnable = new Runnable() {
         @Override
@@ -208,8 +222,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private int mPrevDistance = DISTANCE_OUTOFRANGE;
 	private int mCurrDistance;
 	
-//	private static final String TARGET_USER = "6C:F3:73:65:66:A3"; // nikkis@s3mini, nikkis@s3mini
-	private static final String TARGET_USER = "6C:F3:73:65:65:19"; // timo@s3mini, GT-I8190N
+	private static final String USER1 = "6C:F3:73:65:65:19"; // timo@s3mini, GT-I8190N
+	private static final String USER2 = "6C:F3:73:65:66:A3"; // nikkis@s3mini, nikkis@s3mini
 	
 	// BroadcastReceiver to listen for another user's Bluetooth device
 	private BroadcastReceiver mBTScanReceiver = new BroadcastReceiver() {
@@ -223,13 +237,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 String name = intent.getStringExtra(BluetoothDevice.EXTRA_NAME);
                 Log.i(TAG, "onReceive() " + name + "," + rssi + "dBm" +
                 		", pairedState=" + mBTManager.getPairedUserState());
-                final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                BluetoothDevice temp = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                BluetoothDevice device = mBTAdapter.getRemoteDevice(temp.getAddress());
                 // Send if we find the right device and if we're ready to accept the connection
-                if(device != null && device.getAddress().equals(TARGET_USER) &&
+                if(device != null && device.getAddress().equals(USER2) &&
                 		mBTManager.getPairedUserState() >= BluetoothManager.STATE_LISTEN) {
                 	// Stop discovery
                 	mBTScanHandler.removeCallbacks(mBTScanRunnable);
-                	String msg = "";
                 	mCurrDistance = getDistanceFromRSSI(rssi);
                 	synchronized (this) {
                 		// Send if in range
@@ -240,16 +254,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 			JSONObject data = getCuesData(mCurrDistance);
                 			if(null != data) {
                 				// Connect and send
-                				mBTManager.connectAndSend(device, false, data);
+                				mBTManager.connectAndSend(device, data);
                 				// Note: Devices are unbonded later after send/receive succeeds
                 				if(device.getBondState() == BluetoothDevice.BOND_BONDED) {
-                					Log.i(TAG, device.getName() + " bonded 1");
+                					Log.i(TAG, device.getName() + " bonded after connectAndSend()");
                 				}
                 			}
                 		}
                 	}
-                	// Restart discovery
-                	mBTScanHandler.postDelayed(mBTScanRunnable, SCAN_INTERVAL_MS);
                 }
             }
         }
@@ -283,7 +295,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         	if(mBTAdapter != null) {
         		Log.d(TAG, "performing BT scan");
         		if(!mBTAdapter.isDiscovering()) {
-        			mBTAdapter.cancelDiscovery();
         			mBTAdapter.startDiscovery();
         		}
         	}
@@ -392,7 +403,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         // Stop the send and scan handler runnables
         mSendCueHandler.removeCallbacks(mSendCueRunnable);
         mBTScanHandler.removeCallbacks(mBTScanRunnable);
-        if(mBTScanReceiver != null) {
+        if(mBTScanReceiver != null && mBTAdapter.getAddress().equals(USER1)) {
         	try {
         		unregisterReceiver(mBTScanReceiver);
         	} catch(IllegalArgumentException e) {
@@ -427,7 +438,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         // Connect to the Bluetooth device
         connectDevice();
         
-        // Start the runnable to keep pushing data, if available, to the wearable
+        // Start the runnable to periodically keep pushing data, if available, to the wearable
         mSendCueHandler.postDelayed(mSendCueRunnable, PUSH_INTERVAL_MS);
         
         // Start Bluetooth discovery to continuously monitor signal strength of
@@ -435,17 +446,17 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         // Note: This is being run on a GS3Mini with 4.1.2 JellyBean which does not
         // support Bluetooth LE. Therefore discovery being started is MANDATORY.
         // Register the BroadcastReceiver
-        registerReceiver(mBTScanReceiver, new IntentFilter(BluetoothDevice.ACTION_FOUND));
-		mBTAdapter.startDiscovery();
-		mBTScanHandler.post(mBTScanRunnable);
+        if(mBTAdapter.getAddress().equals(USER1)) {
+	        registerReceiver(mBTScanReceiver, new IntentFilter(BluetoothDevice.ACTION_FOUND));
+			mBTScanHandler.post(mBTScanRunnable);
+        }
     }
 	
 	/**
 	 * Sends text from the TextView to the Bluetooth device
 	 * @param text
 	 */
-	private void sendToBT(String text)
-	{
+	private void sendToBT(String text) {
 		Log.d(TAG, "sendToBT() " + text);
         // Check that we're actually connected before trying anything
         if (mBTManager.getWearableState() != BluetoothManager.STATE_CONNECTED) {

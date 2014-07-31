@@ -31,8 +31,8 @@ public class InfoPool {
 	private static final int INIT_SIZE = 50;
 	
 	// Name identifiers for the JSONArray
-	private static final String JSON_DISTANCE_NAME = "distance";
-	private static final String JSON_ARRAY_NAME = "data";
+	public static final String JSON_DISTANCE_NAME = "distance";
+	public static final String JSON_ARRAY_NAME = "data";
 	
 	/**
 	 * Members
@@ -577,5 +577,26 @@ public class InfoPool {
 			break;
 		}
 		return null;
+	}
+	
+	/**
+	 * Extracts and matches received with what we have currently
+	 * @param data
+	 * Performs basic string matching 
+	 */
+	public synchronized void matchData(String data) {
+		Log.d(TAG, "matchData()");
+		// Clear any matches previously generated
+		clearMatchedCues();
+		
+		// Extract data
+		try {
+			JSONObject root = new JSONObject(data);
+			int distance = root.getInt(JSON_DISTANCE_NAME);
+			JSONArray itemsArray = root.getJSONArray(JSON_ARRAY_NAME);
+		} catch (JSONException e) {
+			Log.e(TAG, "JSONObject creation/extraction error " + e);
+			return;
+		}
 	}
 }
