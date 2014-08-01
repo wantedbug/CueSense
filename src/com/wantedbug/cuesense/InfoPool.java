@@ -96,11 +96,14 @@ public class InfoPool {
 	 */
 	public void clear() {
 		Log.d(TAG, "clear()");
-		// Clear lists
+		// Clear CueItem lists
 		mGlobalList.clear();
 		mNewCuesList.clear();
 		mMatchedCuesList.clear();
-		// Clear data package
+		// Clear distance level lists
+		mNearList.clear();
+		mIntermediateList.clear();
+		mFarList.clear();
 	}
 	
 	/**
@@ -580,7 +583,7 @@ public class InfoPool {
 	}
 	
 	/**
-	 * Extracts and matches received with what we have currently
+	 * Extracts and matches received with what we currently have
 	 * @param data
 	 * Performs basic string matching 
 	 */

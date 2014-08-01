@@ -431,8 +431,7 @@ public class BluetoothManager {
 	// Name for the SDP record when creating server socket
     private static final String CUESENSE_SDP_SERVICE_NAME = "CueSenseAccept";
     // Unique UUID for this application
-//    private static final UUID UUID_CUESENSE = UUID.fromString("8ce255c0-200a-11e0-ac64-0800200c9a66");
-    private static final UUID UUID_CUESENSE2 = UUID.fromString("e8a262fb-db2b-49da-8c7d-3199a30ba929");
+    private static final UUID UUID_CUESENSE = UUID.fromString("e8a262fb-db2b-49da-8c7d-3199a30ba929");
 
     /**
      * Members
@@ -545,10 +544,8 @@ public class BluetoothManager {
         
         // Start the thread to manage the connection and perform transmissions
         mPairedUserConnectedThread = new PairedUserConnectedThread(socket, mSendData);
-        
-        // Write unsynchronized if we have data right now
-//        if(mSendData != null) writeToPairedUser(mSendData.toString().getBytes());
         mPairedUserConnectedThread.start();
+        
         setPairedUserState(STATE_CONNECTED);
         
         // Notify handler that users are connected
@@ -635,7 +632,7 @@ public class BluetoothManager {
 
             // Create a new listening server socket
             try {
-            	tmp = mAdapter.listenUsingInsecureRfcommWithServiceRecord(CUESENSE_SDP_SERVICE_NAME, UUID_CUESENSE2);
+            	tmp = mAdapter.listenUsingInsecureRfcommWithServiceRecord(CUESENSE_SDP_SERVICE_NAME, UUID_CUESENSE);
             } catch (IOException e) {
                 Log.e(TAG, "PairedUserAcceptThread listen() failed", e);
             }
@@ -716,7 +713,7 @@ public class BluetoothManager {
             // Get a BluetoothSocket for a connection with the
             // given BluetoothDevice
             try {
-            	tmp = device.createInsecureRfcommSocketToServiceRecord(UUID_CUESENSE2);
+            	tmp = device.createInsecureRfcommSocketToServiceRecord(UUID_CUESENSE);
             } catch (IOException e) {
             	Log.e(TAG, "PairedUserConnectThread create() failed" + e);
             }
@@ -799,12 +796,6 @@ public class BluetoothManager {
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
-            // Send the data, if we have it ready now
-//            if(mmData != null) {
-//            	write(mmData.toString().getBytes());
-//            	mmData = null;
-//            	mmDataNotSent = false;
-//            }
         }
 
         public void run() {
@@ -814,7 +805,6 @@ public class BluetoothManager {
             int bytes;
             String rcvd = null;
             boolean dataAvailable = false;
-//            int threshold;
 
             // Keep listening to the InputStream while connected
             while (true) {
@@ -822,16 +812,6 @@ public class BluetoothManager {
                 try {
                     // Read from the InputStream when available
                 	Log.i(TAG, "socket connected: " + mmSocket.isConnected());
-//                	try {
-//                    	while(mmInStream.available() == 0 && threshold < 3000) {
-//                    		Thread.sleep(1);
-//                    		++threshold;
-//                    	}
-//                	} catch (IOException e1) {
-//                        e1.printStackTrace();
-//        			} catch (InterruptedException e1) {
-//        				e1.printStackTrace();
-//        			}
                 	while (mmInStream.available() > 0 &&
                 			(bytes = mmInStream.read(buffer)) > -1) {
                         baos.write(buffer, 0, bytes);
@@ -861,7 +841,6 @@ public class BluetoothManager {
             			if(distance > MainActivity.DISTANCE_OUTOFRANGE &&
             					distance <= MainActivity.DISTANCE_FAR) {
             				write(InfoPool.INSTANCE.getData(distance).toString().getBytes());
-//            				writeToPairedUser(InfoPool.INSTANCE.getData(distance).toString().getBytes());
             				mmDataNotSent = false;
             			} else {
             				Log.e(TAG, "Invalid distance data received " + distance);
@@ -891,7 +870,7 @@ public class BluetoothManager {
             try {
                 mmOutStream.write(buffer);
             } catch (IOException e) {
-                Log.e(TAG, "Exception during write/flush/close", e);
+                Log.e(TAG, "Exception during write ", e);
             }
         }
 
