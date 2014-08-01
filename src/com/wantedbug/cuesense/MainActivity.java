@@ -65,7 +65,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// Bluetooth RSSI range values
 	// Note: calibrate these for every test environment since Bluetooth RSSI
 	// values are dependent on the surroundings, surfaces, objects, obstacles, etc.
-	private static final int BT_RSSI_NEAR = 70;
+	private static final int BT_RSSI_NEAR = 50;
 	private static final int BT_RSSI_INTERMEDIATE = 90;
 	private static final int BT_RSSI_FAR = 110;
 
@@ -145,8 +145,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             	Log.i(TAG, "users connected");
             	if(mBTAdapter.getAddress().equals(USER1))
             		mBTManager.writeToPairedUser(getCuesData(mCurrDistance).toString().getBytes());
+            	setDataChanged(mCurrDistance, false);
             	break;
             case BT_MSG_SENDRECV_DONE:
+            	mCurrDevice = null;
             	// Send received data to InfoPool for matching
             	String data = msg.getData().getString(BT_MSG_SENDRECV_DATA);
             	if(!data.isEmpty()) mPool.matchData(data);
@@ -170,7 +172,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     			}
             	// Restart listening and discovery
             	Log.i(TAG, "Restarting user threads and discovery");
-//            	mBTManager.stopPairedUserThreads();
             	mBTManager.startPairedUserThreads();
             	if(mBTAdapter.getAddress().equals(USER1))
             		mBTScanHandler.postDelayed(mBTScanRunnable, SCAN_INTERVAL_MS);
@@ -217,10 +218,18 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private JSONObject mNearData;
 	private JSONObject mIntermediateData;
 	private JSONObject mFarData;
+	// Flags set when above data changes
+	private boolean mNearDataChanged = true;
+	private boolean mIntermediateDataChanged = true;
+	private boolean mFarDataChanged = true;
 	
 	// Distance levels to determine what data to send
 	private int mPrevDistance = DISTANCE_OUTOFRANGE;
 	private int mCurrDistance;
+	
+	// BluetoothDevice cache to avoid multiple discovery callbacks interfering with
+	// an ongoing transmission
+	private BluetoothDevice mCurrDevice = null;
 	
 	private static final String USER1 = "6C:F3:73:65:65:19"; // timo@s3mini, GT-I8190N
 	private static final String USER2 = "6C:F3:73:65:66:A3"; // nikkis@s3mini, nikkis@s3mini
@@ -241,15 +250,19 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 BluetoothDevice device = mBTAdapter.getRemoteDevice(temp.getAddress());
                 // Send if we find the right device and if we're ready to accept the connection
                 if(device != null && device.getAddress().equals(USER2) &&
+                		(mCurrDevice == null || !mCurrDevice.getAddress().equals(device.getAddress())) &&
                 		mBTManager.getPairedUserState() >= BluetoothManager.STATE_LISTEN) {
-                	// Stop discovery
-                	mBTScanHandler.removeCallbacks(mBTScanRunnable);
                 	mCurrDistance = getDistanceFromRSSI(rssi);
                 	synchronized (this) {
-                		// Send if in range
-                		if(mCurrDistance != DISTANCE_OUTOFRANGE && mCurrDistance != mPrevDistance) {
+                		// Send if in range or if data has changed
+                		if(mCurrDistance != DISTANCE_OUTOFRANGE && 
+                			isDataChanged(mCurrDistance)) {
                 			Log.i(TAG, "Sending to " + device.getName() + "," + device.getAddress());
-                			mPrevDistance = mCurrDistance;
+                			mCurrDevice = device;
+                        	// Stop discovery
+                        	mBTAdapter.cancelDiscovery();
+                        	mBTScanHandler.removeCallbacks(mBTScanRunnable);
+                        	mPrevDistance = mCurrDistance;
                 			// Get data to be sent
                 			JSONObject data = getCuesData(mCurrDistance);
                 			if(null != data) {
@@ -259,32 +272,23 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 				if(device.getBondState() == BluetoothDevice.BOND_BONDED) {
                 					Log.i(TAG, device.getName() + " bonded after connectAndSend()");
                 				}
+                			} else {
+                				// Restart listening and discovery
+                            	Log.i(TAG, "no data for distance " + mCurrDistance);
+                            	mCurrDevice = null;
+                            	setDataChanged(mCurrDistance, false);
+                            	mBTManager.startPairedUserThreads();
+                            	if(mBTAdapter.getAddress().equals(USER1))
+                            		mBTScanHandler.postDelayed(mBTScanRunnable, SCAN_INTERVAL_MS);
                 			}
+                		} else {
+                			Log.i(TAG, "not sending data " + mCurrDistance + mPrevDistance + isDataChanged(mCurrDistance));
                 		}
                 	}
                 }
             }
         }
     };
-    
-    /**
-     * Converts RSSI to distance level
-     * @param rssi
-     * @return
-     */
-    private int getDistanceFromRSSI(int rssi) {
-    	rssi = java.lang.Math.abs(rssi);
-    	if(rssi < BT_RSSI_NEAR) {
-    		return DISTANCE_NEAR;
-    	} else if(rssi >=BT_RSSI_NEAR && rssi < BT_RSSI_INTERMEDIATE) {
-    		return DISTANCE_INTERMEDIATE;
-    	} else if(rssi >= BT_RSSI_INTERMEDIATE && rssi < BT_RSSI_FAR) {
-    		return DISTANCE_FAR;
-    	} else {
-    		return DISTANCE_OUTOFRANGE;
-    	}
-    }
-    
     
     // A Handler and Runnable to continuously scan for another user's Bluetooth device
     // specifically for signal strength
@@ -628,7 +632,56 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		}
 	}
 	
-	/**
+    /**
+     * Converts RSSI to distance level
+     * @param rssi
+     * @return
+     */
+    private int getDistanceFromRSSI(int rssi) {
+    	rssi = java.lang.Math.abs(rssi);
+    	if(rssi <= BT_RSSI_NEAR) {
+    		return DISTANCE_NEAR;
+    	} else if(rssi >BT_RSSI_NEAR && rssi <= BT_RSSI_INTERMEDIATE) {
+    		return DISTANCE_INTERMEDIATE;
+    	} else if(rssi > BT_RSSI_INTERMEDIATE && rssi <= BT_RSSI_FAR) {
+    		return DISTANCE_FAR;
+    	} else {
+    		return DISTANCE_OUTOFRANGE;
+    	}
+    }
+    
+    /**
+     * Returns true if there are new Cues available for the specified distance
+     * range
+     * @param distanceRange
+     * @return
+     */
+    private boolean isDataChanged(int distanceRange) {
+    	switch(distanceRange) {
+    	case DISTANCE_NEAR: return mNearDataChanged;
+    	case DISTANCE_INTERMEDIATE: return mIntermediateDataChanged;
+    	case DISTANCE_FAR: return mFarDataChanged;
+    	case DISTANCE_OUTOFRANGE:
+    	default: return false;
+    	}
+    }
+    
+    /**
+     * Sets/resets the data changed flag for the specified distance range
+     * @param distanceRange
+     * @param dataChanged
+     */
+    private void setDataChanged(int distanceRange, boolean dataChanged) {
+    	switch(mCurrDistance) {
+    	case DISTANCE_NEAR: mNearDataChanged = dataChanged; break;
+    	case DISTANCE_INTERMEDIATE: mIntermediateDataChanged = dataChanged; break;
+    	case DISTANCE_FAR: mFarDataChanged = dataChanged; break;
+    	case DISTANCE_OUTOFRANGE:
+		default: break;
+    	}
+    }
+    
+    /**
 	 * Returns the appropriate Cues JSONObject
 	 * @param distanceRange
 	 */
@@ -669,14 +722,17 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		case DISTANCE_NEAR:
 			mNearData = null;
 			mNearData = mPool.getData(distanceRange);
+			mNearDataChanged = true;
 			break;
 		case DISTANCE_INTERMEDIATE:
 			mIntermediateData = null;
 			mIntermediateData = mPool.getData(distanceRange);
+			mIntermediateDataChanged = true;
 			break;
 		case DISTANCE_FAR:
 			mFarData = null;
 			mFarData = mPool.getData(distanceRange);
+			mFarDataChanged = true;
 			break;
 		case DISTANCE_OUTOFRANGE:
 		default:
