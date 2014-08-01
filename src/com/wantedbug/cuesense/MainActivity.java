@@ -255,15 +255,15 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 	mCurrDistance = getDistanceFromRSSI(rssi);
                 	synchronized (this) {
                 		// Send if in range or if data has changed
-                		if(mCurrDistance != DISTANCE_OUTOFRANGE && 
-                			isDataChanged(mCurrDistance)) {
+                		if(mCurrDistance != DISTANCE_OUTOFRANGE && isDataChanged(mCurrDistance)) {
                 			Log.i(TAG, "Sending to " + device.getName() + "," + device.getAddress());
+                			// Cache the BluetoothDevice and distance range
                 			mCurrDevice = device;
-                        	// Stop discovery
+                			mPrevDistance = mCurrDistance;
+                			// Stop discovery
                         	mBTAdapter.cancelDiscovery();
                         	mBTScanHandler.removeCallbacks(mBTScanRunnable);
-                        	mPrevDistance = mCurrDistance;
-                			// Get data to be sent
+                        	// Get the data to be sent
                 			JSONObject data = getCuesData(mCurrDistance);
                 			if(null != data) {
                 				// Connect and send
@@ -575,7 +575,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				args.putInt(ARG_TAB_NUMBER, position + 1);
 				mFBListFragment.setArguments(args);
 				return mFBListFragment;
-//			case INFO_TWITTER: // TODO - Twitter tab
+			case INFO_TWITTER: // TODO - Twitter tab
 			case INFO_SENTINEL: // falls through
 			default: return PlaceholderFragment.newInstance(position + 1);
 			}
@@ -764,7 +764,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Refresh CueSense list
 		mCSListFragment.refreshList();
 		// Refresh Cues data
-		refreshCuesData(DISTANCE_NEAR);
+		setDataChanged(DISTANCE_NEAR, true);
 	}
 
 	@Override
@@ -783,7 +783,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Push to InfoPool
 		mPool.deleteCueItem(item);
 		// Refresh Cues data
-		refreshCuesData(DISTANCE_NEAR);
+		setDataChanged(DISTANCE_NEAR, true);
 	}
 
 	/**
@@ -796,6 +796,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		mDBHelper.updateCueItem(item);
 		// Push to InfoPool
 		mPool.updateCueItem(item);
+		// Refresh Cues data
+		setDataChanged(DISTANCE_NEAR, true);
 	}
 
 	/**
@@ -806,6 +808,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 //		Log.d(TAG, "onFacebookCueAdded()");
 		// Push to InfoPool
 		mPool.addCueItem(item);
+		// Refresh Cues data
+		setDataChanged(DISTANCE_INTERMEDIATE, true);
 	}
 
 	/**
@@ -816,6 +820,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 //		Log.d(TAG, "onFacebookCueDeleted()");
 		// Push to InfoPool
 		mPool.deleteCueItem(item);
+		// Refresh Cues data
+		setDataChanged(DISTANCE_INTERMEDIATE, true);
 	}
 
 	/**
@@ -826,6 +832,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 //		Log.d(TAG, "onFacebookCueChanged()");
 		// Push to InfoPool
 		mPool.updateCueItem(item);
+		// Refresh Cues data
+		setDataChanged(DISTANCE_INTERMEDIATE, true);
 	}
 	
 	/**
@@ -836,6 +844,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 //		Log.d(TAG, "onFacebookCueChanged()");
 		// Remove Facebook items from InfoPool
 		mPool.deleteType(InfoType.INFO_FACEBOOK);
+		// Refresh Cues data
+		setDataChanged(DISTANCE_INTERMEDIATE, false);
 	}
 	
 	/**
@@ -844,7 +854,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	@Override
 	public void onFacebookPriorityCuesAdded(List<CueItem> items) {
 //		Log.d(TAG, "onFacebookPriorityCuesAdded()");
-		// Remove Facebook items from InfoPool
+		// Add Facebook items to InfoPool
 		mPool.addCueItemsToTop(items, InfoType.INFO_FACEBOOK);
+		// Refresh Cues data
+		setDataChanged(DISTANCE_INTERMEDIATE, true);
 	}
 }
