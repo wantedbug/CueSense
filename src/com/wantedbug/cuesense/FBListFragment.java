@@ -53,12 +53,6 @@ public class FBListFragment extends ListFragment {
 		/** Handle addition of priority Facebook cues */
 		void onFacebookPriorityCuesAdded(List<CueItem> items);
 		
-		/** Handle deletion of a Facebook cue */
-		void onFacebookCueDeleted(CueItem item);
-		
-		/** Handle modification of a Facebook cue */
-		void onFacebookCueChanged(CueItem item);
-		
 		/** Handle logging out of Facebook */
 		void onFacebookLogout();
 	}

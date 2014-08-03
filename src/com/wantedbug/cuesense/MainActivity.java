@@ -813,30 +813,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 
 	/**
-	 * Keep InfoPool updated when a Facebook cue is deleted
-	 */
-	@Override
-	public void onFacebookCueDeleted(CueItem item) {
-//		Log.d(TAG, "onFacebookCueDeleted()");
-		// Push to InfoPool
-		mPool.deleteCueItem(item);
-		// Refresh Cues data
-		setDataChanged(DISTANCE_INTERMEDIATE, true);
-	}
-
-	/**
-	 * Keep InfoPool updated when a Facebook cue is changed
-	 */
-	@Override
-	public void onFacebookCueChanged(CueItem item) {
-//		Log.d(TAG, "onFacebookCueChanged()");
-		// Push to InfoPool
-		mPool.updateCueItem(item);
-		// Refresh Cues data
-		setDataChanged(DISTANCE_INTERMEDIATE, true);
-	}
-	
-	/**
 	 * Keep InfoPool updated when the user logs out of Facebook
 	 */
 	@Override
