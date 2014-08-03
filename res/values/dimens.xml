@@ -3,5 +3,11 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="settings_title_horizontal_margin">30dp</dimen>
+    <dimen name="settings_group_elem_vertical_margin">10dp</dimen>
+    <dimen name="settings_twitter_button_horizontal_margin">50dp</dimen>
+    <dimen name="settings_helptext_horizontal_margin">20dp</dimen>
+    <dimen name="settings_fb_group_margin_top">40dp</dimen>
+    <dimen name="settings_tw_group_margin_top">220dp</dimen>
 
 </resources>

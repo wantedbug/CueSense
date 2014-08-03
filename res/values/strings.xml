@@ -18,6 +18,10 @@
     <string name="fb_data_error">There was a problem getting your Facebook data. Please logout and login again.</string>
     <string name="fb_logged_in_as">Logged in as </string>
     <string name="fb_login_explanation">Note: CueSense does not post anything to Facebook.</string><string name="title_cuesense">CueSense</string><string name="title_facebook">Facebook</string><string name="title_twitter">Twitter</string>
+    <string name="tw_logged_in_as">Logged in as</string>
+    <string name="tw_login_explanation">Note: CueSense does not post anything to Twitter.</string>
+    <string name="tw_log_in_with">Log in with Twitter</string>
+    <string name="tw_log_out_from">Log out of Twitter</string>
     
     
     

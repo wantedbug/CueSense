@@ -9,8 +9,8 @@
 	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"
 	    android:textAppearance="?android:attr/textAppearanceMedium"
-	    android:layout_marginTop="30dp"
-	    android:layout_marginLeft="30dp"
+	    android:layout_marginTop="@dimen/settings_fb_group_margin_top"
+	    android:layout_marginLeft="@dimen/settings_title_horizontal_margin"
 	    android:text="@string/title_facebook" />
 
     <com.facebook.widget.LoginButton
@@ -18,7 +18,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="10dp" />
+        android:layout_marginTop="@dimen/settings_group_elem_vertical_margin" />
     
     <TextView
         android:id="@+id/userInfoTextView"
@@ -27,7 +27,9 @@
         android:layout_gravity="center"
         android:gravity="center"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:layout_marginTop="10dp"
+        android:layout_marginLeft="@dimen/settings_helptext_horizontal_margin"
+        android:layout_marginRight="@dimen/settings_helptext_horizontal_margin"
+        android:layout_marginTop="@dimen/settings_group_elem_vertical_margin"
         android:text = "@string/fb_login_explanation" />
-
+    
 </LinearLayout>
