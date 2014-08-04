@@ -737,7 +737,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	@Override
 	public void onCueSenseCueAdded(CueItem item) {
-//		Log.d(TAG, "onCueAdded()");
+//		Log.d(TAG, "onCueSenseCueAdded()");
 		// Push to database
 		mDBHelper.addCueItem(item);
 		// Push to InfoPool
@@ -758,7 +758,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	@Override
 	public void onCueSenseCueDeleted(CueItem item) {
-//		Log.d(TAG, "onCueDeleted()");
+//		Log.d(TAG, "onCueSenseCueDeleted()");
 		// Push to database
 		mDBHelper.deleteCueItem(item);
 		// Push to InfoPool

@@ -18,6 +18,7 @@ import android.content.SharedPreferences.Editor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
@@ -63,13 +64,14 @@ public class SettingsActivity extends FragmentActivity {
 	// Shared Preferences
 	private static SharedPreferences mSharedPreferences;
 
+	@SuppressWarnings("deprecation")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		Log.i(TAG, "onCreate()");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_settings);
 		
-		mSharedPreferences = getApplicationContext().getSharedPreferences("CueSensePref", 0);
+		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
 		/** Facebook UI (handled by FBFragment */
 		if (savedInstanceState == null) {
@@ -189,9 +191,9 @@ public class SettingsActivity extends FragmentActivity {
 							@Override
 							public void run() {
 								SettingsActivity.this.startActivityForResult(
-										new Intent(Intent.ACTION_VIEW, Uri.parse(mTwitterRequestToken.getAuthenticationURL()))
-											.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY),
-										101);
+										new Intent(Intent.ACTION_VIEW, Uri.parse(mTwitterRequestToken.getAuthenticationURL())), 101);
+//											.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY),
+//										101);
 							}
 						});
 					} catch (TwitterException e) {

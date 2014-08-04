@@ -5,16 +5,25 @@
 package com.wantedbug.cuesense;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.wantedbug.cuesense.MainActivity.InfoType;
+
+import twitter4j.ResponseList;
+import twitter4j.Status;
 import twitter4j.Twitter;
+import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.auth.AccessToken;
 import android.app.Activity;
+import android.app.ActivityManager.RecentTaskInfo;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
+import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -61,6 +70,8 @@ public class TwitterListFragment extends ListFragment {
 	// Expandable list data
 	List<Map<String, String>> mGroupData = new ArrayList<Map<String, String>>();
 	List<List<Map<String, String>>> mChildData = new ArrayList<List<Map<String, String>>>();
+	// Handler to change UI elements after async network operations
+	private Handler mTwitterUIHandler;
 	
 	// Shared Preferences
 	private static SharedPreferences mSharedPreferences;
@@ -71,12 +82,16 @@ public class TwitterListFragment extends ListFragment {
 	// Flag to check if data request has already been submitted to avoid duplication
 	private boolean mTWRequestSubmitted = false;
 	
+	ResponseList<Status> recentFavourites = null;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreate()");
 	    super.onCreate(savedInstanceState);
 	    
-	    mSharedPreferences = getActivity().getSharedPreferences("CueSensePref", 0);
+	    mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
+	    
+	    mTwitterUIHandler = new Handler();
 	    
 	    TwitterFactory factory = new TwitterFactory();
 		mTwitter = factory.getInstance();
@@ -98,6 +113,8 @@ public class TwitterListFragment extends ListFragment {
 	    		Log.e(TAG, "Twitter token and secret empty");
 	    	}
 	    }
+	    
+	    getData();
 	}
 	
 	@Override
@@ -117,7 +134,7 @@ public class TwitterListFragment extends ListFragment {
 		Log.d(TAG, "onDestroy()");
 	    super.onDestroy();
 	    
-	    logoutFromTwitter();
+//	    logoutFromTwitter();
 	}
 	
 	@Override
@@ -181,6 +198,45 @@ public class TwitterListFragment extends ListFragment {
 	 */
 	private void getData() {
 		Log.d(TAG, "getData()");
+		
+		if(!isTwitterLoggedIn() || mTWRequestSubmitted) return;
+		
 		mTWRequestSubmitted = true;
+		
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					recentFavourites = mTwitter.getFavorites();
+				} catch (TwitterException e) {
+					Log.e(TAG, "Twitter query error " + e);
+				}
+				
+				getActivity().runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						if(!recentFavourites.isEmpty()) {
+							/** 1. Add the list item header to the list view */
+							Map<String, String> favouritesGroupMap = new HashMap<String, String>();
+							favouritesGroupMap.put(ITEM_DATA, "Favourites");
+							/** 2. Get the children from the JSON response */
+							List<Map<String, String>> favouritesList = new ArrayList<Map<String, String>>();
+							for(Status s : recentFavourites) {
+								Map<String, String> favouritesChild = new HashMap<String, String>();
+								favouritesChild.put(ITEM_DATA, s.getText());
+								favouritesList.add(favouritesChild);
+								CueItem teamItem = new CueItem(-1, InfoType.INFO_TWITTER, s.getText(), true);
+								mListener.onTwitterCueAdded(teamItem);
+							}
+							/** 3. Add the list item's children to the list view */
+							mGroupData.add(favouritesGroupMap);
+							mChildData.add(favouritesList);
+							// Notify that the list contents have changed
+							mAdapter.notifyDataSetChanged();
+						}
+					}
+				});
+			}
+		}).start();
 	}
 }
