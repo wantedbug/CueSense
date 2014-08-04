@@ -102,7 +102,7 @@ public class SettingsActivity extends FragmentActivity {
 		// When control returns to SettingsActivity, check if the request token is
 		// granted. If yes, store the access token in SharedPreferences and
 		// appropriately update UI elements.
-		if (!isTwitterLoggedInAlready()) {
+		if (!isTwitterLoggedIn()) {
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
@@ -176,7 +176,7 @@ public class SettingsActivity extends FragmentActivity {
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
-				if (!isTwitterLoggedInAlready()) {
+				if (!isTwitterLoggedIn()) {
 					ConfigurationBuilder builder = new ConfigurationBuilder();
 					builder.setOAuthConsumerKey(TWITTER_CONSUMER_KEY);
 					builder.setOAuthConsumerSecret(TWITTER_CONSUMER_SECRET);
@@ -229,7 +229,7 @@ public class SettingsActivity extends FragmentActivity {
 	/**
 	 * Returns Twitter login boolean flag from SharedPreferences  
 	 */
-	private boolean isTwitterLoggedInAlready() {
+	private boolean isTwitterLoggedIn() {
 		return mSharedPreferences.getBoolean(PREF_KEY_TWITTER_LOGIN, false);
 	}
 }

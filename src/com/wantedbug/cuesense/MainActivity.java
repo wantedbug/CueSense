@@ -14,6 +14,7 @@ import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
 import com.wantedbug.cuesense.DeleteCueSenseItemDialog.DeleteCueSenseItemListener;
 import com.wantedbug.cuesense.FBListFragment.FacebookCueListener;
 import com.wantedbug.cuesense.NewCueSenseItemDialog.NewCueSenseItemListener;
+import com.wantedbug.cuesense.TwitterListFragment.TwitterCueListener;
 
 import android.annotation.SuppressLint;
 import android.app.ActionBar.Tab;
@@ -40,11 +41,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Toast;
 
 
@@ -54,7 +52,8 @@ import android.widget.Toast;
  */
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener,
 		CueSenseListener, NewCueSenseItemListener, DeleteCueSenseItemListener,
-		FacebookCueListener {
+		FacebookCueListener,
+		TwitterCueListener {
 	// Debugging
 	private static final String TAG = "MainActivity";
 	public static final boolean DEBUG = true;
@@ -209,6 +208,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private CueSenseListFragment mCSListFragment;
 	// Contents of the Facebook tab
 	private FBListFragment mFBListFragment;
+	// Contents of the Twitter tab
+	private TwitterListFragment mTWListFragment;
 	
 	// Reference to Add Cue menu item to set its visibility when needed
 	private MenuItem mAddMenuItem;
@@ -575,9 +576,17 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				args.putInt(ARG_TAB_NUMBER, position + 1);
 				mFBListFragment.setArguments(args);
 				return mFBListFragment;
-			case INFO_TWITTER: // TODO - Twitter tab
+			case INFO_TWITTER:
+				if(mTWListFragment == null) {
+					mTWListFragment = new TwitterListFragment();
+				}
+				args.putInt(ARG_TAB_NUMBER, position + 1);
+				mTWListFragment.setArguments(args);
+				return mTWListFragment;
 			case INFO_SENTINEL: // falls through
-			default: return PlaceholderFragment.newInstance(position + 1);
+			default:
+				Log.e(TAG, "Wrong tab ruh-roh");
+				return null;
 			}
 		}
 
@@ -604,34 +613,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		}
 	}
 
-	// TODO: remove this when tabs are done
-	/**
-	 * A placeholder fragment containing a simple view.
-	 */
-	public static class PlaceholderFragment extends Fragment {
-		/**
-		 * Returns a new instance of this fragment for the given section number.
-		 */
-		public static PlaceholderFragment newInstance(int sectionNumber) {
-			PlaceholderFragment fragment = new PlaceholderFragment();
-			Bundle args = new Bundle();
-			args.putInt(ARG_TAB_NUMBER, sectionNumber);
-			fragment.setArguments(args);
-			return fragment;
-		}
-
-		public PlaceholderFragment() {
-		}
-
-		@Override
-		public View onCreateView(LayoutInflater inflater, ViewGroup container,
-				Bundle savedInstanceState) {
-			View rootView = inflater.inflate(R.layout.fragment_main, container,
-					false);
-			return rootView;
-		}
-	}
-	
     /**
      * Converts RSSI to distance level
      * @param rssi
@@ -817,7 +798,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	@Override
 	public void onFacebookLogout() {
-//		Log.d(TAG, "onFacebookCueChanged()");
+//		Log.d(TAG, "onFacebookLogout()");
 		// Remove Facebook items from InfoPool
 		mPool.deleteType(InfoType.INFO_FACEBOOK);
 		// Refresh Cues data
@@ -834,5 +815,23 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		mPool.addCueItemsToTop(items, InfoType.INFO_FACEBOOK);
 		// Refresh Cues data
 		setDataChanged(DISTANCE_INTERMEDIATE, true);
+	}
+
+	@Override
+	public void onTwitterCueAdded(CueItem item) {
+//		Log.d(TAG, "onTwitterCueAdded()");
+		// Push to InfoPool
+		mPool.addCueItem(item);
+		// Refresh Cues data
+		setDataChanged(DISTANCE_FAR, true);
+	}
+
+	@Override
+	public void onTwitterLogout() {
+//		Log.d(TAG, "onTwitterLogout()");
+		// Remove Twitter items from InfoPool
+		mPool.deleteType(InfoType.INFO_TWITTER);
+		// Refresh Cues data
+		setDataChanged(DISTANCE_FAR, false);
 	}
 }

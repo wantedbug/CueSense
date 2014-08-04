@@ -13,16 +13,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.facebook.Request;
-import com.facebook.Response;
-import com.facebook.Session;
-import com.facebook.SessionState;
-import com.facebook.UiLifecycleHelper;
-import com.facebook.model.GraphObject;
-import com.facebook.model.GraphUser;
-import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
-import com.wantedbug.cuesense.MainActivity.InfoType;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -34,6 +24,15 @@ import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
+
+import com.facebook.Request;
+import com.facebook.Response;
+import com.facebook.Session;
+import com.facebook.SessionState;
+import com.facebook.UiLifecycleHelper;
+import com.facebook.model.GraphObject;
+import com.facebook.model.GraphUser;
+import com.wantedbug.cuesense.MainActivity.InfoType;
 
 /**
  * Fragment that holds the list view of data from the user's Facebook profile 
@@ -73,7 +72,7 @@ public class FBListFragment extends ListFragment {
 	// Expandable list view
 	private SimpleExpandableListAdapter mAdapter;
 	// View for the fragment
-	View v;
+	View mView;
 	
 	// Data for the list views
 	private List<CueItem> mFBList;
@@ -146,9 +145,9 @@ public class FBListFragment extends ListFragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		Log.d(TAG, "onCreateView()");
-	    v = inflater.inflate(R.layout.tab_facebook, container, false);
+	    mView = inflater.inflate(R.layout.tab_facebook, container, false);
 		// Set up list view and list adapter
-		mListView = (ExpandableListView) v.findViewById(android.R.id.list);
+		mListView = (ExpandableListView) mView.findViewById(android.R.id.list);
 		mAdapter = new SimpleExpandableListAdapter(
 				getActivity(),
 				mGroupData,
@@ -163,14 +162,14 @@ public class FBListFragment extends ListFragment {
 		mListView.setAdapter(mAdapter);
 		// Get Facebook data
 		getData();
-		return v;
+		return mView;
 	}
 	
 	@Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         
-        if(!(activity instanceof CueSenseListener)) {
+        if(!(activity instanceof FacebookCueListener)) {
             throw new RuntimeException("Activity must implement FacebookCueListener interface!");
         }
         
@@ -246,11 +245,11 @@ public class FBListFragment extends ListFragment {
 	                if (user != null) {
 	                	getUserInfo(session, user);
 	                }
-	                TextView emptyMessage = (TextView) v.findViewById(android.R.id.empty);
+	                TextView emptyMessage = (TextView) mView.findViewById(android.R.id.empty);
 	                emptyMessage.setText(R.string.fb_no_data);
 	            }
 	            if (response.getError() != null) {
-	                TextView emptyMessage = (TextView) v.findViewById(android.R.id.empty);
+	                TextView emptyMessage = (TextView) mView.findViewById(android.R.id.empty);
 	                emptyMessage.setText(R.string.fb_data_error);
 	            }
 	        }
