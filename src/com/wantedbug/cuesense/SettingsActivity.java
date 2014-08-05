@@ -47,6 +47,8 @@ public class SettingsActivity extends FragmentActivity {
 	static final String PREF_KEY_OAUTH_TOKEN = "oauth_token";
 	static final String PREF_KEY_OAUTH_SECRET = "oauth_token_secret";
 	static final String PREF_KEY_TWITTER_LOGIN = "isTwitterLogedIn";
+	static final String PREF_KEY_TWITTER_USERID = "twitter_userid";
+	static final String PREF_KEY_TWITTER_USERNAME = "twitter_username";
 	static final String TWITTER_CALLBACK_URL = "oauth://t4jsample";
 	// Twitter oauth urls
 	static final String URL_TWITTER_AUTH = "auth_url";
@@ -61,10 +63,12 @@ public class SettingsActivity extends FragmentActivity {
 	// Twitter library handles
 	private static Twitter mTwitter;
 	private static RequestToken mTwitterRequestToken;
+	private static AccessToken mAccessToken;
+	private static long mUserId;
+	private static String mUserName;
 	// Shared Preferences
 	private static SharedPreferences mSharedPreferences;
 
-	@SuppressWarnings("deprecation")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		Log.i(TAG, "onCreate()");
@@ -114,14 +118,9 @@ public class SettingsActivity extends FragmentActivity {
 						String verifier = uri.getQueryParameter(URL_TWITTER_OAUTH_VERIFIER);
 
 						try {
-							// Get and store access token
-							AccessToken accessToken = mTwitter.getOAuthAccessToken(mTwitterRequestToken, verifier);
-							Editor e = mSharedPreferences.edit();
-							e.putString(PREF_KEY_OAUTH_TOKEN, accessToken.getToken());
-							e.putString(PREF_KEY_OAUTH_SECRET, accessToken.getTokenSecret());
-							// Store login status as true
-							e.putBoolean(PREF_KEY_TWITTER_LOGIN, true);
-							e.commit();
+							// Get access token
+							mAccessToken = mTwitter.getOAuthAccessToken(mTwitterRequestToken, verifier);
+							
 							// Update UI elements
 							mTwitterUIHandler.post(new Runnable() {
 								@Override
@@ -130,15 +129,24 @@ public class SettingsActivity extends FragmentActivity {
 									mButtonLogoutTwitter.setVisibility(View.VISIBLE);
 								}
 							});
-							long userID = accessToken.getUserId();
-							User user = mTwitter.showUser(userID);
-							final String username = user.getName();
+							mUserId = mAccessToken.getUserId();
+							User user = mTwitter.showUser(mUserId);
+							mUserName = user.getName();
 							mTwitterUIHandler.post(new Runnable() {
 								@Override
 								public void run() {
-									mUserInfoTextView.setText(getResources().getString(R.string.fb_logged_in_as) + " " + username);
+									mUserInfoTextView.setText(getResources().getString(R.string.fb_logged_in_as) + " " + mUserName);
 								}
 							});
+							
+							// Store some user details to be accessed later
+							Editor e = mSharedPreferences.edit();
+							e.putString(PREF_KEY_OAUTH_TOKEN, mAccessToken.getToken());
+							e.putString(PREF_KEY_OAUTH_SECRET, mAccessToken.getTokenSecret());
+							e.putBoolean(PREF_KEY_TWITTER_LOGIN, true);
+							e.putLong(PREF_KEY_TWITTER_USERID, mUserId);
+							e.putString(PREF_KEY_TWITTER_USERNAME, mUserName);
+							e.commit();
 						} catch (Exception e) {
 							Log.e(TAG, "Twitter login error " + e);
 						}
@@ -151,6 +159,11 @@ public class SettingsActivity extends FragmentActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		if(isTwitterLoggedIn()) {
+			mButtonLoginTwitter.setVisibility(View.GONE);
+			mButtonLogoutTwitter.setVisibility(View.VISIBLE);
+			mUserInfoTextView.setText(getResources().getString(R.string.fb_logged_in_as) + " " + mUserName);
+		}
 	}
 
 	@Override
@@ -221,6 +234,8 @@ public class SettingsActivity extends FragmentActivity {
 		e.remove(PREF_KEY_OAUTH_TOKEN);
 		e.remove(PREF_KEY_OAUTH_SECRET);
 		e.remove(PREF_KEY_TWITTER_LOGIN);
+		e.remove(PREF_KEY_TWITTER_USERID);
+		e.remove(PREF_KEY_TWITTER_USERNAME);
 		e.commit();
 		// Update UI elements
 		mButtonLogoutTwitter.setVisibility(View.GONE);

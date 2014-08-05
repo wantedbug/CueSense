@@ -11,14 +11,15 @@ import java.util.Map;
 
 import com.wantedbug.cuesense.MainActivity.InfoType;
 
+import twitter4j.PagableResponseList;
 import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
+import twitter4j.User;
 import twitter4j.auth.AccessToken;
 import android.app.Activity;
-import android.app.ActivityManager.RecentTaskInfo;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
@@ -82,7 +83,11 @@ public class TwitterListFragment extends ListFragment {
 	// Flag to check if data request has already been submitted to avoid duplication
 	private boolean mTWRequestSubmitted = false;
 	
-	ResponseList<Status> recentFavourites = null;
+	private long mUserId = 0;
+	private String mUserName = null;
+	private ResponseList<Status> mFavourites = null;
+	private PagableResponseList<User> mFriends = null;
+	private List<User> mFollowers = null;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -112,6 +117,9 @@ public class TwitterListFragment extends ListFragment {
 	    	} else {
 	    		Log.e(TAG, "Twitter token and secret empty");
 	    	}
+	    	
+	    	mUserId = mSharedPreferences.getLong(SettingsActivity.PREF_KEY_TWITTER_USERID, -1);
+	    	mUserName  = mSharedPreferences.getString(SettingsActivity.PREF_KEY_TWITTER_USERNAME, "");
 	    }
 	    
 	    getData();
@@ -156,8 +164,6 @@ public class TwitterListFragment extends ListFragment {
 	    		new int[] { android.R.id.text1 }
 	    		);
 	    mListView.setAdapter(mAdapter);
-	    // Get Twitter data
-	    getData();
 	    
 	    return mView;
 	}
@@ -190,6 +196,8 @@ public class TwitterListFragment extends ListFragment {
 		e.remove(SettingsActivity.PREF_KEY_OAUTH_TOKEN);
 		e.remove(SettingsActivity.PREF_KEY_OAUTH_SECRET);
 		e.remove(SettingsActivity.PREF_KEY_TWITTER_LOGIN);
+		e.remove(SettingsActivity.PREF_KEY_TWITTER_USERID);
+		e.remove(SettingsActivity.PREF_KEY_TWITTER_USERNAME);
 		e.commit();
 	}
 	
@@ -199,38 +207,118 @@ public class TwitterListFragment extends ListFragment {
 	private void getData() {
 		Log.d(TAG, "getData()");
 		
-		if(!isTwitterLoggedIn() || mTWRequestSubmitted) return;
+		if(!isTwitterLoggedIn()) return;
+		if(mTWRequestSubmitted) return;
 		
 		mTWRequestSubmitted = true;
 		
+		// Recent favourites
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					recentFavourites = mTwitter.getFavorites();
+					Log.i(TAG, "TWitter user " + mUserId + mUserName);
+					mFavourites = mTwitter.getFavorites();
 				} catch (TwitterException e) {
-					Log.e(TAG, "Twitter query error " + e);
+					Log.e(TAG, "Twitter favourites query error " + e);
 				}
 				
 				getActivity().runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
-						if(!recentFavourites.isEmpty()) {
+						if(!mFavourites.isEmpty()) {
 							/** 1. Add the list item header to the list view */
 							Map<String, String> favouritesGroupMap = new HashMap<String, String>();
 							favouritesGroupMap.put(ITEM_DATA, "Favourites");
-							/** 2. Get the children from the JSON response */
+							/** 2. Get the children from the response */
 							List<Map<String, String>> favouritesList = new ArrayList<Map<String, String>>();
-							for(Status s : recentFavourites) {
+							for(Status s : mFavourites) {
 								Map<String, String> favouritesChild = new HashMap<String, String>();
 								favouritesChild.put(ITEM_DATA, s.getText());
 								favouritesList.add(favouritesChild);
-								CueItem teamItem = new CueItem(-1, InfoType.INFO_TWITTER, s.getText(), true);
-								mListener.onTwitterCueAdded(teamItem);
+								CueItem favouriteItem = new CueItem(-1, InfoType.INFO_TWITTER, s.getText(), true);
+								mListener.onTwitterCueAdded(favouriteItem);
 							}
 							/** 3. Add the list item's children to the list view */
 							mGroupData.add(favouritesGroupMap);
 							mChildData.add(favouritesList);
+							// Notify that the list contents have changed
+							mAdapter.notifyDataSetChanged();
+						}
+					}
+				});
+			}
+		}).start();
+		
+		// Recent friends
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				long cursor = -1;
+				try {
+					mFriends = mTwitter.getFriendsList(mUserId, cursor);
+				} catch (TwitterException e) {
+					Log.e(TAG, "Twitter friends query error " + e);
+				}
+				
+				getActivity().runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						if(!mFriends.isEmpty()) {
+							/** 1. Add the list item header to the list view */
+							Map<String, String> friendsGroupMap = new HashMap<String, String>();
+							friendsGroupMap.put(ITEM_DATA, "Friends");
+							/** 2. Get the children from the response */
+							List<Map<String, String>> friendsList = new ArrayList<Map<String, String>>();
+							for(User u : mFriends) {
+								Map<String, String> friendsChild = new HashMap<String, String>();
+								friendsChild.put(ITEM_DATA, u.getName());
+								friendsList.add(friendsChild);
+								CueItem friendItem = new CueItem(-1, InfoType.INFO_TWITTER, u.getName(), true);
+								mListener.onTwitterCueAdded(friendItem);
+							}
+							/** 3. Add the list item's children to the list view */
+							mGroupData.add(friendsGroupMap);
+							mChildData.add(friendsList);
+							// Notify that the list contents have changed
+							mAdapter.notifyDataSetChanged();
+						}
+					}
+				});
+			}
+		}).start();
+		
+		// Recent followers
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				long cursor = -1;
+				try {
+					Log.i(TAG, "TWitter user " + mUserId + mUserName);
+					mFollowers = mTwitter.getFollowersList(mUserId, cursor);
+				} catch (TwitterException e) {
+					Log.e(TAG, "Twitter followers query error " + e);
+				}
+				
+				getActivity().runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						if(!mFollowers.isEmpty()) {
+							/** 1. Add the list item header to the list view */
+							Map<String, String> followersGroupMap = new HashMap<String, String>();
+							followersGroupMap.put(ITEM_DATA, "Followers");
+							/** 2. Get the children from the response */
+							List<Map<String, String>> followersList = new ArrayList<Map<String, String>>();
+							for(User u : mFollowers) {
+								Map<String, String> followersChild = new HashMap<String, String>();
+								followersChild.put(ITEM_DATA, u.getName());
+								followersList.add(followersChild);
+								CueItem followerItem = new CueItem(-1, InfoType.INFO_TWITTER, u.getName(), true);
+								mListener.onTwitterCueAdded(followerItem);
+							}
+							/** 3. Add the list item's children to the list view */
+							mGroupData.add(followersGroupMap);
+							mChildData.add(followersList);
 							// Notify that the list contents have changed
 							mAdapter.notifyDataSetChanged();
 						}
