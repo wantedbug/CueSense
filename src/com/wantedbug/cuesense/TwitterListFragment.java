@@ -108,6 +108,10 @@ public class TwitterListFragment extends ListFragment {
 		Log.d(TAG, "onResume()");
 	    super.onResume();
 	    
+	    // If we're logged in, refresh AccessToken and user details, and get
+	    // user's Twitter data.
+	    // If not, this means that the user has just logged out of
+	    // Twitter from the Settings view, and we need to clear Twitter data.
 	    if(isTwitterLoggedIn()) {
 	    	String token = mSharedPreferences.getString(SettingsActivity.PREF_KEY_OAUTH_TOKEN, "");
 	    	String tokenSecret = mSharedPreferences.getString(SettingsActivity.PREF_KEY_OAUTH_SECRET, "");
@@ -120,9 +124,12 @@ public class TwitterListFragment extends ListFragment {
 	    	
 	    	mUserId = mSharedPreferences.getLong(SettingsActivity.PREF_KEY_TWITTER_USERID, -1);
 	    	mUserName  = mSharedPreferences.getString(SettingsActivity.PREF_KEY_TWITTER_USERNAME, "");
+	    	
+	    	// Get Twitter data from API queries
+	    	getData();
+	    } else {
+	    	logoutFromTwitter();
 	    }
-	    
-	    getData();
 	}
 	
 	@Override
@@ -141,8 +148,6 @@ public class TwitterListFragment extends ListFragment {
 	public void onDestroy() {
 		Log.d(TAG, "onDestroy()");
 	    super.onDestroy();
-	    
-//	    logoutFromTwitter();
 	}
 	
 	@Override
@@ -188,7 +193,8 @@ public class TwitterListFragment extends ListFragment {
 	
 	/**
 	 * Logs the user out from Twitter
-	 * Clears SharedPreferences of all tokens 
+	 * Clears SharedPreferences of all tokens and notifies the listener
+	 * to clear all Twitter data from the InfoPool
 	 */
 	private void logoutFromTwitter() {
 		Log.d(TAG, "logoutFromTwitter()");
@@ -199,6 +205,8 @@ public class TwitterListFragment extends ListFragment {
 		e.remove(SettingsActivity.PREF_KEY_TWITTER_USERID);
 		e.remove(SettingsActivity.PREF_KEY_TWITTER_USERNAME);
 		e.commit();
+		
+		mListener.onTwitterLogout();
 	}
 	
 	/**
