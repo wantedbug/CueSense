@@ -19,6 +19,14 @@ public class CueItem {
 	// Debugging
 	private static final String TAG = "CueItem";
 	/**
+	 * Constants
+	 */
+	public static final String JSON_TAG_ID = "id";
+	public static final String JSON_TAG_TYPE = "type";
+	public static final String JSON_TAG_DATA = "data";
+	public static final String JSON_TAG_ISCHECKED = "isChecked";
+	
+	/**
 	 * Members
 	 */
 	private int mId;
@@ -58,10 +66,10 @@ public class CueItem {
 	public JSONObject toJSONObject() {
 		JSONObject obj = new JSONObject();
         try {
-            obj.put("id", mId);
-            obj.put("type", mType.value());
-            obj.put("data", mData);
-            obj.put("isChecked", mChecked);
+            obj.put(JSON_TAG_ID, mId);
+            obj.put(JSON_TAG_TYPE, mType.value());
+            obj.put(JSON_TAG_DATA, mData);
+            obj.put(JSON_TAG_ISCHECKED, mChecked);
         } catch (JSONException e) {
             Log.e(TAG, "CueItem JSON creation error " + e);
             obj = null;
