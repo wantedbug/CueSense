@@ -211,6 +211,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// Contents of the Twitter tab
 	private TwitterListFragment mTWListFragment;
 	
+	// TwitterUtils instance
+	TwitterUtils mTwitterUtils = TwitterUtils.INSTANCE;
+	
 	// Reference to Add Cue menu item to set its visibility when needed
 	private MenuItem mAddMenuItem;
 	
@@ -806,7 +809,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 	
 	/**
-	 * Keep InfoPool updated when the user logs out of Facebook
+	 * Keep InfoPool updated when a "special" Facebook cue is added
+	 * This is so that some Facebook data gets a special preference in the
+	 * InfoPool queue.
 	 */
 	@Override
 	public void onFacebookPriorityCuesAdded(List<CueItem> items) {
@@ -817,6 +822,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		setDataChanged(DISTANCE_INTERMEDIATE, true);
 	}
 
+	/**
+	 * Keep InfoPool updated when a Twitter cue is added
+	 */
 	@Override
 	public void onTwitterCueAdded(CueItem item) {
 //		Log.d(TAG, "onTwitterCueAdded()");
@@ -826,6 +834,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		setDataChanged(DISTANCE_FAR, true);
 	}
 
+	/**
+	 * Keep InfoPool updated when the user logs out of Twitter
+	 */
 	@Override
 	public void onTwitterLogout() {
 //		Log.d(TAG, "onTwitterLogout()");

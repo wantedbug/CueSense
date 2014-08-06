@@ -334,5 +334,7 @@ public class TwitterListFragment extends ListFragment {
 				});
 			}
 		}).start();
+		
+		// TODO: mentions+reverse, retweets+reverse
 	}
 }

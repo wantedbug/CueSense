@@ -7,6 +7,7 @@ package com.wantedbug.cuesense;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -69,6 +70,9 @@ public class InfoPool {
 	private ArrayList<CueItem> mIntermediateList = new ArrayList<CueItem>();
 	private ArrayList<CueItem> mFarList = new ArrayList<CueItem>();
 	
+	// Thread to perform matching
+	private MatchThread mMatchThread = null;
+	
 	/**
 	 * Private c'tor to defeat instantiation
 	 */
@@ -99,11 +103,13 @@ public class InfoPool {
 		// Clear CueItem lists
 		mGlobalList.clear();
 		mNewCuesList.clear();
-		mMatchedCuesList.clear();
+		clearMatchedCues();
 		// Clear distance level lists
 		mNearList.clear();
 		mIntermediateList.clear();
 		mFarList.clear();
+		// Cancel any ongoing matching operation, if any
+		stopMatchThread();
 	}
 	
 	/**
@@ -583,23 +589,213 @@ public class InfoPool {
 	}
 	
 	/**
+	 * Stops ongoing matching operation
+	 */
+	private synchronized void stopMatchThread() {
+		if(mMatchThread != null) {
+			mMatchThread.cancel();
+			mMatchThread = null;
+		}
+	}
+	
+	/**
 	 * Extracts and matches received with what we currently have
 	 * @param data
 	 * Performs basic string matching 
 	 */
 	public synchronized void matchData(String data) {
 		Log.d(TAG, "matchData()");
-		// Clear any matches previously generated
-		clearMatchedCues();
 		
-		// Extract data
-		try {
-			JSONObject root = new JSONObject(data);
-			int distance = root.getInt(JSON_DISTANCE_NAME);
-			JSONArray itemsArray = root.getJSONArray(JSON_ARRAY_NAME);
-		} catch (JSONException e) {
-			Log.e(TAG, "JSONObject creation/extraction error " + e);
-			return;
+		// Cancel any ongoing matching operation and start a new one
+		stopMatchThread();
+		mMatchThread = new MatchThread(data);
+		mMatchThread.start();
+	}
+	
+	/**
+	 * Thread to perform matching
+	 * @author vikasprabhu
+	 */
+	private class MatchThread extends Thread {
+		// Debugging
+		private static final String TAG = "MatchThread";
+		
+		/**
+		 * Constants
+		 */
+		private static final double THRESHOLD_NEAR = 0.5;
+		private static final double THRESHOLD_INTERMEDIATE = 0.8;
+		private static final double THRESHOLD_FAR = 0.5;
+		
+		/**
+		 * Members
+		 */
+		//
+		volatile boolean mRunning = true;
+		// Raw JSON data
+		private final String mRawData;
+		// List of CueItems constructed from above JSON data
+		private List<CueItem> mItems;
+		// Distance range received
+		private int mDistance;
+		
+		public MatchThread(String data) {
+			Log.d(TAG, "create MatchThread " + data.length());
+			mRawData = data;
+			mItems = new ArrayList<CueItem>();
+		}
+		
+		public void run() {
+			Log.d(TAG, "run()");
+			if(!mRunning) return;
+			// Extract data from received JSON
+			try {
+				JSONObject root = new JSONObject(mRawData);
+				mDistance = root.getInt(JSON_DISTANCE_NAME);
+				JSONArray itemsArray = root.getJSONArray(JSON_ARRAY_NAME);
+				for(int i = 0; mRunning && i < itemsArray.length(); ++i) {
+					JSONObject itemJSON = itemsArray.getJSONObject(i);
+					CueItem item = new CueItem(itemJSON.getInt(CueItem.JSON_TAG_ID),
+												InfoType.toInfoType(itemJSON.getInt(CueItem.JSON_TAG_TYPE)),
+												itemJSON.getString(CueItem.JSON_TAG_DATA),
+												itemJSON.getBoolean(CueItem.JSON_TAG_ISCHECKED));
+					mItems.add(item);
+				}
+			} catch (JSONException e) {
+				Log.e(TAG, "JSONObject creation/extraction error " + e);
+				return;
+			}
+			
+			if(mRunning) {
+				match();
+			} else {
+				return;
+			}
+		}
+		
+		/**
+		 * Calls match-making function with appropriate threshold values w.r.t.
+		 * distance range involved
+		 */
+		private void match() {
+			// Clear any matches previously generated
+			clearMatchedCues();
+			
+			switch(mDistance) {
+			case MainActivity.DISTANCE_NEAR:
+				match(mNearList, mItems, THRESHOLD_NEAR);
+				break;
+			case MainActivity.DISTANCE_INTERMEDIATE:
+				match(mIntermediateList, mItems, THRESHOLD_INTERMEDIATE);
+				break;
+			case MainActivity.DISTANCE_FAR:
+				match(mFarList, mItems, THRESHOLD_FAR);
+				break;
+			}
+		}
+		
+		/**
+		 * Matches items in one list with another adding matched items to mMatchedCuesList
+		 * @param myItems
+		 * @param theirItems
+		 * @param threshold
+		 */
+		private void match(List<CueItem> myItems, List<CueItem> theirItems, double threshold) {
+			// Create trimmed lower case copies
+			List<String> list1 = new ArrayList<String>();
+			for(CueItem item : myItems) {
+				list1.add(item.data().trim().toLowerCase(Locale.getDefault()));
+			}
+			List<String> list2 = new ArrayList<String>();
+			for(CueItem item : theirItems) {
+				list2.add(item.data().trim().toLowerCase(Locale.getDefault()));
+			}
+			
+			// Match every string in one list against the other
+			// Note: If there's a match found, the matching string is removed from
+			// subsequent comparisons
+			for(int i = 0; mRunning && i < list1.size(); ++i) {
+				String s1 = list1.get(i);
+				boolean added = false;
+				for(int j = 0; mRunning && j < list2.size(); ++j) {
+					String s2 = list2.get(j);
+					int ld = computeLevenshteinDistance(s1, s2);
+					double sim = (1 - (ld / (double)Math.max(s1.length(), s2.length())));
+					if(sim >= threshold && !added) {
+							mMatchedCuesList.add(myItems.get(i));
+							list2.remove(j);
+							--j;
+							added = true;
+					}
+				}
+			}
+		}
+		
+		/**
+		 * Returns the minimum of 3 numbers
+		 * @param a
+		 * @param b
+		 * @param c
+		 * @return
+		 */
+		private int minimum(int a, int b, int c) {                            
+			return Math.min(Math.min(a, b), c);                                      
+		}
+
+		/**
+		 * Returns Levenshtein edit distance between 2 strings
+		 * @param s1
+		 * @param s2
+		 * @return
+		 * Levenshtein distance is defined as the minimum number of edits
+		 * (add/delete/change) required to make 1 string identical to the
+		 * other
+		 */
+		public int computeLevenshteinDistance(String s1, String s2) {
+			int len1 = s1.length() + 1;
+			int len2 = s2.length() + 1;
+
+			// Array of distances
+			int[] cost = new int[len1];
+			int[] newcost = new int[len1];
+
+			// Initial cost of skipping prefix in String s1
+			for (int i = 0; i < len1; i++)
+				cost[i] = i;
+
+			// Compute the array of distances
+			// Transformation cost for each letter in s2
+			for (int j = 1; j < len2; j++) {
+				// Initial cost of skipping prefix in String s2
+				newcost[0] = j;
+
+				// Transformation cost for each letter in s1
+				for(int i = 1; i < len1; i++) {
+					// Matching current letters in both strings
+					int match = (s1.charAt(i - 1) == s2.charAt(j - 1)) ? 0 : 1;
+
+					// Cost for each type of operation
+					int cost_replace = cost[i - 1] + match;
+					int cost_insert  = cost[i] + 1;
+					int cost_delete  = newcost[i - 1] + 1;
+
+					// Keep minimum cost
+					newcost[i] = minimum(cost_insert, cost_delete, cost_replace);
+				}
+				// Swap cost/newcost arrays
+				int[] swap = cost; cost = newcost; newcost = swap;
+			}
+
+			// The distance is the cost for transforming all letters in both strings
+			return cost[len1 - 1];
+		}
+		
+		/**
+		 * Resets the running flag of this thread
+		 */
+		public void cancel() {
+			Log.d(TAG, "cancel()");
+			mRunning = false;
 		}
 	}
 }
