@@ -49,7 +49,11 @@ public class FBListFragment extends ListFragment {
 		/** Handle addition of a new Facebook cue */
 		void onFacebookCueAdded(CueItem item);
 		
-		/** Handle addition of priority Facebook cues */
+		/**
+		 * Handle addition of a "special" Facebook cue
+		 * This is so that some Facebook data gets a special preference in the
+		 * InfoPool queue.
+		 */
 		void onFacebookPriorityCuesAdded(List<CueItem> items);
 		
 		/** Handle logging out of Facebook */
