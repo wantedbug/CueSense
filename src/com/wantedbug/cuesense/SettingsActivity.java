@@ -49,7 +49,7 @@ public class SettingsActivity extends FragmentActivity {
 	static final String PREF_KEY_TWITTER_LOGIN = "isTwitterLogedIn";
 	static final String PREF_KEY_TWITTER_USERID = "twitter_userid";
 	static final String PREF_KEY_TWITTER_USERNAME = "twitter_username";
-	static final String TWITTER_CALLBACK_URL = "oauth://t4jsample";
+	static final String TWITTER_CALLBACK_URL = "oauth://cuesense";
 	// Twitter oauth urls
 	static final String URL_TWITTER_AUTH = "auth_url";
 	static final String URL_TWITTER_OAUTH_VERIFIER = "oauth_verifier";
