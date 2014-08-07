@@ -48,7 +48,9 @@ public class BluetoothManager {
     // UUID for serial connection
     private static final UUID SERIAL_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     // Bluetooth address of the wearable
-	public static final String DEVICE_MAC = "00:06:66:60:1D:07";
+	public static final String DEVICE1_MAC = "00:06:66:60:1D:07";
+//	public static final String DEVICE1_MAC = "00:06:66:60:DC:EE";
+	public static final String DEVICE2_MAC = "00:06:66:67:DE:6B";
 	// Termination character to append to a Bluetooth transmission to
 	// signify the end of the same
 	private static final String TERM_CHAR = "|";

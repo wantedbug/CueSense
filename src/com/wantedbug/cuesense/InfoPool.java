@@ -361,14 +361,15 @@ public class InfoPool {
 			return ret;
 		}
 		
-		// If not, then return the first checked item from the global list
+		// If not, then return the next checked item from the global list
 		if(mGlobalCounter >= mGlobalList.size()) {
 			mGlobalCounter = 0;
 		}
-		for(int i = 0; i < mGlobalCounter; ++i) {
+		for(int i = mGlobalCounter; i < mGlobalList.size(); ++i) {
 			CueItem item = mGlobalList.get(i);
 			if(item.isChecked()) {
 				mGlobalCounter = i;
+				break;
 			}
 		}
 		String ret = mGlobalList.get(mGlobalCounter).data();

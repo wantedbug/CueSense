@@ -64,9 +64,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// Bluetooth RSSI range values
 	// Note: calibrate these for every test environment since Bluetooth RSSI
 	// values are dependent on the surroundings, surfaces, objects, obstacles, etc.
-	private static final int BT_RSSI_NEAR = 50;
-	private static final int BT_RSSI_INTERMEDIATE = 90;
-	private static final int BT_RSSI_FAR = 110;
+	private static final int BT_RSSI_NEAR = 60;
+	private static final int BT_RSSI_INTERMEDIATE = 100;
+	private static final int BT_RSSI_FAR = 120;
 
 	// Time interval between successive data push attempts to the wearable device
 	private static final int PUSH_INTERVAL_MS = 8000;
@@ -259,7 +259,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 	mCurrDistance = getDistanceFromRSSI(rssi);
                 	synchronized (this) {
                 		// Send if in range or if data has changed
-                		if(mCurrDistance != DISTANCE_OUTOFRANGE && isDataChanged(mCurrDistance)) {
+                		if(mCurrDistance != DISTANCE_OUTOFRANGE) { // && isDataChanged(mCurrDistance)) {
                 			Log.i(TAG, "Sending to " + device.getName() + "," + device.getAddress());
                 			// Cache the BluetoothDevice and distance range
                 			mCurrDevice = device;
@@ -429,7 +429,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private void connectDevice() {
 		Log.d(TAG, "connectDevice");
         // Get the BluetoothDevice object
-        BluetoothDevice device = mBTAdapter.getRemoteDevice(BluetoothManager.DEVICE_MAC);
+        BluetoothDevice device = null;
+        if(mBTAdapter.getAddress().equals(USER2)) {
+        	device = mBTAdapter.getRemoteDevice(BluetoothManager.DEVICE1_MAC);
+        } else {
+        	device = mBTAdapter.getRemoteDevice(BluetoothManager.DEVICE2_MAC);
+        }
         // Attempt to connect to the device
         mBTManager.connectWearable(device);
     }
