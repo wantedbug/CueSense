@@ -699,6 +699,11 @@ public class InfoPool {
 		 * @param myItems
 		 * @param theirItems
 		 * @param threshold
+		 * Algorithm (for 1 string):
+		 * 1. Match a string directly. If identical, add to the mMatchedCuesList
+		 * 2. If not, compute Levenshtein distance. If it's above the specified threshold
+		 *    value, add to the mMatchedCuesList
+		 * 3. If not, then ignore the string
 		 */
 		private void match(List<CueItem> myItems, List<CueItem> theirItems, double threshold) {
 			// Create trimmed lower case copies
@@ -716,16 +721,18 @@ public class InfoPool {
 			// subsequent comparisons
 			for(int i = 0; mRunning && i < list1.size(); ++i) {
 				String s1 = list1.get(i);
-				boolean added = false;
 				for(int j = 0; mRunning && j < list2.size(); ++j) {
 					String s2 = list2.get(j);
-					int ld = computeLevenshteinDistance(s1, s2);
-					double sim = (1 - (ld / (double)Math.max(s1.length(), s2.length())));
-					if(sim >= threshold && !added) {
-							mMatchedCuesList.add(myItems.get(i));
-							list2.remove(j);
-							--j;
-							added = true;
+					if(s2.equals(s1)) {
+						mMatchedCuesList.add(myItems.get(i));
+						break;
+					} else {
+						int ld = computeLevenshteinDistance(s1, s2);
+						double sim = (1 - (ld / (double)Math.max(s1.length(), s2.length())));
+						if(sim >= threshold) {
+								mMatchedCuesList.add(myItems.get(i));
+								break;
+						}
 					}
 				}
 			}
@@ -748,7 +755,7 @@ public class InfoPool {
 		 * @param s2
 		 * @return
 		 * Levenshtein distance is defined as the minimum number of edits
-		 * (add/delete/change) required to make 1 string identical to the
+		 * (add/delete/change) required to make one string identical to the
 		 * other
 		 */
 		public int computeLevenshteinDistance(String s1, String s2) {
