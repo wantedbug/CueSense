@@ -761,7 +761,7 @@ public class BluetoothManager {
             try {
                 mmSocket.close();
             } catch (IOException e) {
-                Log.e(TAG, "close() of connect socket failed", e);
+                Log.e(TAG, "close() of connect socket failed ", e);
             }
         }
     }
@@ -793,7 +793,7 @@ public class BluetoothManager {
                 tmpIn = socket.getInputStream();
                 tmpOut = socket.getOutputStream();
             } catch (IOException e) {
-                Log.e(TAG, "temp sockets not created", e);
+                Log.e(TAG, "temp sockets not created ", e);
             }
 
             mmInStream = tmpIn;
@@ -825,7 +825,7 @@ public class BluetoothManager {
                 		break;
                 	}
                 } catch (IOException e) {
-                    Log.e(TAG, "PairedUserConnectedThread::run() error", e);
+                    Log.e(TAG, "PairedUserConnectedThread::run() error ", e);
                     pairedUserConnectionLost();
                     // Start the threads over to restart listening mode
                     BluetoothManager.this.startPairedUserThreads();
@@ -835,21 +835,22 @@ public class BluetoothManager {
             // If we've received data, check if we have data to send
             if(rcvd!= null && !rcvd.isEmpty()) {
             	Log.i(TAG, rcvd.length() + " characters: " + rcvd);
-            	// If we didn't have data earlier, we need to send it now
+            	// If we didn't have data earlier, we need to send it now, if any
             	try {
             		if(mmDataNotSent) {
             			JSONObject data = new JSONObject(rcvd);
             			int distance = data.getInt(InfoPool.JSON_DISTANCE_NAME);
             			if(distance > MainActivity.DISTANCE_OUTOFRANGE &&
             					distance <= MainActivity.DISTANCE_FAR) {
-            				write(InfoPool.INSTANCE.getData(distance).toString().getBytes());
+            				JSONObject myData = InfoPool.INSTANCE.getData(distance);
+            				if(myData != null) write(myData.toString().getBytes());
             				mmDataNotSent = false;
             			} else {
             				Log.e(TAG, "Invalid distance data received " + distance);
             			}
             		}
             	} catch(JSONException e) {
-            		Log.e(TAG, "JSON error" + e);
+            		Log.e(TAG, "JSON error " + e);
             	}
             } else {
             	rcvd = "";
@@ -881,7 +882,7 @@ public class BluetoothManager {
             try {
                 mmSocket.close();
             } catch (IOException e) {
-                Log.e(TAG, "close() of connect socket failed", e);
+                Log.e(TAG, "close() of connect socket failed ", e);
             }
         }
     }
