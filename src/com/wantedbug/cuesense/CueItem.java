@@ -66,10 +66,10 @@ public class CueItem {
 	public JSONObject toJSONObject() {
 		JSONObject obj = new JSONObject();
         try {
-            obj.put(JSON_TAG_ID, mId);
-            obj.put(JSON_TAG_TYPE, mType.value());
+//            obj.put(JSON_TAG_ID, mId);
+//            obj.put(JSON_TAG_TYPE, mType.value());
             obj.put(JSON_TAG_DATA, mData);
-            obj.put(JSON_TAG_ISCHECKED, mChecked);
+//            obj.put(JSON_TAG_ISCHECKED, mChecked);
         } catch (JSONException e) {
             Log.e(TAG, "CueItem JSON creation error " + e);
             obj = null;
