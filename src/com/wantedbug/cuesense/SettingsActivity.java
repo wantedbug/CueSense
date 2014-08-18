@@ -39,21 +39,6 @@ public class SettingsActivity extends FragmentActivity {
 	 */
 	// Fragment that holds Facebook login button
 	FBFragment mFBFragment;
-	// Twitter API keys
-	static String TWITTER_CONSUMER_KEY = "P5HEJoRa6yUyWWatULzmBCpS2";
-	static String TWITTER_CONSUMER_SECRET = "JBQo8dilVJLaFx9ReudSiNCntP1wx4DdpfSceJYccRoIAj8Gwx";
-	// Preference Constants
-	static String PREFERENCE_NAME = "twitter_oauth";
-	static final String PREF_KEY_OAUTH_TOKEN = "oauth_token";
-	static final String PREF_KEY_OAUTH_SECRET = "oauth_token_secret";
-	static final String PREF_KEY_TWITTER_LOGIN = "isTwitterLogedIn";
-	static final String PREF_KEY_TWITTER_USERID = "twitter_userid";
-	static final String PREF_KEY_TWITTER_USERNAME = "twitter_username";
-	static final String TWITTER_CALLBACK_URL = "oauth://cuesense";
-	// Twitter oauth urls
-	static final String URL_TWITTER_AUTH = "auth_url";
-	static final String URL_TWITTER_OAUTH_VERIFIER = "oauth_verifier";
-	static final String URL_TWITTER_OAUTH_TOKEN = "oauth_token";
 	// Twitter UI elements
 	Button mButtonLoginTwitter;
 	Button mButtonLogoutTwitter;
@@ -64,8 +49,9 @@ public class SettingsActivity extends FragmentActivity {
 	private static Twitter mTwitter;
 	private static RequestToken mTwitterRequestToken;
 	private static AccessToken mAccessToken;
-	private static long mUserId;
-	private static String mUserName;
+	private static long mTwitterUserId;
+	private static String mTwitterName;
+	private static String mTwitterScreenName;
 	// Shared Preferences
 	private static SharedPreferences mSharedPreferences;
 
@@ -113,9 +99,9 @@ public class SettingsActivity extends FragmentActivity {
 				@Override
 				public void run() {
 					Uri uri = getIntent().getData();
-					if (uri != null && uri.toString().startsWith(TWITTER_CALLBACK_URL)) {
+					if (uri != null && uri.toString().startsWith(TwitterUtils.TWITTER_CALLBACK_URL)) {
 						// oAuth verifier
-						String verifier = uri.getQueryParameter(URL_TWITTER_OAUTH_VERIFIER);
+						String verifier = uri.getQueryParameter(TwitterUtils.URL_TWITTER_OAUTH_VERIFIER);
 
 						try {
 							// Get access token
@@ -129,23 +115,25 @@ public class SettingsActivity extends FragmentActivity {
 									mButtonLogoutTwitter.setVisibility(View.VISIBLE);
 								}
 							});
-							mUserId = mAccessToken.getUserId();
-							User user = mTwitter.showUser(mUserId);
-							mUserName = user.getName();
+							mTwitterUserId = mAccessToken.getUserId();
+							User user = mTwitter.showUser(mTwitterUserId);
+							mTwitterName = user.getName();
+							mTwitterScreenName = user.getScreenName();
 							mTwitterUIHandler.post(new Runnable() {
 								@Override
 								public void run() {
-									mUserInfoTextView.setText(getResources().getString(R.string.fb_logged_in_as) + " " + mUserName);
+									mUserInfoTextView.setText(getResources().getString(R.string.fb_logged_in_as) + " " + mTwitterName);
 								}
 							});
 							
 							// Store some user details to be accessed later
 							Editor e = mSharedPreferences.edit();
-							e.putString(PREF_KEY_OAUTH_TOKEN, mAccessToken.getToken());
-							e.putString(PREF_KEY_OAUTH_SECRET, mAccessToken.getTokenSecret());
-							e.putBoolean(PREF_KEY_TWITTER_LOGIN, true);
-							e.putLong(PREF_KEY_TWITTER_USERID, mUserId);
-							e.putString(PREF_KEY_TWITTER_USERNAME, mUserName);
+							e.putString(TwitterUtils.PREF_KEY_OAUTH_TOKEN, mAccessToken.getToken());
+							e.putString(TwitterUtils.PREF_KEY_OAUTH_SECRET, mAccessToken.getTokenSecret());
+							e.putBoolean(TwitterUtils.PREF_KEY_TWITTER_LOGIN, true);
+							e.putLong(TwitterUtils.PREF_KEY_TWITTER_USERID, mTwitterUserId);
+							e.putString(TwitterUtils.PREF_KEY_TWITTER_NAME, mTwitterName);
+							e.putString(TwitterUtils.PREF_KEY_TWITTER_SCREENNAME, mTwitterScreenName);
 							e.commit();
 						} catch (Exception e) {
 							Log.e(TAG, "Twitter login error " + e);
@@ -162,7 +150,7 @@ public class SettingsActivity extends FragmentActivity {
 		if(isTwitterLoggedIn()) {
 			mButtonLoginTwitter.setVisibility(View.GONE);
 			mButtonLogoutTwitter.setVisibility(View.VISIBLE);
-			mUserInfoTextView.setText(getResources().getString(R.string.fb_logged_in_as) + " " + mUserName);
+			mUserInfoTextView.setText(getResources().getString(R.string.fb_logged_in_as) + " " + mTwitterName);
 		}
 	}
 
@@ -193,20 +181,19 @@ public class SettingsActivity extends FragmentActivity {
 			public void run() {
 				if (!isTwitterLoggedIn()) {
 					ConfigurationBuilder builder = new ConfigurationBuilder();
-					builder.setOAuthConsumerKey(TWITTER_CONSUMER_KEY);
-					builder.setOAuthConsumerSecret(TWITTER_CONSUMER_SECRET);
+					builder.setOAuthConsumerKey(TwitterUtils.TWITTER_CONSUMER_KEY);
+					builder.setOAuthConsumerSecret(TwitterUtils.TWITTER_CONSUMER_SECRET);
 					Configuration configuration = builder.build();
 					TwitterFactory factory = new TwitterFactory(configuration);
 					mTwitter = factory.getInstance();
 					try {
-						mTwitterRequestToken = mTwitter.getOAuthRequestToken(TWITTER_CALLBACK_URL);
+						mTwitterRequestToken = mTwitter.getOAuthRequestToken(TwitterUtils.TWITTER_CALLBACK_URL);
 						mTwitterUIHandler.post(new Runnable() {
 							@Override
 							public void run() {
 								SettingsActivity.this.startActivityForResult(
 										new Intent(Intent.ACTION_VIEW, Uri.parse(mTwitterRequestToken.getAuthenticationURL())), 101);
-//											.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY),
-//										101);
+//											.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY), 101);
 							}
 						});
 					} catch (TwitterException e) {
@@ -231,11 +218,12 @@ public class SettingsActivity extends FragmentActivity {
 	private void logoutFromTwitter() {
 		// Clear the shared preferences
 		Editor e = mSharedPreferences.edit();
-		e.remove(PREF_KEY_OAUTH_TOKEN);
-		e.remove(PREF_KEY_OAUTH_SECRET);
-		e.remove(PREF_KEY_TWITTER_LOGIN);
-		e.remove(PREF_KEY_TWITTER_USERID);
-		e.remove(PREF_KEY_TWITTER_USERNAME);
+		e.remove(TwitterUtils.PREF_KEY_OAUTH_TOKEN);
+		e.remove(TwitterUtils.PREF_KEY_OAUTH_SECRET);
+		e.remove(TwitterUtils.PREF_KEY_TWITTER_LOGIN);
+		e.remove(TwitterUtils.PREF_KEY_TWITTER_USERID);
+		e.remove(TwitterUtils.PREF_KEY_TWITTER_NAME);
+		e.remove(TwitterUtils.PREF_KEY_TWITTER_SCREENNAME);
 		e.commit();
 		// Update UI elements
 		mButtonLogoutTwitter.setVisibility(View.GONE);
@@ -247,6 +235,6 @@ public class SettingsActivity extends FragmentActivity {
 	 * Returns Twitter login boolean flag from SharedPreferences  
 	 */
 	private boolean isTwitterLoggedIn() {
-		return mSharedPreferences.getBoolean(PREF_KEY_TWITTER_LOGIN, false);
+		return mSharedPreferences.getBoolean(TwitterUtils.PREF_KEY_TWITTER_LOGIN, false);
 	}
 }

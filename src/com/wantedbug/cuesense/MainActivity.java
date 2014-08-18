@@ -61,12 +61,15 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	/**
 	 * Constants
 	 */
+	// Intent request codes
+	private static final int REQUEST_ENABLE_BT = 1;	
+
 	// Bluetooth RSSI range values
 	// Note: calibrate these for every test environment since Bluetooth RSSI
 	// values are dependent on the surroundings, surfaces, objects, obstacles, etc.
-	private static final int BT_RSSI_NEAR = 60;
-	private static final int BT_RSSI_INTERMEDIATE = 100;
-	private static final int BT_RSSI_FAR = 120;
+	private static final int BT_RSSI_NEAR = 50;
+	private static final int BT_RSSI_INTERMEDIATE = 75;
+	private static final int BT_RSSI_FAR = 100;
 
 	// Time interval between successive data push attempts to the wearable device
 	private static final int PUSH_INTERVAL_MS = 8000;
@@ -119,10 +122,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	/**
 	 * Members
 	 */
-	// Intent request codes
-	private static final int REQUEST_ENABLE_BT = 1;	
-
-	// Members
 	private BluetoothAdapter mBTAdapter = BluetoothAdapter.getDefaultAdapter();
 	private BluetoothManager mBTManager = null;
 	// A handler to deal with callbacks from BTManager
@@ -259,7 +258,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 	mCurrDistance = getDistanceFromRSSI(rssi);
                 	synchronized (this) {
                 		// Send if in range or if data has changed
-                		if(mCurrDistance != DISTANCE_OUTOFRANGE) { // && isDataChanged(mCurrDistance)) {
+                		if(mCurrDistance != DISTANCE_OUTOFRANGE && isDataChanged(mCurrDistance)) {
                 			Log.i(TAG, "Sending to " + device.getName() + "," + device.getAddress());
                 			// Cache the BluetoothDevice and distance range
                 			mCurrDevice = device;
@@ -324,6 +323,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             finish();
             return;
         }
+        
+        /** Set up TwitterUtils */
+		mTwitterUtils.init(getApplicationContext());
 		
 		/** Action bar and tabs setup */
 		// Set up the action bar.
@@ -693,15 +695,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		return null;
 	}
 	
-	/**
-	 * Refreshes all the Cues JSONObjects
-	 */
-	private void refreshCuesData() {
-		refreshCuesData(DISTANCE_NEAR);
-		refreshCuesData(DISTANCE_INTERMEDIATE);
-		refreshCuesData(DISTANCE_FAR);
-	}
-
 	/**
 	 * Refreshes the appropriate Cues JSONObject
 	 * @param distanceRange

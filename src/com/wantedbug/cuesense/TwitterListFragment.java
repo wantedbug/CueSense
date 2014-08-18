@@ -21,9 +21,7 @@ import twitter4j.User;
 import twitter4j.auth.AccessToken;
 import android.app.Activity;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
@@ -43,9 +41,6 @@ public class TwitterListFragment extends ListFragment {
 	public interface TwitterCueListener {
 		/** Handle addition of a new Twitter cue */
 		void onTwitterCueAdded(CueItem item);
-		
-		/** Handle addition of priority Twitter cues */
-//		void onTwitterPriorityCuesAdded(List<CueItem> items);
 		
 		/** Handle logging out of Twitter */
 		void onTwitterLogout();
@@ -71,8 +66,6 @@ public class TwitterListFragment extends ListFragment {
 	// Expandable list data
 	List<Map<String, String>> mGroupData = new ArrayList<Map<String, String>>();
 	List<List<Map<String, String>>> mChildData = new ArrayList<List<Map<String, String>>>();
-	// Handler to change UI elements after async network operations
-	private Handler mTwitterUIHandler;
 	
 	// Shared Preferences
 	private static SharedPreferences mSharedPreferences;
@@ -96,11 +89,9 @@ public class TwitterListFragment extends ListFragment {
 	    
 	    mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
 	    
-	    mTwitterUIHandler = new Handler();
-	    
 	    TwitterFactory factory = new TwitterFactory();
 		mTwitter = factory.getInstance();
-		mTwitter.setOAuthConsumer(SettingsActivity.TWITTER_CONSUMER_KEY, SettingsActivity.TWITTER_CONSUMER_SECRET);
+		mTwitter.setOAuthConsumer(TwitterUtils.TWITTER_CONSUMER_KEY, TwitterUtils.TWITTER_CONSUMER_SECRET);
 	}
 	
 	@Override
@@ -113,8 +104,8 @@ public class TwitterListFragment extends ListFragment {
 	    // If not, this means that the user has just logged out of
 	    // Twitter from the Settings view, and we need to clear Twitter data.
 	    if(isTwitterLoggedIn()) {
-	    	String token = mSharedPreferences.getString(SettingsActivity.PREF_KEY_OAUTH_TOKEN, "");
-	    	String tokenSecret = mSharedPreferences.getString(SettingsActivity.PREF_KEY_OAUTH_SECRET, "");
+	    	String token = mSharedPreferences.getString(TwitterUtils.PREF_KEY_OAUTH_TOKEN, "");
+	    	String tokenSecret = mSharedPreferences.getString(TwitterUtils.PREF_KEY_OAUTH_SECRET, "");
 	    	if(!token.isEmpty() && !tokenSecret.isEmpty()) {
 	    		AccessToken accessToken = new AccessToken(token, tokenSecret);
 	    		mTwitter.setOAuthAccessToken(accessToken);
@@ -122,8 +113,8 @@ public class TwitterListFragment extends ListFragment {
 	    		Log.e(TAG, "Twitter token and secret empty");
 	    	}
 	    	
-	    	mUserId = mSharedPreferences.getLong(SettingsActivity.PREF_KEY_TWITTER_USERID, -1);
-	    	mUserName  = mSharedPreferences.getString(SettingsActivity.PREF_KEY_TWITTER_USERNAME, "");
+	    	mUserId = mSharedPreferences.getLong(TwitterUtils.PREF_KEY_TWITTER_USERID, -1);
+	    	mUserName  = mSharedPreferences.getString(TwitterUtils.PREF_KEY_TWITTER_NAME, "");
 	    	
 	    	// Get Twitter data from API queries
 	    	getData();
@@ -188,7 +179,7 @@ public class TwitterListFragment extends ListFragment {
 	 * Returns Twitter login boolean flag from SharedPreferences  
 	 */
 	private boolean isTwitterLoggedIn() {
-		return mSharedPreferences.getBoolean(SettingsActivity.PREF_KEY_TWITTER_LOGIN, false);
+		return mSharedPreferences.getBoolean(TwitterUtils.PREF_KEY_TWITTER_LOGIN, false);
 	}
 	
 	/**
@@ -198,14 +189,8 @@ public class TwitterListFragment extends ListFragment {
 	 */
 	private void logoutFromTwitter() {
 		Log.d(TAG, "logoutFromTwitter()");
-		Editor e = mSharedPreferences.edit();
-		e.remove(SettingsActivity.PREF_KEY_OAUTH_TOKEN);
-		e.remove(SettingsActivity.PREF_KEY_OAUTH_SECRET);
-		e.remove(SettingsActivity.PREF_KEY_TWITTER_LOGIN);
-		e.remove(SettingsActivity.PREF_KEY_TWITTER_USERID);
-		e.remove(SettingsActivity.PREF_KEY_TWITTER_USERNAME);
-		e.commit();
-		
+
+		TwitterUtils.INSTANCE.logoutFromTwitter();
 		mListener.onTwitterLogout();
 	}
 	
@@ -219,13 +204,13 @@ public class TwitterListFragment extends ListFragment {
 		if(mTWRequestSubmitted) return;
 		
 		mTWRequestSubmitted = true;
+		Log.i(TAG, "Twitter user " + mUserId + "," + mUserName);
 		
 		// Recent favourites
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					Log.i(TAG, "TWitter user " + mUserId + mUserName);
 					mFavourites = mTwitter.getFavorites();
 				} catch (TwitterException e) {
 					Log.e(TAG, "Twitter favourites query error " + e);
@@ -242,9 +227,10 @@ public class TwitterListFragment extends ListFragment {
 							List<Map<String, String>> favouritesList = new ArrayList<Map<String, String>>();
 							for(Status s : mFavourites) {
 								Map<String, String> favouritesChild = new HashMap<String, String>();
-								favouritesChild.put(ITEM_DATA, s.getText());
+								String data = "@" + s.getUser().getName() + ": " + s.getText();
+								favouritesChild.put(ITEM_DATA, data);
 								favouritesList.add(favouritesChild);
-								CueItem favouriteItem = new CueItem(-1, InfoType.INFO_TWITTER, s.getText(), true);
+								CueItem favouriteItem = new CueItem(-1, InfoType.INFO_TWITTER, data, true);
 								mListener.onTwitterCueAdded(favouriteItem);
 							}
 							/** 3. Add the list item's children to the list view */
@@ -280,9 +266,10 @@ public class TwitterListFragment extends ListFragment {
 							List<Map<String, String>> friendsList = new ArrayList<Map<String, String>>();
 							for(User u : mFriends) {
 								Map<String, String> friendsChild = new HashMap<String, String>();
-								friendsChild.put(ITEM_DATA, u.getName());
+								String data = "follows " + u.getName();
+								friendsChild.put(ITEM_DATA, data);
 								friendsList.add(friendsChild);
-								CueItem friendItem = new CueItem(-1, InfoType.INFO_TWITTER, u.getName(), true);
+								CueItem friendItem = new CueItem(-1, InfoType.INFO_TWITTER, data, true);
 								mListener.onTwitterCueAdded(friendItem);
 							}
 							/** 3. Add the list item's children to the list view */
@@ -319,9 +306,10 @@ public class TwitterListFragment extends ListFragment {
 							List<Map<String, String>> followersList = new ArrayList<Map<String, String>>();
 							for(User u : mFollowers) {
 								Map<String, String> followersChild = new HashMap<String, String>();
-								followersChild.put(ITEM_DATA, u.getName());
+								String data = "followed by " + u.getName();
+								followersChild.put(ITEM_DATA, data);
 								followersList.add(followersChild);
-								CueItem followerItem = new CueItem(-1, InfoType.INFO_TWITTER, u.getName(), true);
+								CueItem followerItem = new CueItem(-1, InfoType.INFO_TWITTER, data, true);
 								mListener.onTwitterCueAdded(followerItem);
 							}
 							/** 3. Add the list item's children to the list view */
@@ -334,7 +322,5 @@ public class TwitterListFragment extends ListFragment {
 				});
 			}
 		}).start();
-		
-		// TODO: mentions+reverse, retweets+reverse
 	}
 }

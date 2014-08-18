@@ -34,6 +34,7 @@ public class InfoPool {
 	// Name identifiers for the JSONArray
 	public static final String JSON_DISTANCE_NAME = "distance";
 	public static final String JSON_ARRAY_NAME = "data";
+	public static final String JSON_TWITTERSCREENNAME_NAME = "twitterScreenName";
 	
 	/**
 	 * Members
@@ -571,11 +572,13 @@ public class InfoPool {
 				JSONObject itemJSON = item.toJSONObject();
 				if(itemJSON != null) dataArray.put(itemJSON);
 			}
-			if(dataArray.length() == 0) return null;
+			String twitterScreenName = TwitterUtils.INSTANCE.getScreenName();
 			dataObject = new JSONObject();
 			try {
 				dataObject.put(JSON_DISTANCE_NAME, distanceRange);
-				dataObject.put(JSON_ARRAY_NAME, dataArray);
+				if(!twitterScreenName.isEmpty())
+					dataObject.put(JSON_TWITTERSCREENNAME_NAME, twitterScreenName);
+				if(dataArray.length() != 0) dataObject.put(JSON_ARRAY_NAME, dataArray);
 			} catch(JSONException e) {
 				Log.e(TAG, "DISTANCE_FAR JSON creation error " + e);
 				return null;
@@ -626,7 +629,7 @@ public class InfoPool {
 		 */
 		private static final double THRESHOLD_NEAR = 0.5;
 		private static final double THRESHOLD_INTERMEDIATE = 0.8;
-		private static final double THRESHOLD_FAR = 0.5;
+		private static final double THRESHOLD_FAR = 0.6;
 		
 		/**
 		 * Members
@@ -638,7 +641,9 @@ public class InfoPool {
 		// List of CueItems constructed from above JSON data
 		private List<CueItem> mItems;
 		// Distance range received
-		private int mDistance;
+		private int mDistance = MainActivity.DISTANCE_OUTOFRANGE;
+		// Twitter screen name of the nearby user
+		private String mTargetUserScreenName = "";
 		
 		public MatchThread(String data) {
 			Log.d(TAG, "create MatchThread " + data.length());
@@ -652,21 +657,26 @@ public class InfoPool {
 			// Extract data from received JSON
 			try {
 				JSONObject root = new JSONObject(mRawData);
-				mDistance = root.getInt(JSON_DISTANCE_NAME);
-				JSONArray itemsArray = root.getJSONArray(JSON_ARRAY_NAME);
-				for(int i = 0; mRunning && i < itemsArray.length(); ++i) {
-					JSONObject itemJSON = itemsArray.getJSONObject(i);
-					CueItem item = new CueItem(itemJSON.getInt(CueItem.JSON_TAG_ID),
-												InfoType.toInfoType(itemJSON.getInt(CueItem.JSON_TAG_TYPE)),
-												itemJSON.getString(CueItem.JSON_TAG_DATA),
-												itemJSON.getBoolean(CueItem.JSON_TAG_ISCHECKED));
-					mItems.add(item);
+				if(root.has(JSON_DISTANCE_NAME))
+					mDistance = root.getInt(JSON_DISTANCE_NAME);
+				if(root.has(JSON_TWITTERSCREENNAME_NAME))
+					mTargetUserScreenName = root.getString(JSON_TWITTERSCREENNAME_NAME);
+				JSONArray itemsArray = null;
+				if(root.has(JSON_ARRAY_NAME)) {
+					itemsArray = root.getJSONArray(JSON_ARRAY_NAME);
+					for(int i = 0; mRunning && i < itemsArray.length(); ++i) {
+						JSONObject itemJSON = itemsArray.getJSONObject(i);
+						CueItem item = new CueItem(-1, InfoType.toInfoType(mDistance), itemJSON.getString(CueItem.JSON_TAG_DATA), true);
+						mItems.add(item);
+					}
 				}
 			} catch (JSONException e) {
 				Log.e(TAG, "JSONObject creation/extraction error " + e);
 				return;
 			}
 			
+			// We just came out of a potentially long running JSON creation operation
+			// Check if we're canceled and then proceed
 			if(mRunning) {
 				match();
 			} else {
@@ -690,8 +700,31 @@ public class InfoPool {
 				match(mIntermediateList, mItems, THRESHOLD_INTERMEDIATE);
 				break;
 			case MainActivity.DISTANCE_FAR:
+				// Match data
 				match(mFarList, mItems, THRESHOLD_FAR);
+				// Get common followings tweets if we have the target user's screen name
+				if(!mTargetUserScreenName.isEmpty())
+					getCommonTweets();
 				break;
+			}
+		}
+		
+		/**
+		 * Gets tweets of the users' common followings 
+		 */
+		public void getCommonTweets() {
+			Log.d(TAG, "getCommonTweets()");
+			
+			List<String> commonFollowingsTweets = TwitterUtils.INSTANCE.getCommonFollowingsTweets(mTargetUserScreenName);
+			Log.i(TAG, commonFollowingsTweets.size() + " common tweets found " + mRunning);
+			
+			// We just came back from a potentially long running network operation
+			// Check if we're canceled and then proceed
+			if(!mRunning) return;
+			
+			// Add the tweets to the top of matched cues
+			for(String tweet : commonFollowingsTweets) {
+				mMatchedCuesList.add(0, new CueItem(-1, InfoType.INFO_TWITTER, tweet, true));
 			}
 		}
 		
