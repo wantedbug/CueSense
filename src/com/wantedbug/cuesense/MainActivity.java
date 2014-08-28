@@ -43,6 +43,7 @@ import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 
@@ -209,6 +210,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private FBListFragment mFBListFragment;
 	// Contents of the Twitter tab
 	private TwitterListFragment mTWListFragment;
+	// Contents of the text scroll fragment
+	private TextScrollFragment mTextScrollFragment;
 	
 	// TwitterUtils instance
 	TwitterUtils mTwitterUtils = TwitterUtils.INSTANCE;
@@ -326,6 +329,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         
         /** Set up TwitterUtils */
 		mTwitterUtils.init(getApplicationContext());
+		
+		/** Text scroll fragment setup */
+//		mTextScrollFragment = new TextScrollFragment();
+//		getSupportFragmentManager().beginTransaction()
+//			.add(mTextScrollFragment, "")
+//			.hide(mTextScrollFragment)
+//			.commit();
 		
 		/** Action bar and tabs setup */
 		// Set up the action bar.
@@ -510,6 +520,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 		mAddMenuItem = menu.findItem(R.id.action_add);
+		mAddMenuItem.setVisible(false);
 		return true;
 	}
 
@@ -528,6 +539,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			// New CueSense item dialog
 			DialogFragment dialog = new NewCueSenseItemDialog();
 			dialog.show(getSupportFragmentManager(), "new_cuesense_item");
+			return true;
+		} else if(id == R.id.action_showTextScrollDisplay) {
+			showTextScrollDIsplay();
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
@@ -556,6 +570,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	@Override
 	public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) { }
+	
+	/**
+	 * 
+	 */
+	private void showTextScrollDIsplay() {
+		DialogFragment dialog = new TextScrollFragment();
+		dialog.show(getSupportFragmentManager(), "text_scroll");
+	}
 
 	/**
 	 * A {@link FragmentPagerAdapter} that returns a fragment corresponding to

@@ -9,6 +9,12 @@
         android:icon="@drawable/ic_add"
         android:title="@string/menu_add_cue"/>
     <item
+        android:id="@+id/action_showTextScrollDisplay"
+        android:orderInCategory="101"
+        android:showAsAction="always"
+        android:icon="@drawable/ic_action_cast"
+        android:title="@string/menu_broadcast"/>
+    <item
         android:id="@+id/action_settings"
         android:showAsAction="never"
         android:title="@string/action_settings"/>
