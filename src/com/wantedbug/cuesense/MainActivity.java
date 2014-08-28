@@ -77,9 +77,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private static final int SCAN_INTERVAL_MS = 8000;
 	// Tab content identifiers
 	public enum InfoType {
-		INFO_CUESENSE(0),
-		INFO_FACEBOOK(1),
-		INFO_TWITTER(2),
+		INFO_CUESENSE(2),
+		INFO_FACEBOOK(0),
+		INFO_TWITTER(1),
 		INFO_SENTINEL(3);
 		
 		private final int value;
@@ -746,7 +746,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Refresh CueSense list
 		mCSListFragment.refreshList();
 		// Refresh Cues data
-		setDataChanged(DISTANCE_NEAR, true);
+		setDataChanged(DISTANCE_FAR, true);
 	}
 
 	@Override
@@ -765,7 +765,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Push to InfoPool
 		mPool.deleteCueItem(item);
 		// Refresh Cues data
-		setDataChanged(DISTANCE_NEAR, true);
+		setDataChanged(DISTANCE_FAR, true);
 	}
 
 	/**
@@ -779,7 +779,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Push to InfoPool
 		mPool.updateCueItem(item);
 		// Refresh Cues data
-		setDataChanged(DISTANCE_NEAR, true);
+		setDataChanged(DISTANCE_FAR, true);
 	}
 
 	/**
@@ -791,7 +791,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Push to InfoPool
 		mPool.addCueItem(item);
 		// Refresh Cues data
-		setDataChanged(DISTANCE_INTERMEDIATE, true);
+		setDataChanged(DISTANCE_NEAR, true);
 	}
 
 	/**
@@ -803,7 +803,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Remove Facebook items from InfoPool
 		mPool.deleteType(InfoType.INFO_FACEBOOK);
 		// Refresh Cues data
-		setDataChanged(DISTANCE_INTERMEDIATE, false);
+		setDataChanged(DISTANCE_NEAR, false);
 	}
 	
 	/**
@@ -817,7 +817,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Add Facebook items to InfoPool
 		mPool.addCueItemsToTop(items, InfoType.INFO_FACEBOOK);
 		// Refresh Cues data
-		setDataChanged(DISTANCE_INTERMEDIATE, true);
+		setDataChanged(DISTANCE_NEAR, true);
 	}
 
 	/**
@@ -829,7 +829,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Push to InfoPool
 		mPool.addCueItem(item);
 		// Refresh Cues data
-		setDataChanged(DISTANCE_FAR, true);
+		setDataChanged(DISTANCE_INTERMEDIATE, true);
 	}
 
 	/**
@@ -841,6 +841,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Remove Twitter items from InfoPool
 		mPool.deleteType(InfoType.INFO_TWITTER);
 		// Refresh Cues data
-		setDataChanged(DISTANCE_FAR, false);
+		setDataChanged(DISTANCE_INTERMEDIATE, false);
 	}
 }
