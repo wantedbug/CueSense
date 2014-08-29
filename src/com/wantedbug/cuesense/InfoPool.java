@@ -244,8 +244,6 @@ public class InfoPool {
 			}
 		}
 
-		// TODO What happens if item is in matched list and, due to the update,
-		// it doesn't match so well any more?
 		// Search in matched list as well
 		for(CueItem it : mMatchedCuesList) {
 			if(it.id() == item.id() ||
@@ -323,30 +321,30 @@ public class InfoPool {
 	 * If there is any data in the matched list, the global list will never
 	 * be searched.
 	 */
-	public synchronized String getNext() {
+	public synchronized CueItem getNext() {
 		Log.d(TAG, "getNext()");
 		if(mNewCuesList.isEmpty() && mGlobalList.isEmpty() && mMatchedCuesList.isEmpty()) {
 			Log.i(TAG, "getNext() lists empty");
-			return "CueSense";
+			return new CueItem(-1, InfoType.INFO_CUESENSE, "CueSense", true);
 		}
 		
 		// Return the first encountered checked Cue that the user entered
 		// and add the same to the end of the global list
 		if(!mNewCuesList.isEmpty()) {
 			boolean found = false;
-			String ret = "";
+			CueItem ret = new CueItem(-1, InfoType.INFO_CUESENSE, "", false);
 			Iterator<CueItem> it = mNewCuesList.iterator();
 			while(!found && it.hasNext()) {
 				CueItem item = it.next();
 				if(item.isChecked()) {
-					ret = item.data();
+					ret = item;
 					mGlobalList.add(item);
 					it.remove();
 					found = true;
 				}
 			}
 			if(found) {
-				Log.i(TAG, "getNext() from new list " + ret);
+				Log.i(TAG, "getNext() from new list " + ret.data());
 				return ret;
 			}
 		}
@@ -356,7 +354,7 @@ public class InfoPool {
 			if(mMatchedCounter >= mMatchedCuesList.size()) {
 				mMatchedCounter = 0;
 			}
-			String ret = mMatchedCuesList.get(mMatchedCounter).data();
+			CueItem ret = mMatchedCuesList.get(mMatchedCounter);
 			++mMatchedCounter;
 			Log.i(TAG, "getNext() from matched list " + ret);
 			return ret;
@@ -373,7 +371,7 @@ public class InfoPool {
 				break;
 			}
 		}
-		String ret = mGlobalList.get(mGlobalCounter).data();
+		CueItem ret = mGlobalList.get(mGlobalCounter);
 		++mGlobalCounter;
 		Log.i(TAG, "getNext() from global list " + ret);
 		return ret;

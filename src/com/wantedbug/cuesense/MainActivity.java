@@ -43,7 +43,6 @@ import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Toast;
 
 
@@ -72,8 +71,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private static final int BT_RSSI_INTERMEDIATE = 75;
 	private static final int BT_RSSI_FAR = 100;
 
-	// Time interval between successive data push attempts to the wearable device
-	private static final int PUSH_INTERVAL_MS = 8000;
+//	// Time interval between successive data push attempts to the wearable device
+//	private static final int PUSH_INTERVAL_MS = 8000;
 	// Time interval between successive Bluetooth discovery scans
 	private static final int SCAN_INTERVAL_MS = 8000;
 	// Tab content identifiers
@@ -135,9 +134,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             case BT_MSG_TOAST:
             	int msgData = msg.getData().getInt(BT_MSG_ERROR);
             	if(BT_ERR_CONN_FAILED == msgData) {
-            		Toast.makeText(getApplicationContext(), R.string.bt_connection_failed, Toast.LENGTH_LONG).show();
+//            		Toast.makeText(getApplicationContext(), R.string.bt_connection_failed, Toast.LENGTH_LONG).show();
             	} else if(BT_ERR_CONN_LOST == msgData) {
-            		Toast.makeText(getApplicationContext(), R.string.bt_connection_lost, Toast.LENGTH_LONG).show();
+//            		Toast.makeText(getApplicationContext(), R.string.bt_connection_lost, Toast.LENGTH_LONG).show();
             	}
             	break;
             case BT_MSG_PAIREDUSERCONNECTED:
@@ -180,19 +179,19 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     };
 
     // A Handler and Runnable to periodically keep pushing messages to the wearable device
-    Handler mSendCueHandler = new Handler();
-    Runnable mSendCueRunnable = new Runnable() {
-        @Override
-        public void run() {
-        	Log.d(TAG, "mSendCueRunnable::run()");
-        	if(mBTManager.getWearableState() == BluetoothManager.STATE_CONNECTED &&
-        			mBTManager.isDeviceReady()) {
-        		Log.d(TAG, "BT is connected and ready");
-        		sendToBT(InfoPool.INSTANCE.getNext());
-        	}
-        	mSendCueHandler.postDelayed(this, PUSH_INTERVAL_MS);
-        }
-    };
+//    Handler mSendCueHandler = new Handler();
+//    Runnable mSendCueRunnable = new Runnable() {
+//        @Override
+//        public void run() {
+//        	Log.d(TAG, "mSendCueRunnable::run()");
+//        	if(mBTManager.getWearableState() == BluetoothManager.STATE_CONNECTED &&
+//        			mBTManager.isDeviceReady()) {
+//        		Log.d(TAG, "BT is connected and ready");
+//        		sendToBT(InfoPool.INSTANCE.getNext());
+//        	}
+//        	mSendCueHandler.postDelayed(this, PUSH_INTERVAL_MS);
+//        }
+//    };
 
 	// Pager adapter that provides fragments for each section
 	private SectionsPagerAdapter mSectionsPagerAdapter;
@@ -210,8 +209,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private FBListFragment mFBListFragment;
 	// Contents of the Twitter tab
 	private TwitterListFragment mTWListFragment;
-	// Contents of the text scroll fragment
-	private TextScrollFragment mTextScrollFragment;
 	
 	// TwitterUtils instance
 	TwitterUtils mTwitterUtils = TwitterUtils.INSTANCE;
@@ -330,13 +327,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         /** Set up TwitterUtils */
 		mTwitterUtils.init(getApplicationContext());
 		
-		/** Text scroll fragment setup */
-//		mTextScrollFragment = new TextScrollFragment();
-//		getSupportFragmentManager().beginTransaction()
-//			.add(mTextScrollFragment, "")
-//			.hide(mTextScrollFragment)
-//			.commit();
-		
 		/** Action bar and tabs setup */
 		// Set up the action bar.
 		final ActionBar actionBar = getActionBar();
@@ -421,7 +411,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         	mBTManager.stopPairedUserThreads();
         }
         // Stop the send and scan handler runnables
-        mSendCueHandler.removeCallbacks(mSendCueRunnable);
+//        mSendCueHandler.removeCallbacks(mSendCueRunnable);
         mBTScanHandler.removeCallbacks(mBTScanRunnable);
         if(mBTScanReceiver != null && mBTAdapter.getAddress().equals(USER1)) {
         	try {
@@ -464,7 +454,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         connectDevice();
         
         // Start the runnable to periodically keep pushing data, if available, to the wearable
-        mSendCueHandler.postDelayed(mSendCueRunnable, PUSH_INTERVAL_MS);
+//        mSendCueHandler.postDelayed(mSendCueRunnable, PUSH_INTERVAL_MS);
         
         // Start Bluetooth discovery to continuously monitor signal strength of
         // the nearby user
@@ -477,23 +467,23 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         }
     }
 	
-	/**
-	 * Sends text from the TextView to the Bluetooth device
-	 * @param text
-	 */
-	private void sendToBT(String text) {
-		Log.d(TAG, "sendToBT() " + text);
-        // Check that we're actually connected before trying anything
-        if (mBTManager.getWearableState() != BluetoothManager.STATE_CONNECTED) {
-            Toast.makeText(this, R.string.bt_not_connected, Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        // Check that there's actually something to send
-        if (text.length() > 0) {
-            mBTManager.writeToWearable(text);
-        }
-    }
+//	/**
+//	 * Sends text from the TextView to the Bluetooth device
+//	 * @param text
+//	 */
+//	private void sendToBT(String text) {
+//		Log.d(TAG, "sendToBT() " + text);
+//        // Check that we're actually connected before trying anything
+//        if (mBTManager.getWearableState() != BluetoothManager.STATE_CONNECTED) {
+//            Toast.makeText(this, R.string.bt_not_connected, Toast.LENGTH_LONG).show();
+//            return;
+//        }
+//
+//        // Check that there's actually something to send
+//        if (text.length() > 0) {
+//            mBTManager.writeToWearable(text);
+//        }
+//    }
 	
 	/**
 	 *  This routine is called when an activity completes.
@@ -541,7 +531,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			dialog.show(getSupportFragmentManager(), "new_cuesense_item");
 			return true;
 		} else if(id == R.id.action_showTextScrollDisplay) {
-			showTextScrollDIsplay();
+			DialogFragment dialog = new TextScrollFragment();
+			dialog.show(getSupportFragmentManager(), "text_scroll");
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
@@ -571,14 +562,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	@Override
 	public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) { }
 	
-	/**
-	 * 
-	 */
-	private void showTextScrollDIsplay() {
-		DialogFragment dialog = new TextScrollFragment();
-		dialog.show(getSupportFragmentManager(), "text_scroll");
-	}
-
 	/**
 	 * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
 	 * one of the sections/tabs/pages.
