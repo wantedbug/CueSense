@@ -4,20 +4,20 @@
 
 package com.wantedbug.cuesense;
 
-import com.wantedbug.cuesense.MainActivity.InfoType;
 
-import android.R.color;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.pm.ActivityInfo;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
+import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
 /**
@@ -39,31 +39,44 @@ public class TextScrollFragment extends DialogFragment {
 	 */
 	// UI elements
 	private TextView mScrollText;
+	// Animations for mScrollText
+	Animation mIntroAnim;
+	Animation mOutroAnim;
+	// Animation listeners to control mScrollText's animation and to get
+	// new item at the end of the animation
+	AnimationListener mIntroAnimListener = new AnimationListener() {
+		@Override
+		public void onAnimationStart(Animation animation) {
+			// Do nothing
+		}
+
+		@Override
+		public void onAnimationEnd(Animation animation) {
+			mScrollText.startAnimation(mOutroAnim);
+		}
+
+		@Override
+		public void onAnimationRepeat(Animation animation) {
+			// Do nothing
+		}
+	};
 	
-	// A Handler and Runnable to periodically keep pushing messages to the "wearable device"
-    Handler mSendCueHandler = new Handler();
-    Runnable mSendCueRunnable = new Runnable() {
-        @Override
-        public void run() {
-        	Log.d(TAG, "mSendCueRunnable::run()");
-    		if(mScrollText != null) {
-    			CueItem item = InfoPool.INSTANCE.getNext();
-    			switch(item.type()) {
-    			case INFO_CUESENSE:
-    				mScrollText.setTextColor(Color.parseColor("#FFA500")); // orange
-    				break;
-    			case INFO_FACEBOOK:
-    				mScrollText.setTextColor(Color.BLUE);
-    				break;
-    			case INFO_TWITTER:
-    				mScrollText.setTextColor(Color.CYAN);
-    				break;
-    			}
-    			mScrollText.setText(item.data());
-    		}
-        	mSendCueHandler.postDelayed(this, PUSH_INTERVAL_MS);
-        }
-    };
+	AnimationListener mOutroAnimListener = new AnimationListener() {
+		@Override
+		public void onAnimationStart(Animation animation) {
+			// Do nothing
+		}
+		
+		@Override
+		public void onAnimationRepeat(Animation animation) {
+			// Do nothing
+		}
+		
+		@Override
+		public void onAnimationEnd(Animation animation) {
+			setText();
+		}
+	};
 	
 	@Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -79,6 +92,17 @@ public class TextScrollFragment extends DialogFragment {
         
         mScrollText = (TextView) dialogView.findViewById(R.id.scrollText);
         
+        // Rotate text to make it look like the dialog is in landscape mode
+        mScrollText.setRotation(90);
+        
+        // Set mScrollText's intro and outro animations
+        mIntroAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.slide_in_left);
+        mIntroAnim.setDuration(PUSH_INTERVAL_MS / 2);
+        mIntroAnim.setAnimationListener(mIntroAnimListener);
+        mOutroAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.slide_out_right);
+        mOutroAnim.setDuration(PUSH_INTERVAL_MS / 2);
+        mOutroAnim.setAnimationListener(mOutroAnimListener);
+        
         return builder.create();
 	}
 	
@@ -87,21 +111,47 @@ public class TextScrollFragment extends DialogFragment {
 		Log.d(TAG, "onResume()");
         super.onResume();
         
-        // Set dialog dimensions
-        int width = getResources().getDisplayMetrics().widthPixels;
-        int height = getResources().getDisplayMetrics().heightPixels;
+        // Set dialog dimensions explicitly
+        Point outSize = new Point();
+        getActivity().getWindowManager().getDefaultDisplay().getSize(outSize);
+        int width = outSize.x;
+        int height = outSize.y - 50;
         getDialog().getWindow().setLayout(width, height);
         
-        mSendCueHandler.post(mSendCueRunnable);
+        // New item
+        setText();
 	}
 	
 	@Override
 	public void onDestroy() {
 		Log.d(TAG, "onDestroy()");
         super.onDestroy();
-        // Stop the send handler runnable
-        mSendCueHandler.removeCallbacks(mSendCueRunnable);
+        mScrollText.clearAnimation();
         // Allow display to timeout
         getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+	}
+	
+	/**
+	 * Sets mScrollText by getting the next CueItem from the InfoPool
+	 * and starting its intro animation
+	 */
+	private void setText() {
+		// New item
+		CueItem item = InfoPool.INSTANCE.getNext();
+		if(mScrollText != null) {
+			switch(item.type()) {
+			case INFO_CUESENSE:
+				mScrollText.setTextColor(Color.parseColor("#FFA500")); // CueSense orange
+				break;
+			case INFO_FACEBOOK:
+				mScrollText.setTextColor(Color.parseColor("#627AAD")); // Facebook blue
+				break;
+			case INFO_TWITTER:
+				mScrollText.setTextColor(Color.parseColor("#1dcaff")); // Twitter cyan
+				break;
+			}
+		}
+		mScrollText.setText(item.data());
+		mScrollText.startAnimation(mIntroAnim);
 	}
 }

@@ -5,11 +5,10 @@
         
         <TextView 
             android:id="@+id/scrollText"
-            android:layout_width="match_parent"
-        	android:layout_height="match_parent"
-        	android:layout_gravity="center"
-        	android:gravity="center"
-        	android:textAppearance="?android:attr/textAppearanceLarge"
+            android:layout_width="1000dp"
+        	android:layout_height="1000dp"
+        	android:gravity="center_vertical"
+        	android:textSize="40sp"
         	android:text="@string/app_name" />
         
 </RelativeLayout>
