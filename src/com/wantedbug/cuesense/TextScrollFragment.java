@@ -131,22 +131,26 @@ public class TextScrollFragment extends DialogFragment {
 	 * and starting its intro animation
 	 */
 	private void setText() {
+		final String spacer = "      ";
 		// New item
 		CueItem item = InfoPool.INSTANCE.getNext();
 		if(mScrollText != null) {
 			switch(item.type()) {
 			case INFO_CUESENSE:
 				mImage.setImageDrawable(getResources().getDrawable(R.drawable.ic_launcher));
-				mContextHeader.setText("What I did last summer..");
+				mImage.setBackgroundColor(0x00000000);
+				mContextHeader.setText(spacer + "What I did last summer..");
 				mScrollText.setTextColor(Color.parseColor("#FFA500")); // CueSense orange
 				break;
 			case INFO_FACEBOOK:
 				mImage.setImageDrawable(getResources().getDrawable(R.drawable.com_facebook_inverse_icon));
-				mContextHeader.setText("I like..");
+				mImage.setBackgroundColor(getResources().getColor(R.color.com_facebook_blue));
+				mContextHeader.setText(spacer + "I like..I like..I like..I like..I like..I like..I like..I like..");
 				mScrollText.setTextColor(Color.parseColor("#627AAD")); // Facebook blue
 				break;
 			case INFO_TWITTER:
-				mContextHeader.setText("Twitter..");
+				mContextHeader.setText(spacer + "Twitter..");
+				mImage.setBackgroundColor(0x00000000);
 				mScrollText.setTextColor(Color.parseColor("#1dcaff")); // Twitter cyan
 				break;
 			default:
