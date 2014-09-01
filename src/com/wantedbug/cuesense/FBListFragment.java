@@ -291,7 +291,7 @@ public class FBListFragment extends ListFragment {
 		
 		/** INSPIRATIONAL PEOPLE */
 		JSONArray peopleJSONArray = (JSONArray) user.getProperty("inspirational_people");
-		if(peopleJSONArray.length() > 0 ) {
+		if(peopleJSONArray != null && peopleJSONArray.length() > 0 ) {
 			/** 1. Add the list item header to the list view */
 			Map<String, String> peopleGroupMap = new HashMap<String, String>();
 			peopleGroupMap.put(ITEM_DATA, "Inspirational people");
@@ -331,7 +331,7 @@ public class FBListFragment extends ListFragment {
 		
 		/** FAVOURITE SPORTS TEAMS */
 		JSONArray teamsJSONArray = (JSONArray) user.getProperty("favorite_teams");
-		if(teamsJSONArray.length() > 0 ) {
+		if(teamsJSONArray != null && teamsJSONArray.length() > 0 ) {
 			/** 1. Add the list item header to the list view */
 			Map<String, String> teamsGroupMap = new HashMap<String, String>();
 			teamsGroupMap.put(ITEM_DATA, "Sports teams");
@@ -374,7 +374,7 @@ public class FBListFragment extends ListFragment {
 		/** EDUCATION */
 		if(session.isPermissionGranted("user_education_history")) {
 			JSONArray schoolsJSON = (JSONArray)user.getProperty("education");
-			if(schoolsJSON.length() > 0) {
+			if(schoolsJSON != null && schoolsJSON.length() > 0) {
 				/** 1. Add the list item header to the list view */
 				Map<String, String> educationGroupMap = new HashMap<String, String>();
 				educationGroupMap.put(ITEM_DATA, "Education");
@@ -416,7 +416,7 @@ public class FBListFragment extends ListFragment {
 		/** WORK HISTORY */
 		if(session.isPermissionGranted("user_work_history")) {
 			JSONArray companiesJSON = (JSONArray)user.getProperty("work");
-			if(companiesJSON.length() > 0) {
+			if(companiesJSON != null && companiesJSON.length() > 0) {
 				/** 1. Add the list item header to the list view */
 				Map<String, String> workGroupMap = new HashMap<String, String>();
 				workGroupMap.put(ITEM_DATA, "Work history");
@@ -457,7 +457,7 @@ public class FBListFragment extends ListFragment {
 		
 		/** LANGUAGES */
 		JSONArray languages = (JSONArray) user.getProperty("languages");
-		if (languages.length() > 0) {
+		if (languages != null && languages.length() > 0) {
 			/** 1. Add the list item header to the list view */
 			Map<String, String> languageGroupMap = new HashMap<String, String>();
 			languageGroupMap.put(ITEM_DATA, "Languages");
@@ -543,7 +543,7 @@ public class FBListFragment extends ListFragment {
 		/** HOMETOWN */
 		if(session.isPermissionGranted("user_hometown")) {
 			JSONObject hometownJSON = (JSONObject)user.getProperty("hometown");
-			if(hometownJSON.has("name")) {
+			if(hometownJSON != null && hometownJSON.has("name")) {
 				/** 2. Get the children from the JSON response */
 				Map<String, String> hometownChild = new HashMap<String, String>();
 				hometownChild.put(ITEM_DATA, hometownJSON.optString("name"));
