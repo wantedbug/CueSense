@@ -356,7 +356,7 @@ public class InfoPool {
 			}
 			CueItem ret = mMatchedCuesList.get(mMatchedCounter);
 			++mMatchedCounter;
-			Log.i(TAG, "getNext() from matched list " + ret);
+			Log.i(TAG, "getNext() from matched list " + ret.data());
 			return ret;
 		}
 		
@@ -373,7 +373,7 @@ public class InfoPool {
 		}
 		CueItem ret = mGlobalList.get(mGlobalCounter);
 		++mGlobalCounter;
-		Log.i(TAG, "getNext() from global list " + ret);
+		Log.i(TAG, "getNext() from global list " + ret.data());
 		return ret;
 	}
 	
