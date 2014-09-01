@@ -1,14 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent" >
-        
-        <TextView 
-            android:id="@+id/scrollText"
-            android:layout_width="1000dp"
-        	android:layout_height="1000dp"
-        	android:gravity="center_vertical"
-        	android:textSize="40sp"
-        	android:text="@string/app_name" />
-        
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <TextView
+        android:id="@+id/contextHeader1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/contextImage1"
+        android:layout_gravity="center_vertical"
+        android:layout_toRightOf="@+id/contextImage1"
+        android:layout_marginBottom="10dp"
+        android:textSize="30sp" />
+
+    <ImageView
+        android:id="@+id/contextImage1"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:scaleType="fitXY"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_gravity="center_vertical"
+        android:layout_margin="5dp" />
+
+    <TextView
+        android:id="@+id/scrollText1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/contextHeader1"
+        android:layout_gravity="center_vertical|center_horizontal"
+        android:textSize="60sp" />
+
 </RelativeLayout>

@@ -8,7 +8,6 @@ package com.wantedbug.cuesense;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.graphics.Color;
-import android.graphics.Point;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.util.Log;
@@ -18,6 +17,7 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 /**
@@ -38,6 +38,8 @@ public class TextScrollFragment extends DialogFragment {
 	 * Members
 	 */
 	// UI elements
+	private ImageView mImage;
+	private TextView mContextHeader;
 	private TextView mScrollText;
 	// Animations for mScrollText
 	Animation mIntroAnim;
@@ -90,12 +92,12 @@ public class TextScrollFragment extends DialogFragment {
         final View dialogView = inflater.inflate(R.layout.fragment_textscroll, null);
         builder.setView(dialogView);
         
-        mScrollText = (TextView) dialogView.findViewById(R.id.scrollText);
+        // UI elements
+        mImage = (ImageView) dialogView.findViewById(R.id.contextImage1);
+        mContextHeader = (TextView) dialogView.findViewById(R.id.contextHeader1);
+        mScrollText = (TextView) dialogView.findViewById(R.id.scrollText1);
         
-        // Rotate text to make it look like the dialog is in landscape mode
-        mScrollText.setRotation(90);
-        
-        // Set mScrollText's intro and outro animations
+        // Set scrolling text's intro and outro animations
         mIntroAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.slide_in_left);
         mIntroAnim.setDuration(PUSH_INTERVAL_MS / 2);
         mIntroAnim.setAnimationListener(mIntroAnimListener);
@@ -110,13 +112,6 @@ public class TextScrollFragment extends DialogFragment {
 	public void onResume() {
 		Log.d(TAG, "onResume()");
         super.onResume();
-        
-        // Set dialog dimensions explicitly
-        Point outSize = new Point();
-        getActivity().getWindowManager().getDefaultDisplay().getSize(outSize);
-        int width = outSize.x;
-        int height = outSize.y - 50;
-        getDialog().getWindow().setLayout(width, height);
         
         // New item
         setText();
@@ -141,13 +136,20 @@ public class TextScrollFragment extends DialogFragment {
 		if(mScrollText != null) {
 			switch(item.type()) {
 			case INFO_CUESENSE:
+				mImage.setImageDrawable(getResources().getDrawable(R.drawable.ic_launcher));
+				mContextHeader.setText("What I did last summer..");
 				mScrollText.setTextColor(Color.parseColor("#FFA500")); // CueSense orange
 				break;
 			case INFO_FACEBOOK:
+				mImage.setImageDrawable(getResources().getDrawable(R.drawable.com_facebook_inverse_icon));
+				mContextHeader.setText("I like..");
 				mScrollText.setTextColor(Color.parseColor("#627AAD")); // Facebook blue
 				break;
 			case INFO_TWITTER:
+				mContextHeader.setText("Twitter..");
 				mScrollText.setTextColor(Color.parseColor("#1dcaff")); // Twitter cyan
+				break;
+			default:
 				break;
 			}
 		}
