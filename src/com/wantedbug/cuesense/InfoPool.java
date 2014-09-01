@@ -312,6 +312,19 @@ public class InfoPool {
 	}
 	
 	/**
+	 * Returns true if there is any data in the InfoPool; false if otherwise
+	 * @return
+	 */
+	public boolean hasNext() {
+		Log.d(TAG, "getNext()");
+		if(mNewCuesList.isEmpty() && mGlobalList.isEmpty() && mMatchedCuesList.isEmpty()) {
+			Log.i(TAG, "getNext() lists empty");
+			return false;
+		}
+		return true;
+	}
+	
+	/**
 	 * Gets next Cue from the appropriate list
 	 * @return
 	 * Returns only checked Cues. Priority order for the search:
@@ -332,7 +345,7 @@ public class InfoPool {
 		// and add the same to the end of the global list
 		if(!mNewCuesList.isEmpty()) {
 			boolean found = false;
-			CueItem ret = new CueItem(-1, InfoType.INFO_CUESENSE, "", false);
+			CueItem ret = new CueItem(-1, InfoType.INFO_CUESENSE, "", false); // to make the silly Android compiler happy
 			Iterator<CueItem> it = mNewCuesList.iterator();
 			while(!found && it.hasNext()) {
 				CueItem item = it.next();

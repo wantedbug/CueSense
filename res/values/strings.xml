@@ -23,6 +23,7 @@
     <string name="tw_log_in_with">Log in with Twitter</string>
     <string name="tw_log_out_from">Log out of Twitter</string>
     <string name="tw_no_data">Login to Twitter in Settings to include your Twitter data</string>
+    <string name="no_data_anywhere">There\'s nothing to display. Try logging in to a social network in Settings or add your own cue in the CueSense tab.</string>
     
     
     

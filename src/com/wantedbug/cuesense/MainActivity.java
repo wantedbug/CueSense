@@ -531,8 +531,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			dialog.show(getSupportFragmentManager(), "new_cuesense_item");
 			return true;
 		} else if(id == R.id.action_showTextScrollDisplay) {
-			DialogFragment dialog = new TextScrollFragment();
-			dialog.show(getSupportFragmentManager(), "text_scroll");
+			if(mPool.hasNext()) {
+				DialogFragment dialog = new TextScrollFragment();
+				dialog.show(getSupportFragmentManager(), "text_scroll");
+			} else {
+				Toast.makeText(getApplicationContext(), R.string.no_data_anywhere, Toast.LENGTH_LONG).show();
+			}
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
