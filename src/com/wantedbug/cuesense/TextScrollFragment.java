@@ -76,7 +76,7 @@ public class TextScrollFragment extends DialogFragment {
 		
 		@Override
 		public void onAnimationEnd(Animation animation) {
-			setText();
+			getNextText();
 		}
 	};
 	
@@ -114,7 +114,7 @@ public class TextScrollFragment extends DialogFragment {
         super.onResume();
         
         // New item
-        setText();
+        getNextText();
 	}
 	
 	@Override
@@ -130,10 +130,19 @@ public class TextScrollFragment extends DialogFragment {
 	 * Sets mScrollText by getting the next CueItem from the InfoPool
 	 * and starting its intro animation
 	 */
-	private void setText() {
+	private void getNextText() {
 		final String spacer = "      ";
-		// New item
+		// Get the next item
 		CueItem item = InfoPool.INSTANCE.getNext();
+		
+		// Set text size
+		if(item.data().length() <= 35) {
+			mScrollText.setTextSize(getResources().getDimension(R.dimen.scroll_text_size_large));
+		} else {
+			mScrollText.setTextSize(getResources().getDimension(R.dimen.scroll_text_size_medium));
+		}
+		
+		// Set other properties
 		if(mScrollText != null) {
 			switch(item.type()) {
 			case INFO_CUESENSE:
@@ -145,7 +154,7 @@ public class TextScrollFragment extends DialogFragment {
 			case INFO_FACEBOOK:
 				mImage.setImageDrawable(getResources().getDrawable(R.drawable.com_facebook_inverse_icon));
 				mImage.setBackgroundColor(getResources().getColor(R.color.com_facebook_blue));
-				mContextHeader.setText(spacer + "I like..I like..I like..I like..I like..I like..I like..I like..");
+				mContextHeader.setText(spacer + "I like..");
 				mScrollText.setTextColor(Color.parseColor("#627AAD")); // Facebook blue
 				break;
 			case INFO_TWITTER:
@@ -157,6 +166,8 @@ public class TextScrollFragment extends DialogFragment {
 				break;
 			}
 		}
+		
+		// Set text and start appropriate animation
 		mScrollText.setText(item.data());
 		mScrollText.startAnimation(mIntroAnim);
 	}

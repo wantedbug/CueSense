@@ -9,5 +9,7 @@
     <dimen name="settings_helptext_horizontal_margin">20dp</dimen>
     <dimen name="settings_fb_group_margin_top">40dp</dimen>
     <dimen name="settings_tw_group_margin_top">220dp</dimen>
+    <dimen name="scroll_text_size_large">50sp</dimen>
+    <dimen name="scroll_text_size_medium">30sp</dimen>
 
 </resources>

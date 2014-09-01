@@ -36,6 +36,6 @@
         android:layout_below="@+id/contextHeader1"
         android:layout_gravity="center_vertical|center_horizontal"
         android:layout_margin="5dp"
-        android:textSize="60sp" />
+        android:textSize="@dimen/scroll_text_size_large" />
 
 </RelativeLayout>
