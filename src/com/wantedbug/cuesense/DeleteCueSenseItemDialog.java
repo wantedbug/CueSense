@@ -51,7 +51,7 @@ public class DeleteCueSenseItemDialog extends DialogFragment {
         final View dialogView = inflater.inflate(R.layout.delete_cuesense_item_dialog, null);
         
         builder.setView(dialogView)
-    	.setTitle(R.string.delete_cuesense_item_description)
+    	.setTitle(R.string.delete_cuesense_item_dialog_title)
     	.setPositiveButton(R.string.delete_cuesense_item_deletebutton, new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {

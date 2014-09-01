@@ -8,10 +8,10 @@
     <string name="bt_connection_failed">Unable to connect to your wearable. Please make sure it is switched on and restart CueSense.</string>
     <string name="bt_connection_lost">Connection to your wearable lost. Reconnecting..</string>
     <string name="menu_add_cue">Add a Cue</string>
-    <string name="menu_broadcast">Screen broadcast</string><string name="new_cuesense_item_description">Add a new Cue</string>
+    <string name="menu_broadcast">Screen broadcast</string><string name="new_cuesense_item_dialog_title">Add a new Cue</string><string name="new_cuesense_item_description">Enter the text for the Cue below</string>
     <string name="new_cuesense_item_addbutton">Add</string>
     <string name="new_cuesense_item_cancelbutton">Cancel</string>
-    <string name="cuesense_no_data">No Cues added. Add one using the add button above.</string><string name="delete_cuesense_item_description">Delete this Cue?</string>
+    <string name="cuesense_no_data">No Cues added. Add one using the add button above.</string><string name="delete_cuesense_item_dialog_title">Delete this Cue?</string><string name="delete_cuesense_item_description">This will delete this Cue permanently. What would you like to do?</string>
     <string name="delete_cuesense_item_deletebutton">Delete</string>
     <string name="fb_no_data">Login to Facebook in Settings to include your Facebook data</string>
     
@@ -24,6 +24,8 @@
     <string name="tw_log_out_from">Log out of Twitter</string>
     <string name="tw_no_data">Login to Twitter in Settings to include your Twitter data</string>
     <string name="no_data_anywhere">There\'s nothing to display. Try logging in to a social network in Settings or add your own cue in the CueSense tab.</string>
+    
+    
     
     
     

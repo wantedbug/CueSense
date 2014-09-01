@@ -13,6 +13,7 @@
         android:id="@+id/deleteCueSenseItemDescription"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/delete_cuesense_item_description" />
+        android:text="@string/delete_cuesense_item_description"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
 
 </LinearLayout>

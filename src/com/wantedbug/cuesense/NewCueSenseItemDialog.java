@@ -47,7 +47,7 @@ public class NewCueSenseItemDialog extends DialogFragment {
         final View dialogView = inflater.inflate(R.layout.new_cuesense_item_dialog, null);
         
         builder.setView(dialogView)
-        	.setTitle(R.string.new_cuesense_item_description)
+        	.setTitle(R.string.new_cuesense_item_dialog_title)
         	.setPositiveButton(R.string.new_cuesense_item_addbutton, new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
