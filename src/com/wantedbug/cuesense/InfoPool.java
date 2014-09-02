@@ -338,14 +338,14 @@ public class InfoPool {
 		Log.d(TAG, "getNext()");
 		if(mNewCuesList.isEmpty() && mGlobalList.isEmpty() && mMatchedCuesList.isEmpty()) {
 			Log.i(TAG, "getNext() lists empty");
-			return new CueItem(-1, InfoType.INFO_CUESENSE, "CueSense", true);
+			return new CueItem(-1, InfoType.INFO_SENTINEL, "CueSense", true);
 		}
 		
 		// Return the first encountered checked Cue that the user entered
 		// and add the same to the end of the global list
 		if(!mNewCuesList.isEmpty()) {
 			boolean found = false;
-			CueItem ret = new CueItem(-1, InfoType.INFO_CUESENSE, "", false); // to make the silly Android compiler happy
+			CueItem ret = new CueItem(-1, InfoType.INFO_SENTINEL, "", false); // to make the silly Android compiler happy
 			Iterator<CueItem> it = mNewCuesList.iterator();
 			while(!found && it.hasNext()) {
 				CueItem item = it.next();
@@ -374,17 +374,21 @@ public class InfoPool {
 		}
 		
 		// If not, then return the next checked item from the global list
-		if(mGlobalCounter >= mGlobalList.size()) {
-			mGlobalCounter = 0;
-		}
-		for(int i = mGlobalCounter; i < mGlobalList.size(); ++i) {
-			CueItem item = mGlobalList.get(i);
+		CueItem ret = new CueItem(-1, InfoType.INFO_SENTINEL, "", false); // to make the silly Android compiler happy
+		int count = 0;
+		while(count != mGlobalList.size()) {
+			if(mGlobalCounter >= mGlobalList.size()) {
+				mGlobalCounter = 0;
+			}
+			CueItem item = mGlobalList.get(mGlobalCounter);
 			if(item.isChecked()) {
-				mGlobalCounter = i;
+				ret = item;
 				break;
+			} else {
+				++mGlobalCounter;
+				++count;
 			}
 		}
-		CueItem ret = mGlobalList.get(mGlobalCounter);
 		++mGlobalCounter;
 		Log.i(TAG, "getNext() from global list " + ret.data());
 		return ret;
