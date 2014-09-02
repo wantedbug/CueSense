@@ -36,6 +36,9 @@ import android.content.IntentFilter;
 //import android.support.v4.app.FragmentTransaction;
 //import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -62,7 +65,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 * Constants
 	 */
 	// Intent request codes
-	private static final int REQUEST_ENABLE_BT = 1;	
+	private static final int REQUEST_ENABLE_BT = 1;
+	
+	private static final boolean PLAY_NOTIFICATION = true;
 
 	// Bluetooth RSSI range values
 	// Note: calibrate these for every test environment since Bluetooth RSSI
@@ -149,7 +154,19 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             	mCurrDevice = null;
             	// Send received data to InfoPool for matching
             	String data = msg.getData().getString(BT_MSG_SENDRECV_DATA);
-            	if(!data.isEmpty()) mPool.matchData(data);
+            	if(!data.isEmpty()) {
+            		mPool.matchData(data);
+            		// Play the default notification sound when data is received
+            		if(PLAY_NOTIFICATION) {
+            			try {
+            				Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            			    Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+            			    r.play();
+            			} catch (Exception e) {
+            			    Log.e(TAG, "Error playing notification" + e);
+            			}
+            		}
+            	}
     			// Unpair the users' phones if they were bonded
             	// Note: we have to do this because the low level implementation may change between
             	// device manufacturers
