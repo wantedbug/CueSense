@@ -377,6 +377,7 @@ public class InfoPool {
 		CueItem ret = new CueItem(-1, InfoType.INFO_SENTINEL, "", false); // to make the silly Android compiler happy
 		int count = 0;
 		while(count != mGlobalList.size()) {
+			Log.d(TAG, "searching in the global list");
 			if(mGlobalCounter >= mGlobalList.size()) {
 				mGlobalCounter = 0;
 			}

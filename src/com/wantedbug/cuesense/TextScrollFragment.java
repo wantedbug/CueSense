@@ -33,7 +33,10 @@ public class TextScrollFragment extends DialogFragment {
 	 * Constants
 	 */
 	// Time interval between successive data push attempts to the wearable device
-	private static final int PUSH_INTERVAL_MS = 8000;
+//	private static final int PUSH_INTERVAL_MS = 10000;
+	private static final int DURATION_SHORT = 750;
+	private static final int DURATION_MEDIUM = 1000;
+	private static final int DURATION_LONG = 5000;
 	
 	/**
 	 * Members
@@ -46,6 +49,11 @@ public class TextScrollFragment extends DialogFragment {
 	Animation mSlideInLeftAnim;
 	Animation mSlideOutRightAnim;
 	Animation mBlinkingAnim;
+	Animation mSlideInTopAnim;
+	Animation mSlideOutBottomAnim;
+	Animation mSlideInRightAnim;
+	Animation mSlideOutLeftAnim;
+	Animation mFadeOutAnim;
 	// Animation listeners to control mScrollText's animation and to get
 	// new item at the end of the animation
 	AnimationListener mSlideInLeftAnimListener = new AnimationListener() {
@@ -99,6 +107,91 @@ public class TextScrollFragment extends DialogFragment {
 		}
 	};
 	
+	AnimationListener mSlideInTopAnimListener = new AnimationListener() {
+		@Override
+		public void onAnimationStart(Animation animation) {
+			// Do nothing
+		}
+
+		@Override
+		public void onAnimationEnd(Animation animation) {
+			mScrollText.startAnimation(mSlideOutBottomAnim);
+		}
+
+		@Override
+		public void onAnimationRepeat(Animation animation) {
+			// Do nothing
+		}
+	};
+	
+	AnimationListener mSlideOutBottomAnimListener = new AnimationListener() {
+		@Override
+		public void onAnimationStart(Animation animation) {
+			// Do nothing
+		}
+		
+		@Override
+		public void onAnimationRepeat(Animation animation) {
+			// Do nothing
+		}
+		
+		@Override
+		public void onAnimationEnd(Animation animation) {
+			getNextText();
+		}
+	};
+	
+	AnimationListener mSlideInRightAnimListener = new AnimationListener() {
+		@Override
+		public void onAnimationStart(Animation animation) {
+			// Do nothing
+		}
+
+		@Override
+		public void onAnimationEnd(Animation animation) {
+			mScrollText.startAnimation(mFadeOutAnim);
+		}
+
+		@Override
+		public void onAnimationRepeat(Animation animation) {
+			// Do nothing
+		}
+	};
+	
+	AnimationListener mSlideOutLeftAnimListener = new AnimationListener() {
+		@Override
+		public void onAnimationStart(Animation animation) {
+			// Do nothing
+		}
+		
+		@Override
+		public void onAnimationRepeat(Animation animation) {
+			// Do nothing
+		}
+		
+		@Override
+		public void onAnimationEnd(Animation animation) {
+			getNextText();
+		}
+	};
+	
+	AnimationListener mFadeOutAnimListener = new AnimationListener() {
+		@Override
+		public void onAnimationStart(Animation animation) {
+			// Do nothing
+		}
+		
+		@Override
+		public void onAnimationRepeat(Animation animation) {
+			// Do nothing
+		}
+		
+		@Override
+		public void onAnimationEnd(Animation animation) {
+			getNextText();
+		}
+	};
+	
 	@Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreateDialog)()");
@@ -116,21 +209,40 @@ public class TextScrollFragment extends DialogFragment {
         mContextHeader = (TextView) dialogView.findViewById(R.id.contextHeader1);
         mScrollText = (TextView) dialogView.findViewById(R.id.scrollText1);
         
-        /** Set up animations */
+        /** Animations */
         // Slide in from left
         mSlideInLeftAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.slide_in_left);
-        mSlideInLeftAnim.setDuration(PUSH_INTERVAL_MS / 2);
+        mSlideInLeftAnim.setDuration(DURATION_MEDIUM);
         mSlideInLeftAnim.setAnimationListener(mSlideInLeftAnimListener);
         // Slide out to right
         mSlideOutRightAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.slide_out_right);
-        mSlideOutRightAnim.setDuration(PUSH_INTERVAL_MS / 2);
+        mSlideOutRightAnim.setDuration(DURATION_LONG);
         mSlideOutRightAnim.setAnimationListener(mSlideOutRightAnimListener);
-        // Blink 4 times
-        mBlinkingAnim = new AlphaAnimation(0, 1);
-        mBlinkingAnim.setDuration(PUSH_INTERVAL_MS / 8);
-        mBlinkingAnim.setRepeatMode(Animation.REVERSE);
-        mBlinkingAnim.setRepeatCount(4);
+        // Blink multiple times
+        mBlinkingAnim = new AlphaAnimation(1, 0);
+        mBlinkingAnim.setDuration(DURATION_SHORT);
+        mBlinkingAnim.setRepeatCount(7);
         mBlinkingAnim.setAnimationListener(mBlinkingAnimListener);
+        // Slide in from top
+        mSlideInTopAnim = AnimationUtils.loadAnimation(getActivity(), R.anim.slide_in_top);
+        mSlideInTopAnim.setDuration(DURATION_MEDIUM);
+        mSlideInTopAnim.setAnimationListener(mSlideInTopAnimListener);
+        // Slide out to bottom
+        mSlideOutBottomAnim = AnimationUtils.loadAnimation(getActivity(), R.anim.slide_out_bottom);
+        mSlideOutBottomAnim.setDuration(DURATION_LONG);
+        mSlideOutBottomAnim.setAnimationListener(mSlideOutBottomAnimListener);
+        // Slide in from right
+        mSlideInRightAnim = AnimationUtils.loadAnimation(getActivity(), R.anim.slide_in_right);
+        mSlideInRightAnim.setDuration(DURATION_MEDIUM);
+        mSlideInRightAnim.setAnimationListener(mSlideInRightAnimListener);
+        // Slide out to left
+        mSlideOutLeftAnim = AnimationUtils.loadAnimation(getActivity(), R.anim.slide_out_left);
+        mSlideOutLeftAnim.setDuration(DURATION_LONG);
+        mSlideOutLeftAnim.setAnimationListener(mSlideOutLeftAnimListener);
+        // Fade out
+        mFadeOutAnim = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_out);
+        mFadeOutAnim.setDuration(DURATION_LONG);
+        mFadeOutAnim.setAnimationListener(mFadeOutAnimListener);
         
         return builder.create();
 	}
@@ -158,17 +270,21 @@ public class TextScrollFragment extends DialogFragment {
 	 * and starting its intro animation
 	 */
 	private void getNextText() {
-		final String spacer = "      ";
+		final String spacer = "       ";
 		// Get the next item
 		CueItem item = InfoPool.INSTANCE.getNext();
 		
 		// Set text size
-		if(item.data().length() <= 25) {
+		int strlen = item.data().length(); 
+		if(strlen <= 25) {
 			Log.d(TAG, "font size large");
 			mScrollText.setTextSize(getResources().getDimension(R.dimen.scroll_text_size_large));
-		} else {
+		} else if(strlen > 25 && strlen <= 30) {
 			Log.d(TAG, "font size medium");
 			mScrollText.setTextSize(getResources().getDimension(R.dimen.scroll_text_size_medium));
+		} else {
+			Log.d(TAG, "font size medium");
+			mScrollText.setTextSize(getResources().getDimension(R.dimen.scroll_text_size_small));
 		}
 		
 		// Set text properties and animation
@@ -187,7 +303,7 @@ public class TextScrollFragment extends DialogFragment {
 			mContextHeader.setText(spacer + "I like..");
 			mScrollText.setTextColor(Color.parseColor("#627AAD")); // Facebook blue
 			mScrollText.setText(item.data());
-			mScrollText.startAnimation(mSlideInLeftAnim);
+			mScrollText.startAnimation(mSlideInTopAnim);
 			break;
 		case INFO_TWITTER:
 			mImage.setImageDrawable(getResources().getDrawable(R.drawable.twitter_logo_blue));
@@ -195,7 +311,7 @@ public class TextScrollFragment extends DialogFragment {
 			mContextHeader.setText(spacer + "On Twitter..");
 			mScrollText.setTextColor(Color.parseColor("#1dcaff")); // Twitter cyan
 			mScrollText.setText(item.data());
-			mScrollText.startAnimation(mSlideInLeftAnim);
+			mScrollText.startAnimation(mSlideInRightAnim);
 			break;
 		default:
 			mImage.setImageDrawable(getResources().getDrawable(R.drawable.ic_launcher));
@@ -203,7 +319,7 @@ public class TextScrollFragment extends DialogFragment {
 			mContextHeader.setText(spacer + "CueSense");
 			mScrollText.setTextColor(Color.parseColor("#FFA500")); // CueSense orange
 			mScrollText.setText("Hello!");
-			mScrollText.startAnimation(mBlinkingAnim);
+			mScrollText.startAnimation(mSlideInTopAnim);
 			break;
 		}
 	}
