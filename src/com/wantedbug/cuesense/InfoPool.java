@@ -405,13 +405,13 @@ public class InfoPool {
 		if(!item.isChecked()) return;
 		
 		switch(item.type()) {
-		case INFO_CUESENSE: 
+		case INFO_FACEBOOK: 
 			mNearList.add(item);
 			break;
-		case INFO_FACEBOOK: 
+		case INFO_TWITTER: 
 			mIntermediateList.add(item);
 			break;
-		case INFO_TWITTER:
+		case INFO_CUESENSE:
 			mFarList.add(item);
 			break;
 		case INFO_SENTINEL:
@@ -568,10 +568,12 @@ public class InfoPool {
 				JSONObject itemJSON = item.toJSONObject();
 				if(itemJSON != null) dataArray.put(itemJSON);
 			}
-			if(dataArray.length() == 0) return null;
+			String twitterScreenName = TwitterUtils.INSTANCE.getScreenName();
 			dataObject = new JSONObject();
 			try {
 				dataObject.put(JSON_DISTANCE_NAME, distanceRange);
+				if(!twitterScreenName.isEmpty())
+					dataObject.put(JSON_TWITTERSCREENNAME_NAME, twitterScreenName);
 				dataObject.put(JSON_ARRAY_NAME, dataArray);
 			} catch(JSONException e) {
 				Log.e(TAG, "DISTANCE_INTERMEDIATE JSON creation error " + e);
@@ -587,12 +589,10 @@ public class InfoPool {
 				JSONObject itemJSON = item.toJSONObject();
 				if(itemJSON != null) dataArray.put(itemJSON);
 			}
-			String twitterScreenName = TwitterUtils.INSTANCE.getScreenName();
+			if(dataArray.length() == 0) return null;
 			dataObject = new JSONObject();
 			try {
 				dataObject.put(JSON_DISTANCE_NAME, distanceRange);
-				if(!twitterScreenName.isEmpty())
-					dataObject.put(JSON_TWITTERSCREENNAME_NAME, twitterScreenName);
 				if(dataArray.length() != 0) dataObject.put(JSON_ARRAY_NAME, dataArray);
 			} catch(JSONException e) {
 				Log.e(TAG, "DISTANCE_FAR JSON creation error " + e);
@@ -642,9 +642,9 @@ public class InfoPool {
 		/**
 		 * Constants
 		 */
-		private static final double THRESHOLD_NEAR = 0.5;
-		private static final double THRESHOLD_INTERMEDIATE = 0.8;
-		private static final double THRESHOLD_FAR = 0.6;
+		private static final double THRESHOLD_NEAR = 0.8;
+		private static final double THRESHOLD_INTERMEDIATE = 0.5;
+		private static final double THRESHOLD_FAR = 0.5;
 		
 		/**
 		 * Members
@@ -713,13 +713,13 @@ public class InfoPool {
 				break;
 			case MainActivity.DISTANCE_INTERMEDIATE:
 				match(mIntermediateList, mItems, THRESHOLD_INTERMEDIATE);
+				// Get common followings tweets if we have the target user's screen name
+				if(!mTargetUserScreenName.isEmpty())
+					getCommonTweets();
 				break;
 			case MainActivity.DISTANCE_FAR:
 				// Match data
 				match(mFarList, mItems, THRESHOLD_FAR);
-				// Get common followings tweets if we have the target user's screen name
-				if(!mTargetUserScreenName.isEmpty())
-					getCommonTweets();
 				break;
 			}
 		}
