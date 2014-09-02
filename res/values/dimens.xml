@@ -10,6 +10,7 @@
     <dimen name="settings_fb_group_margin_top">40dp</dimen>
     <dimen name="settings_tw_group_margin_top">220dp</dimen>
     <dimen name="scroll_text_size_large">50sp</dimen>
-    <dimen name="scroll_text_size_medium">30sp</dimen>
+    <dimen name="scroll_text_size_medium">40sp</dimen>
+    <dimen name="scroll_text_size_small">30sp</dimen>
 
 </resources>
