@@ -251,8 +251,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// an ongoing transmission
 	private BluetoothDevice mCurrDevice = null;
 	
-	private static final String USER1 = "6C:F3:73:65:65:19"; // timo@s3mini, GT-I8190N
-	private static final String USER2 = "6C:F3:73:65:66:A3"; // nikkis@s3mini, nikkis@s3mini
+//	private static final String USER1 = "6C:F3:73:65:65:19"; // timo@s3mini, GT-I8190N
+//	private static final String USER2 = "6C:F3:73:65:66:A3"; // nikkis@s3mini, nikkis@s3mini
+	private static final String USER1 = "34:BE:00:57:29:33"; // sg2ting
+	private static final String USER2 = "34:BE:00:57:26:B9"; // sg2tung
 	
 	// BroadcastReceiver to listen for another user's Bluetooth device
 	private BroadcastReceiver mBTScanReceiver = new BroadcastReceiver() {
@@ -512,6 +514,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		switch(requestCode) {
 		case REQUEST_ENABLE_BT:
             if (resultCode == Activity.RESULT_OK) {
+            	// Ensure BT is permanently discoverable
+            	if (mBTAdapter.getScanMode() !=
+            			BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+            		Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+            		discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0);
+            		startActivity(discoverableIntent);
+            	}
                 setupBTLink();
             } else {
                 Log.d(TAG, "BT not enabled");
