@@ -274,16 +274,19 @@ public class TextScrollFragment extends DialogFragment {
 		// Get the next item
 		CueItem item = InfoPool.INSTANCE.getNext();
 		
+		final int TEXT_LEN_FONT_LARGE = 23;
+		final int TEXT_LEN_FONT_MEDIUM = 30;
+		
 		// Set text size
 		int strlen = item.data().length(); 
-		if(strlen <= 25) {
+		if(strlen <= TEXT_LEN_FONT_LARGE) {
 			Log.d(TAG, "font size large");
 			mScrollText.setTextSize(getResources().getDimension(R.dimen.scroll_text_size_large));
-		} else if(strlen > 25 && strlen <= 30) {
+		} else if(strlen > TEXT_LEN_FONT_LARGE && strlen <= TEXT_LEN_FONT_MEDIUM) {
 			Log.d(TAG, "font size medium");
 			mScrollText.setTextSize(getResources().getDimension(R.dimen.scroll_text_size_medium));
 		} else {
-			Log.d(TAG, "font size medium");
+			Log.d(TAG, "font size small");
 			mScrollText.setTextSize(getResources().getDimension(R.dimen.scroll_text_size_small));
 		}
 		
