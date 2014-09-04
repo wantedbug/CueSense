@@ -266,7 +266,7 @@ public class TwitterListFragment extends ListFragment {
 							List<Map<String, String>> friendsList = new ArrayList<Map<String, String>>();
 							for(User u : mFriends) {
 								Map<String, String> friendsChild = new HashMap<String, String>();
-								String data = "follows " + u.getName();
+								String data = "I follow " + u.getName();
 								friendsChild.put(ITEM_DATA, data);
 								friendsList.add(friendsChild);
 								CueItem friendItem = new CueItem(-1, InfoType.INFO_TWITTER, data, true);
@@ -306,7 +306,7 @@ public class TwitterListFragment extends ListFragment {
 							List<Map<String, String>> followersList = new ArrayList<Map<String, String>>();
 							for(User u : mFollowers) {
 								Map<String, String> followersChild = new HashMap<String, String>();
-								String data = "followed by " + u.getName();
+								String data = "I'm followed by " + u.getName();
 								followersChild.put(ITEM_DATA, data);
 								followersList.add(followersChild);
 								CueItem followerItem = new CueItem(-1, InfoType.INFO_TWITTER, data, true);
