@@ -279,15 +279,15 @@ public class FBListFragment extends ListFragment {
 			Request.newGraphPathRequest(session, "/me/books.reads", mBooksResponseCallback).executeAsync();
 		}
 		
-		/** MUSIC */
-		// Try with permissions
-		if(session.isPermissionGranted("user_actions.music")) {
-			// Life is going to easy if this permission is granted in the future
-		} else {
-			Log.i(TAG, "getUserInfo() Music permission NOT granted");
-			// Try with a Graph path request
-			Request.newGraphPathRequest(session, "/me/music", mMusicResponseCallback).executeAsync();
-		}
+//		/** MUSIC */
+//		// Try with permissions
+//		if(session.isPermissionGranted("user_actions.music")) {
+//			// Life is going to easy if this permission is granted in the future
+//		} else {
+//			Log.i(TAG, "getUserInfo() Music permission NOT granted");
+//			// Try with a Graph path request
+//			Request.newGraphPathRequest(session, "/me/music", mMusicResponseCallback).executeAsync();
+//		}
 		
 		/** INSPIRATIONAL PEOPLE */
 		JSONArray peopleJSONArray = (JSONArray) user.getProperty("inspirational_people");
