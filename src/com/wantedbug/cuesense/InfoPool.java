@@ -32,9 +32,9 @@ public class InfoPool {
 	private static final int INIT_SIZE = 50;
 	
 	// Name identifiers for the JSONArray
-	public static final String JSON_DISTANCE_NAME = "distance";
-	public static final String JSON_ARRAY_NAME = "data";
-	public static final String JSON_TWITTERSCREENNAME_NAME = "twitterScreenName";
+	public static final String JSON_DISTANCE_NAME = "dist";
+	public static final String JSON_ARRAY_NAME = "d";
+	public static final String JSON_TWITTERSCREENNAME_NAME = "tSN";
 	
 	/**
 	 * Members
@@ -633,6 +633,48 @@ public class InfoPool {
 	}
 	
 	/**
+	 * Tries to fix problems with the raw data received, if any
+	 * @param rawData
+	 * @return
+	 * Incoming raw JSON data may be incomplete due to problems in the transmissions
+	 */
+	public String fixRawData(String rawData) {
+		JSONObject obj = null;
+		boolean recovered = false;
+		boolean triedAppend = false;
+		String temp = rawData;
+		String termCharSeq = "\"}]}"; // this is a valid termination char sequence
+		
+		// Try to recover the incomplete data by removing one char from the end at a time,
+		// appending a valid termination character sequence and trying to construct a
+		// JSONObject
+		while(!recovered) {
+			try {
+				obj = new JSONObject(temp);
+				recovered = true;
+				rawData = temp;
+			} catch(JSONException e) {
+				Log.d(TAG, "doesn't work: " + rawData);
+				if(rawData.isEmpty()) {
+					rawData = "Couldn't recover";
+					break;
+				}
+				if(!triedAppend) {
+					rawData = rawData + termCharSeq;
+					temp = new String(rawData);
+					triedAppend = true;
+				} else {
+					rawData = rawData.substring(0, rawData.length() - 1);
+					temp = new String(rawData);
+					temp = temp + termCharSeq;
+				}
+			}
+		}
+		
+		return rawData;
+	}
+	
+	/**
 	 * Thread to perform matching
 	 * @author vikasprabhu
 	 */
@@ -663,7 +705,7 @@ public class InfoPool {
 		
 		public MatchThread(String data) {
 			Log.d(TAG, "create MatchThread " + data.length());
-			mRawData = data;
+			mRawData = fixRawData(data);
 			mItems = new ArrayList<CueItem>();
 		}
 		
@@ -705,6 +747,7 @@ public class InfoPool {
 		 * distance range involved
 		 */
 		private void match() {
+			Log.d(TAG, "match()");
 			// Clear any matches previously generated
 			clearMatchedCues();
 			
@@ -774,12 +817,14 @@ public class InfoPool {
 				for(int j = 0; mRunning && j < list2.size(); ++j) {
 					String s2 = list2.get(j);
 					if(s2.equals(s1)) {
+						Log.i(TAG, "match found: " + myItems.get(i).data());
 						mMatchedCuesList.add(myItems.get(i));
 						break;
 					} else {
 						int ld = computeLevenshteinDistance(s1, s2);
 						double sim = (1 - (ld / (double)Math.max(s1.length(), s2.length())));
 						if(sim >= threshold) {
+								Log.i(TAG, "match found: " + myItems.get(i).data());
 								mMatchedCuesList.add(myItems.get(i));
 								break;
 						}

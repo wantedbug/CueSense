@@ -81,11 +81,12 @@ public class BluetoothManager {
      * C'tor
      * @param context
      */
-	public BluetoothManager(Context context, Handler handler) {
+	public BluetoothManager(Context context, Handler handler, DistanceRangeListener distanceRangeListener) {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mHandler = handler;
         mWearableState = STATE_NONE;
         mPairedUserState = STATE_NONE;
+        mDistanceRangeListener = distanceRangeListener;
 	}
 	
 	/**
@@ -765,6 +766,13 @@ public class BluetoothManager {
             }
         }
     }
+    
+    public interface DistanceRangeListener {
+    	/** Return the current distance range of the other user */
+    	int currentDistanceRange();
+    }
+    
+    DistanceRangeListener mDistanceRangeListener;
 
     /**
      * This thread handles outgoing transmissions to and listens to
@@ -810,13 +818,17 @@ public class BluetoothManager {
 
             // Keep listening to the InputStream while connected
             while (true) {
-//            	threshold = 0;
                 try {
                     // Read from the InputStream when available
-                	Log.i(TAG, "socket connected: " + mmSocket.isConnected());
+                	Log.i(TAG, "socket connected: " + mmSocket.isConnected() + mmInStream.available());
                 	while (mmInStream.available() > 0 &&
                 			(bytes = mmInStream.read(buffer)) > -1) {
                         baos.write(buffer, 0, bytes);
+                        try {
+                        	sleep(100);
+                        } catch(InterruptedException e) {
+                        	Log.e(TAG, "sleep interrupted " + e);
+                        }
                         baos.flush();
                         dataAvailable = true;
                 	}
@@ -834,19 +846,21 @@ public class BluetoothManager {
             }
             // If we've received data, check if we have data to send
             if(rcvd!= null && !rcvd.isEmpty()) {
-            	Log.i(TAG, rcvd.length() + " characters: " + rcvd);
+            	Log.i(TAG, "received " + rcvd.length() + " characters: " + rcvd);
             	// If we didn't have data earlier, we need to send it now, if any
             	try {
             		if(mmDataNotSent) {
+            			rcvd = InfoPool.INSTANCE.fixRawData(rcvd);
             			JSONObject data = new JSONObject(rcvd);
-            			int distance = data.getInt(InfoPool.JSON_DISTANCE_NAME);
+            			int distance = data.optInt(InfoPool.JSON_DISTANCE_NAME);
+            			if(distance == 0) distance = mDistanceRangeListener.currentDistanceRange();
             			if(distance > MainActivity.DISTANCE_OUTOFRANGE &&
             					distance <= MainActivity.DISTANCE_FAR) {
             				JSONObject myData = InfoPool.INSTANCE.getData(distance);
             				if(myData != null) write(myData.toString().getBytes());
             				mmDataNotSent = false;
             			} else {
-            				Log.e(TAG, "Invalid distance data received " + distance);
+            				Log.e(TAG, "Invalid data received " + distance);
             			}
             		}
             	} catch(JSONException e) {
@@ -869,7 +883,7 @@ public class BluetoothManager {
          */
         public void write(byte[] buffer) {
         	String buf = new String(buffer);
-        	Log.d(TAG, "write() " + buf);
+        	Log.d(TAG, "write() " + buf.length() + " characters: " + buf);
             try {
                 mmOutStream.write(buffer);
             } catch (IOException e) {

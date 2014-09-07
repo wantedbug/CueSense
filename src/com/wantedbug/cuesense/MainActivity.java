@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.json.JSONObject;
 
+import com.wantedbug.cuesense.BluetoothManager.DistanceRangeListener;
 import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
 import com.wantedbug.cuesense.DeleteCueSenseItemDialog.DeleteCueSenseItemListener;
 import com.wantedbug.cuesense.FBListFragment.FacebookCueListener;
@@ -56,7 +57,8 @@ import android.widget.Toast;
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener,
 		CueSenseListener, NewCueSenseItemListener, DeleteCueSenseItemListener,
 		FacebookCueListener,
-		TwitterCueListener {
+		TwitterCueListener,
+		DistanceRangeListener {
 	// Debugging
 	private static final String TAG = "MainActivity";
 	public static final boolean DEBUG = true;
@@ -68,13 +70,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private static final int REQUEST_ENABLE_BT = 1;
 	
 	private static final boolean PLAY_NOTIFICATION = true;
-
-	// Bluetooth RSSI range values
-	// Note: calibrate these for every test environment since Bluetooth RSSI
-	// values are dependent on the surroundings, surfaces, objects, obstacles, etc.
-	private static final int BT_RSSI_NEAR = 50;
-	private static final int BT_RSSI_INTERMEDIATE = 75;
-	private static final int BT_RSSI_FAR = 100;
 
 //	// Time interval between successive data push attempts to the wearable device
 //	private static final int PUSH_INTERVAL_MS = 8000;
@@ -118,12 +113,37 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public static final int BT_ERR_CONN_LOST = 1;
 	public static final int BT_ERR_CONN_FAILED = 2;
 	
+	// Bluetooth RSSI range values
+	// Note: calibrate these for every test environment since Bluetooth RSSI
+	// values are dependent on the surroundings, surfaces, objects, obstacles, etc.
+	private static final int BT_RSSI_NEAR = 60;
+	private static final int BT_RSSI_INTERMEDIATE = 72;
+	private static final int BT_RSSI_FAR = 100;
+	
 	// Distance levels
-	public static final int DISTANCE_OUTOFRANGE = 0;
+	public static final int DISTANCE_OUTOFRANGE = -1;
 	public static final int DISTANCE_NEAR = 1;
 	public static final int DISTANCE_INTERMEDIATE = 2;
 	public static final int DISTANCE_FAR = 3;
 	
+    /**
+     * Converts RSSI to distance level
+     * @param rssi
+     * @return
+     */
+    private int getDistanceFromRSSI(int rssi) {
+    	rssi = java.lang.Math.abs(rssi);
+    	if(rssi <= BT_RSSI_NEAR) {
+    		return DISTANCE_NEAR;
+    	} else if(rssi >BT_RSSI_NEAR && rssi <= BT_RSSI_INTERMEDIATE) {
+    		return DISTANCE_INTERMEDIATE;
+    	} else if(rssi > BT_RSSI_INTERMEDIATE && rssi <= BT_RSSI_FAR) {
+    		return DISTANCE_FAR;
+    	} else {
+    		return DISTANCE_OUTOFRANGE;
+    	}
+    }
+    
 	/**
 	 * Members
 	 */
@@ -245,7 +265,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	
 	// Distance levels to determine what data to send
 	private int mPrevDistance = DISTANCE_OUTOFRANGE;
-	private int mCurrDistance;
+	private int mCurrDistance = DISTANCE_OUTOFRANGE;
 	
 	// BluetoothDevice cache to avoid multiple discovery callbacks interfering with
 	// an ongoing transmission
@@ -275,6 +295,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 		(mCurrDevice == null || !mCurrDevice.getAddress().equals(device.getAddress())) &&
                 		mBTManager.getPairedUserState() >= BluetoothManager.STATE_LISTEN) {
                 	mCurrDistance = getDistanceFromRSSI(rssi);
+                	Toast.makeText(getApplicationContext(), "RSSI: " + rssi + "dBm", Toast.LENGTH_SHORT).show();
                 	synchronized (this) {
                 		// Send if in range or if data has changed
                 		if(mCurrDistance != DISTANCE_OUTOFRANGE && isDataChanged(mCurrDistance)) {
@@ -467,7 +488,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         Log.d(TAG, "setupBTLink()");
 
         // Initialize BluetoothManager
-        mBTManager = new BluetoothManager(this, mBTMessageHandler);
+        mBTManager = new BluetoothManager(this, mBTMessageHandler, this);
 
         // Connect to the Bluetooth device
         connectDevice();
@@ -657,24 +678,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			return null;
 		}
 	}
-
-    /**
-     * Converts RSSI to distance level
-     * @param rssi
-     * @return
-     */
-    private int getDistanceFromRSSI(int rssi) {
-    	rssi = java.lang.Math.abs(rssi);
-    	if(rssi <= BT_RSSI_NEAR) {
-    		return DISTANCE_NEAR;
-    	} else if(rssi >BT_RSSI_NEAR && rssi <= BT_RSSI_INTERMEDIATE) {
-    		return DISTANCE_INTERMEDIATE;
-    	} else if(rssi > BT_RSSI_INTERMEDIATE && rssi <= BT_RSSI_FAR) {
-    		return DISTANCE_FAR;
-    	} else {
-    		return DISTANCE_OUTOFRANGE;
-    	}
-    }
     
     /**
      * Returns true if there are new Cues available for the specified distance
@@ -877,5 +880,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		mPool.deleteType(InfoType.INFO_TWITTER);
 		// Refresh Cues data
 		setDataChanged(DISTANCE_INTERMEDIATE, false);
+	}
+
+	@Override
+	public int currentDistanceRange() {
+		return mCurrDistance;
 	}
 }
