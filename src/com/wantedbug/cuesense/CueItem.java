@@ -21,10 +21,10 @@ public class CueItem {
 	/**
 	 * Constants
 	 */
-	public static final String JSON_TAG_ID = "id";
-	public static final String JSON_TAG_TYPE = "type";
-	public static final String JSON_TAG_DATA = "data";
-	public static final String JSON_TAG_ISCHECKED = "isChecked";
+	public static final String JSON_TAG_ID = "i";
+	public static final String JSON_TAG_TYPE = "t";
+	public static final String JSON_TAG_DATA = "d";
+	public static final String JSON_TAG_ISCHECKED = "c";
 	
 	/**
 	 * Members
@@ -67,7 +67,7 @@ public class CueItem {
 		JSONObject obj = new JSONObject();
         try {
 //            obj.put(JSON_TAG_ID, mId);
-//            obj.put(JSON_TAG_TYPE, mType.value());
+            obj.put(JSON_TAG_TYPE, mType.value());
             obj.put(JSON_TAG_DATA, mData);
 //            obj.put(JSON_TAG_ISCHECKED, mChecked);
         } catch (JSONException e) {

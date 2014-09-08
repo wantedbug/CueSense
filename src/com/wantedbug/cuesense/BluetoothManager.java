@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.UUID;
+import java.util.zip.DataFormatException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -484,6 +485,11 @@ public class BluetoothManager {
         if (mPairedUserAcceptThread == null) {
             mPairedUserAcceptThread = new PairedUserAcceptThread();
             mPairedUserAcceptThread.start();
+        } else {
+        	mPairedUserAcceptThread.cancel();
+        	mPairedUserAcceptThread = null;
+        	mPairedUserAcceptThread = new PairedUserAcceptThread();
+            mPairedUserAcceptThread.start();
         }
     }
 
@@ -605,8 +611,11 @@ public class BluetoothManager {
      */
     private void pairedUserConnectionFailed() {
     	Log.d(TAG, "pairedUserConnectionFailed()");
+    	// Notify MainActivity that send/receive has failed
+    	Message msg = mHandler.obtainMessage(MainActivity.BT_MSG_SENDRECV_ERROR);
+    	mHandler.sendMessage(msg);
         // Start the service over to restart listening mode
-        BluetoothManager.this.startPairedUserThreads();
+//        BluetoothManager.this.startPairedUserThreads();
     }
 
     /**
@@ -614,8 +623,11 @@ public class BluetoothManager {
      */
     private void pairedUserConnectionLost() {
     	Log.d(TAG, "pairedUserConnectionLost()");
+    	// Notify MainActivity that send/receive has failed
+    	Message msg = mHandler.obtainMessage(MainActivity.BT_MSG_SENDRECV_ERROR);
+    	mHandler.sendMessage(msg);
         // Start the service over to restart listening mode
-        BluetoothManager.this.startPairedUserThreads();
+//        BluetoothManager.this.startPairedUserThreads();
     }
 
     /**
@@ -814,6 +826,7 @@ public class BluetoothManager {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             int bytes;
             String rcvd = null;
+            byte[] rcvdBytes = null;
             boolean dataAvailable = false;
 
             // Keep listening to the InputStream while connected
@@ -833,11 +846,13 @@ public class BluetoothManager {
                         dataAvailable = true;
                 	}
                 	if(dataAvailable) {
-                		rcvd = baos.toString();
+                		rcvdBytes = baos.toByteArray();
+                		rcvdBytes = CompressionUtils.decompress(rcvdBytes);
+                		rcvd = new String(rcvdBytes, "UTF-8");
                 		break;
                 	}
-                } catch (IOException e) {
-                    Log.e(TAG, "PairedUserConnectedThread::run() error ", e);
+                } catch (IOException | DataFormatException e) {
+                    Log.e(TAG, "PairedUserConnectedThread::run() read error ", e);
                     pairedUserConnectionLost();
                     // Start the threads over to restart listening mode
                     BluetoothManager.this.startPairedUserThreads();
@@ -845,8 +860,8 @@ public class BluetoothManager {
                 }
             }
             // If we've received data, check if we have data to send
-            if(rcvd!= null && !rcvd.isEmpty()) {
-            	Log.i(TAG, "received " + rcvd.length() + " characters: " + rcvd);
+            if(rcvd != null && !rcvd.isEmpty()) {
+            	Log.i(TAG, "received " + rcvdBytes.length + " characters");
             	// If we didn't have data earlier, we need to send it now, if any
             	try {
             		if(mmDataNotSent) {
@@ -864,7 +879,7 @@ public class BluetoothManager {
             			}
             		}
             	} catch(JSONException e) {
-            		Log.e(TAG, "JSON error " + e);
+            		Log.e(TAG, "PairedUserConnectedThread::run() read/write error " + e);
             	}
             } else {
             	rcvd = "";
@@ -882,9 +897,9 @@ public class BluetoothManager {
          * @param buffer  The bytes to write
          */
         public void write(byte[] buffer) {
-        	String buf = new String(buffer);
-        	Log.d(TAG, "write() " + buf.length() + " characters: " + buf);
             try {
+            	buffer = CompressionUtils.compress(buffer);
+            	if(buffer != null) Log.d(TAG, "write() " + buffer.length + " characters");
                 mmOutStream.write(buffer);
             } catch (IOException e) {
                 Log.e(TAG, "Exception during write ", e);

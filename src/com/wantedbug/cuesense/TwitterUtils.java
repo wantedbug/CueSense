@@ -154,6 +154,9 @@ public class TwitterUtils {
 	 * IMPORTANT: MUST BE RUN ON NON-UI THREAD
 	 */
 	public List<String> getCommonFollowingsTweets(String targetUserScreenName) {
+		if(!isTwitterLoggedIn())
+			return null;
+		
 		IDs myFriendsIDs;
 		IDs targetUserFriendsIDs;
 		List<Status> statuses;

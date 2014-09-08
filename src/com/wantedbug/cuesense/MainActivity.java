@@ -71,10 +71,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	
 	private static final boolean PLAY_NOTIFICATION = true;
 
-//	// Time interval between successive data push attempts to the wearable device
-//	private static final int PUSH_INTERVAL_MS = 8000;
 	// Time interval between successive Bluetooth discovery scans
-	private static final int SCAN_INTERVAL_MS = 8000;
+	private static final int SCAN_INTERVAL_MS = 5000;
 	// Tab content identifiers
 	public enum InfoType {
 		INFO_CUESENSE(2),
@@ -106,6 +104,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public static final int BT_MSG_TOAST = 1;
 	public static final int BT_MSG_SENDRECV_DONE = 2;
 	public static final int BT_MSG_PAIREDUSERCONNECTED = 3;
+	public static final int BT_MSG_SENDRECV_ERROR = 4;
 	// Key message names received from BTManager
 	public static final String BT_MSG_ERROR = "error";
 	public static final String BT_MSG_SENDRECV_DATA = "data";
@@ -117,14 +116,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// Note: calibrate these for every test environment since Bluetooth RSSI
 	// values are dependent on the surroundings, surfaces, objects, obstacles, etc.
 	private static final int BT_RSSI_NEAR = 60;
-	private static final int BT_RSSI_INTERMEDIATE = 72;
 	private static final int BT_RSSI_FAR = 100;
 	
 	// Distance levels
 	public static final int DISTANCE_OUTOFRANGE = -1;
 	public static final int DISTANCE_NEAR = 1;
-	public static final int DISTANCE_INTERMEDIATE = 2;
-	public static final int DISTANCE_FAR = 3;
+	public static final int DISTANCE_FAR = 2;
 	
     /**
      * Converts RSSI to distance level
@@ -135,9 +132,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     	rssi = java.lang.Math.abs(rssi);
     	if(rssi <= BT_RSSI_NEAR) {
     		return DISTANCE_NEAR;
-    	} else if(rssi >BT_RSSI_NEAR && rssi <= BT_RSSI_INTERMEDIATE) {
-    		return DISTANCE_INTERMEDIATE;
-    	} else if(rssi > BT_RSSI_INTERMEDIATE && rssi <= BT_RSSI_FAR) {
+    	} else if(rssi > BT_RSSI_NEAR && rssi <= BT_RSSI_FAR) {
     		return DISTANCE_FAR;
     	} else {
     		return DISTANCE_OUTOFRANGE;
@@ -170,7 +165,33 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             		mBTManager.writeToPairedUser(getCuesData(mCurrDistance).toString().getBytes());
             	setDataChanged(mCurrDistance, false);
             	break;
-            case BT_MSG_SENDRECV_DONE:
+            case BT_MSG_SENDRECV_ERROR: {
+            	// Unpair the users' phones if they were bonded
+            	// Note: we have to do this because the low level implementation may change between
+            	// device manufacturers
+            	Log.i(TAG, "Unpairing phones");
+    			Set<BluetoothDevice> devices = mBTAdapter.getBondedDevices();
+    			for(BluetoothDevice dev : devices) {
+    				if(dev.getName().equals(USER1) || dev.getName().equals(USER2)) {
+    					Log.i(TAG, dev.getName() + " bonded after BT_MSG_SENDRECV_DONE");
+    					try {
+    						Method method = dev.getClass().getMethod("removeBond", (Class[]) null);
+    						method.invoke(dev, (Object[]) null);
+    						Log.i(TAG, "unbonded");
+    					} catch (Exception e) {
+    						Log.e(TAG, "Could not unpair " + e);
+    					}
+    					break;
+    				}
+    			}
+            	// Restart listening and discovery
+            	Log.i(TAG, "Restarting user threads and discovery");
+            	mBTManager.startPairedUserThreads();
+            	if(mBTAdapter.getAddress().equals(USER1))
+            		mBTScanHandler.postDelayed(mBTScanRunnable, SCAN_INTERVAL_MS);
+            }
+            	break;
+            case BT_MSG_SENDRECV_DONE: {
             	mCurrDevice = null;
             	// Send received data to InfoPool for matching
             	String data = msg.getData().getString(BT_MSG_SENDRECV_DATA);
@@ -210,25 +231,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             	mBTManager.startPairedUserThreads();
             	if(mBTAdapter.getAddress().equals(USER1))
             		mBTScanHandler.postDelayed(mBTScanRunnable, SCAN_INTERVAL_MS);
+            }
             	break;
             }
         }
     };
-
-    // A Handler and Runnable to periodically keep pushing messages to the wearable device
-//    Handler mSendCueHandler = new Handler();
-//    Runnable mSendCueRunnable = new Runnable() {
-//        @Override
-//        public void run() {
-//        	Log.d(TAG, "mSendCueRunnable::run()");
-//        	if(mBTManager.getWearableState() == BluetoothManager.STATE_CONNECTED &&
-//        			mBTManager.isDeviceReady()) {
-//        		Log.d(TAG, "BT is connected and ready");
-//        		sendToBT(InfoPool.INSTANCE.getNext());
-//        	}
-//        	mSendCueHandler.postDelayed(this, PUSH_INTERVAL_MS);
-//        }
-//    };
 
 	// Pager adapter that provides fragments for each section
 	private SectionsPagerAdapter mSectionsPagerAdapter;
@@ -256,11 +263,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// Cues data wrapped in JSONObjects to be transmitted to the nearby user
 	// Note: one object for each distance range
 	private JSONObject mNearData;
-	private JSONObject mIntermediateData;
 	private JSONObject mFarData;
 	// Flags set when above data changes
 	private boolean mNearDataChanged = true;
-	private boolean mIntermediateDataChanged = true;
 	private boolean mFarDataChanged = true;
 	
 	// Distance levels to determine what data to send
@@ -298,7 +303,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 	Toast.makeText(getApplicationContext(), "RSSI: " + rssi + "dBm", Toast.LENGTH_SHORT).show();
                 	synchronized (this) {
                 		// Send if in range or if data has changed
-                		if(mCurrDistance != DISTANCE_OUTOFRANGE && isDataChanged(mCurrDistance)) {
+                		if(mCurrDistance != DISTANCE_OUTOFRANGE && mPrevDistance != mCurrDistance) { //isDataChanged(mCurrDistance)) {
                 			Log.i(TAG, "Sending to " + device.getName() + "," + device.getAddress());
                 			// Cache the BluetoothDevice and distance range
                 			mCurrDevice = device;
@@ -340,9 +345,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         @Override
         public void run() {
         	if(mBTAdapter != null) {
-        		Log.d(TAG, "performing BT scan");
         		if(!mBTAdapter.isDiscovering()) {
+        			Log.d(TAG, "performing BT scan");
         			mBTAdapter.startDiscovery();
+        		} else {
+        			Log.d(TAG, "BT scan discovery in progress");
         		}
         	}
             mBTScanHandler.postDelayed(this, SCAN_INTERVAL_MS);
@@ -688,7 +695,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     private boolean isDataChanged(int distanceRange) {
     	switch(distanceRange) {
     	case DISTANCE_NEAR: return mNearDataChanged;
-    	case DISTANCE_INTERMEDIATE: return mIntermediateDataChanged;
     	case DISTANCE_FAR: return mFarDataChanged;
     	case DISTANCE_OUTOFRANGE:
     	default: return false;
@@ -703,7 +709,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     private void setDataChanged(int distanceRange, boolean dataChanged) {
     	switch(mCurrDistance) {
     	case DISTANCE_NEAR: mNearDataChanged = dataChanged; break;
-    	case DISTANCE_INTERMEDIATE: mIntermediateDataChanged = dataChanged; break;
     	case DISTANCE_FAR: mFarDataChanged = dataChanged; break;
     	case DISTANCE_OUTOFRANGE:
 		default: break;
@@ -719,9 +724,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		case DISTANCE_NEAR:
 			if(null == mNearData) refreshCuesData(distanceRange);
 			return mNearData;
-		case DISTANCE_INTERMEDIATE:
-			if(null == mIntermediateData) refreshCuesData(distanceRange);
-			return mIntermediateData;
 		case DISTANCE_FAR:
 			if(null == mFarData) refreshCuesData(distanceRange);
 			return mFarData;
@@ -743,11 +745,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			mNearData = null;
 			mNearData = mPool.getData(distanceRange);
 			mNearDataChanged = true;
-			break;
-		case DISTANCE_INTERMEDIATE:
-			mIntermediateData = null;
-			mIntermediateData = mPool.getData(distanceRange);
-			mIntermediateDataChanged = true;
 			break;
 		case DISTANCE_FAR:
 			mFarData = null;
@@ -867,7 +864,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Push to InfoPool
 		mPool.addCueItem(item);
 		// Refresh Cues data
-		setDataChanged(DISTANCE_INTERMEDIATE, true);
+		setDataChanged(DISTANCE_NEAR, true);
 	}
 
 	/**
@@ -879,7 +876,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Remove Twitter items from InfoPool
 		mPool.deleteType(InfoType.INFO_TWITTER);
 		// Refresh Cues data
-		setDataChanged(DISTANCE_INTERMEDIATE, false);
+		setDataChanged(DISTANCE_NEAR, false);
 	}
 
 	@Override

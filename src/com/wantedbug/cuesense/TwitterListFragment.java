@@ -231,7 +231,7 @@ public class TwitterListFragment extends ListFragment {
 								favouritesChild.put(ITEM_DATA, data);
 								favouritesList.add(favouritesChild);
 								CueItem favouriteItem = new CueItem(-1, InfoType.INFO_TWITTER, data, true);
-								mListener.onTwitterCueAdded(favouriteItem);
+//								mListener.onTwitterCueAdded(favouriteItem);
 							}
 							/** 3. Add the list item's children to the list view */
 							mGroupData.add(favouritesGroupMap);

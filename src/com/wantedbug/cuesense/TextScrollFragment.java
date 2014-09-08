@@ -295,7 +295,7 @@ public class TextScrollFragment extends DialogFragment {
 		case INFO_CUESENSE:
 			mImage.setImageDrawable(getResources().getDrawable(R.drawable.ic_launcher));
 			mImage.setBackgroundColor(0x00000000);
-			mContextHeader.setText(spacer + "What I did last summer..");
+			mContextHeader.setText(spacer + "About me..");
 			mScrollText.setTextColor(Color.parseColor("#FFA500")); // CueSense orange
 			mScrollText.setText(item.data());
 			mScrollText.startAnimation(mBlinkingAnim);
@@ -303,7 +303,7 @@ public class TextScrollFragment extends DialogFragment {
 		case INFO_FACEBOOK:
 			mImage.setImageDrawable(getResources().getDrawable(R.drawable.com_facebook_inverse_icon));
 			mImage.setBackgroundColor(getResources().getColor(R.color.com_facebook_blue));
-			mContextHeader.setText(spacer + "I like..");
+			mContextHeader.setText(spacer + "On my Facebook..");
 			mScrollText.setTextColor(Color.parseColor("#627AAD")); // Facebook blue
 			mScrollText.setText(item.data());
 			mScrollText.startAnimation(mSlideInTopAnim);
@@ -311,7 +311,7 @@ public class TextScrollFragment extends DialogFragment {
 		case INFO_TWITTER:
 			mImage.setImageDrawable(getResources().getDrawable(R.drawable.twitter_logo_blue));
 			mImage.setBackgroundColor(0x00000000);
-			mContextHeader.setText(spacer + "On Twitter..");
+			mContextHeader.setText(spacer + "On my Twitter..");
 			mScrollText.setTextColor(Color.parseColor("#1dcaff")); // Twitter cyan
 			mScrollText.setText(item.data());
 			mScrollText.startAnimation(mSlideInRightAnim);
