@@ -10,23 +10,10 @@ import java.util.Set;
 
 import org.json.JSONObject;
 
-import com.wantedbug.cuesense.BluetoothManager.DistanceRangeListener;
-import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
-import com.wantedbug.cuesense.DeleteCueSenseItemDialog.DeleteCueSenseItemListener;
-import com.wantedbug.cuesense.FBListFragment.FacebookCueListener;
-import com.wantedbug.cuesense.NewCueSenseItemDialog.NewCueSenseItemListener;
-import com.wantedbug.cuesense.TwitterListFragment.TwitterCueListener;
-
 import android.annotation.SuppressLint;
+import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.Activity;
-import android.app.ActionBar;
-import android.support.v4.app.DialogFragment;
-//import android.app.Fragment;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-//import android.app.FragmentManager;
-import android.support.v4.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -34,20 +21,32 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-//import android.support.v4.app.FragmentTransaction;
-//import android.support.v13.app.FragmentPagerAdapter;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
+import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnCompletionListener;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.app.DialogFragment;
+//import android.app.Fragment;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+//import android.app.FragmentManager;
+import android.support.v4.app.FragmentManager;
+//import android.support.v4.app.FragmentTransaction;
+//import android.support.v13.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
+
+import com.wantedbug.cuesense.BluetoothManager.DistanceRangeListener;
+import com.wantedbug.cuesense.CueSenseListFragment.CueSenseListener;
+import com.wantedbug.cuesense.DeleteCueSenseItemDialog.DeleteCueSenseItemListener;
+import com.wantedbug.cuesense.FBListFragment.FacebookCueListener;
+import com.wantedbug.cuesense.NewCueSenseItemDialog.NewCueSenseItemListener;
+import com.wantedbug.cuesense.TwitterListFragment.TwitterCueListener;
 
 
 /**
@@ -197,16 +196,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             	String data = msg.getData().getString(BT_MSG_SENDRECV_DATA);
             	if(!data.isEmpty()) {
             		mPool.matchData(data);
-            		// Play the default notification sound when data is received
-            		if(PLAY_NOTIFICATION) {
-            			try {
-            				Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            			    Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
-            			    r.play();
-            			} catch (Exception e) {
-            			    Log.e(TAG, "Error playing notification" + e);
-            			}
-            		}
+            		// Play an audio cue when data send/receive is done
+            		playSound(mCurrDistance);
             	}
     			// Unpair the users' phones if they were bonded
             	// Note: we have to do this because the low level implementation may change between
@@ -882,5 +873,43 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	@Override
 	public int currentDistanceRange() {
 		return mCurrDistance;
+	}
+	
+	/**
+	 * Plays the respective notification sound for the specified distance range
+	 * @param distanceRange
+	 * For instance, DISTANCE_NEAR could be associated with a more positive sound
+	 * while DISTANCE_FAR can be associated with a slightly negative sound.
+	 */
+	private void playSound(int distanceRange) {
+		// Play the default notification sound when data is received
+		MediaPlayer mp = null;
+		if(PLAY_NOTIFICATION) {
+			switch(distanceRange) {
+			case DISTANCE_NEAR:
+				mp = MediaPlayer.create(this, R.raw.positive);
+				if(mp == null) return;
+				mp.setOnCompletionListener(new OnCompletionListener() {
+		             @Override
+		             public void onCompletion(MediaPlayer mp) {
+		                 mp.release();
+		             }
+		          });
+				mp.start();
+				break;
+			case DISTANCE_FAR:
+				mp = MediaPlayer.create(this, R.raw.negative);
+				if(mp == null) return;
+				mp.setOnCompletionListener(new OnCompletionListener() {
+		             @Override
+		             public void onCompletion(MediaPlayer mp) {
+		                 mp.release();
+		             }
+		          });
+				mp.start();
+			default:
+				break;
+			}
+		}
 	}
 }
