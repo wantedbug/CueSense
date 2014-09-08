@@ -305,7 +305,7 @@ public class FBListFragment extends ListFragment {
 						Map<String, String> personChild = new HashMap<String, String>();
 						personChild.put(ITEM_DATA, personJSON.getString("name"));
 						peopleList.add(personChild);
-						CueItem personItem = new CueItem(-1, InfoType.INFO_FACEBOOK, personJSON.getString("name"), true);
+						CueItem personItem = new CueItem(-1, InfoType.INFO_FACEBOOK, "I'm inspired by " + personJSON.getString("name"), true);
 						mFBList.add(personItem);
 						mListener.onFacebookCueAdded(personItem);
 						++numChildrenAdded;
@@ -345,7 +345,7 @@ public class FBListFragment extends ListFragment {
 						Map<String, String> teamChild = new HashMap<String, String>();
 						teamChild.put(ITEM_DATA, teamJSON.getString("name"));
 						teamsList.add(teamChild);
-						CueItem teamItem = new CueItem(-1, InfoType.INFO_FACEBOOK, teamJSON.getString("name"), true);
+						CueItem teamItem = new CueItem(-1, InfoType.INFO_FACEBOOK, "I like " + teamJSON.getString("name"), true);
 						mFBList.add(teamItem);
 						mListener.onFacebookCueAdded(teamItem);
 						++numChildrenAdded;
@@ -369,8 +369,6 @@ public class FBListFragment extends ListFragment {
 			Log.e(TAG, "getUserInfo() Sports teams list empty");
 		}
 		
-		/** ACTORS/DIRECTORS */
-		
 		/** EDUCATION */
 		if(session.isPermissionGranted("user_education_history")) {
 			JSONArray schoolsJSON = (JSONArray)user.getProperty("education");
@@ -389,7 +387,7 @@ public class FBListFragment extends ListFragment {
 						Map<String, String> schoolChild = new HashMap<String, String>();
 						schoolChild.put(ITEM_DATA, school.getString("name"));
 						schoolsList.add(schoolChild);
-						CueItem schoolItem = new CueItem(-1, InfoType.INFO_FACEBOOK, school.getString("name"), true);
+						CueItem schoolItem = new CueItem(-1, InfoType.INFO_FACEBOOK, "I studied at " + school.getString("name"), true);
 						mFBList.add(schoolItem);
 						mListener.onFacebookCueAdded(schoolItem);
 						++numChildrenAdded;
@@ -431,7 +429,7 @@ public class FBListFragment extends ListFragment {
 						Map<String, String> companyChild = new HashMap<String, String>();
 						companyChild.put(ITEM_DATA, company.getString("name"));
 						companiesList.add(companyChild);
-						CueItem companyItem = new CueItem(-1, InfoType.INFO_FACEBOOK, company.getString("name"), true);
+						CueItem companyItem = new CueItem(-1, InfoType.INFO_FACEBOOK, "I worked at " + company.getString("name"), true);
 						mFBList.add(companyItem);
 						mListener.onFacebookCueAdded(companyItem);
 						++numChildrenAdded;
@@ -475,7 +473,7 @@ public class FBListFragment extends ListFragment {
 				Map<String, String> languageChild = new HashMap<String, String>();
 				languageChild.put(ITEM_DATA, languageJSON.optString("name"));
 				languagesList.add(languageChild);
-				CueItem languageItem = new CueItem(-1, InfoType.INFO_FACEBOOK, languageJSON.optString("name"), true);
+				CueItem languageItem = new CueItem(-1, InfoType.INFO_FACEBOOK, "I speak " + languageJSON.optString("name"), true);
 				mFBList.add(languageItem);
 				mListener.onFacebookCueAdded(languageItem);
 				++numChildrenAdded;
@@ -503,13 +501,13 @@ public class FBListFragment extends ListFragment {
 		if(session.isPermissionGranted("user_birthday")) {
 			if(!user.getBirthday().isEmpty()) {
 				/** 2. Get the children from the JSON response */
-				// Child 1: the actual birthday as returned by Facebook
-				Map<String, String> birthdayString = new HashMap<String, String>();
-				birthdayString.put(ITEM_DATA, user.getBirthday());
-				aboutMeList.add(birthdayString);
-				++numChildrenAdded;
-				CueItem birthdayStringItem = new CueItem(-1, InfoType.INFO_FACEBOOK, user.getBirthday(), true);
-				mListener.onFacebookCueAdded(birthdayStringItem);
+//				// Child 1: the actual birthday as returned by Facebook
+//				Map<String, String> birthdayString = new HashMap<String, String>();
+//				birthdayString.put(ITEM_DATA, user.getBirthday());
+//				aboutMeList.add(birthdayString);
+//				++numChildrenAdded;
+//				CueItem birthdayStringItem = new CueItem(-1, InfoType.INFO_FACEBOOK, user.getBirthday(), true);
+//				mListener.onFacebookCueAdded(birthdayStringItem);
 				// Child 2: the birthday month
 				int month = Integer.parseInt(user.getBirthday().substring(0, 2));
 				String bdayMonth = "";
@@ -528,10 +526,10 @@ public class FBListFragment extends ListFragment {
 				case 12: bdayMonth = "December"; break;
 				}
 				Map<String, String> birthdayMonth = new HashMap<String, String>();
-				birthdayMonth.put(ITEM_DATA, "Child of " + bdayMonth);
+				birthdayMonth.put(ITEM_DATA, "Born in " + bdayMonth);
 				aboutMeList.add(birthdayMonth);
 				++numChildrenAdded;
-				CueItem birthdayMonthItem = new CueItem(-1, InfoType.INFO_FACEBOOK, "Child of " + bdayMonth, true);
+				CueItem birthdayMonthItem = new CueItem(-1, InfoType.INFO_FACEBOOK, "Born in " + bdayMonth, true);
 				mFBList.add(birthdayMonthItem);
 				mListener.onFacebookCueAdded(birthdayMonthItem);
 			} else {
@@ -548,7 +546,7 @@ public class FBListFragment extends ListFragment {
 				Map<String, String> hometownChild = new HashMap<String, String>();
 				hometownChild.put(ITEM_DATA, hometownJSON.optString("name"));
 				aboutMeList.add(hometownChild);
-				CueItem hometownItem = new CueItem(-1, InfoType.INFO_FACEBOOK, hometownJSON.optString("name"), true);
+				CueItem hometownItem = new CueItem(-1, InfoType.INFO_FACEBOOK, "I'm from " + hometownJSON.optString("name"), true);
 				mFBList.add(hometownItem);
 				mListener.onFacebookCueAdded(hometownItem);
 				++numChildrenAdded;
@@ -615,7 +613,7 @@ public class FBListFragment extends ListFragment {
 							mChildData.add(0, booksChildrenList);
 							List<CueItem> items = new ArrayList<CueItem>();
 							for(int i = 0; i < numChildrenAdded; ++i) {
-								CueItem bookItem = new CueItem(-1, InfoType.INFO_FACEBOOK, booksChildrenList.get(i).get(ITEM_DATA), true);
+								CueItem bookItem = new CueItem(-1, InfoType.INFO_FACEBOOK, "I like " + booksChildrenList.get(i).get(ITEM_DATA), true);
 								mFBList.add(bookItem);
 								items.add(bookItem);
 							}
@@ -685,7 +683,7 @@ public class FBListFragment extends ListFragment {
 							mChildData.add(0, musicChildrenList);
 							List<CueItem> items = new ArrayList<CueItem>();
 							for(int i = 0; i < numChildrenAdded; ++i) {
-								CueItem musicItem = new CueItem(-1, InfoType.INFO_FACEBOOK, musicChildrenList.get(i).get(ITEM_DATA), true);
+								CueItem musicItem = new CueItem(-1, InfoType.INFO_FACEBOOK, "I like " + musicChildrenList.get(i).get(ITEM_DATA), true);
 								mFBList.add(musicItem);
 								items.add(musicItem);
 							}
