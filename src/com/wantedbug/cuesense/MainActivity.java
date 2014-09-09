@@ -23,6 +23,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -165,6 +168,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             	setDataChanged(mCurrDistance, false);
             	break;
             case BT_MSG_SENDRECV_ERROR: {
+            	mCurrDevice = null;
             	// Unpair the users' phones if they were bonded
             	// Note: we have to do this because the low level implementation may change between
             	// device manufacturers
@@ -285,7 +289,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 Log.i(TAG, "onReceive() " + name + "," + rssi + "dBm" +
                 		", pairedState=" + mBTManager.getPairedUserState());
                 BluetoothDevice temp = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                BluetoothDevice device = mBTAdapter.getRemoteDevice(temp.getAddress());
+                BluetoothDevice device = temp; // mBTAdapter.getRemoteDevice(temp.getAddress());
+                Log.i(TAG, "device=" + device + "mCurrDevice=" + mCurrDevice);
                 // Send if we find the right device and if we're ready to accept the connection
                 if(device != null && device.getAddress().equals(USER2) &&
                 		(mCurrDevice == null || !mCurrDevice.getAddress().equals(device.getAddress())) &&
@@ -316,12 +321,15 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                             	Log.i(TAG, "no data for distance " + mCurrDistance);
                             	mCurrDevice = null;
                             	setDataChanged(mCurrDistance, false);
-                            	mBTManager.startPairedUserThreads();
+//                            	mBTManager.startPairedUserThreads();
                             	if(mBTAdapter.getAddress().equals(USER1))
                             		mBTScanHandler.postDelayed(mBTScanRunnable, SCAN_INTERVAL_MS);
                 			}
                 		} else {
                 			Log.i(TAG, "not sending data " + mCurrDistance + mPrevDistance + isDataChanged(mCurrDistance));
+                			mBTScanHandler.removeCallbacks(mBTScanRunnable);
+                			if(mBTAdapter.getAddress().equals(USER1))
+                        		mBTScanHandler.postDelayed(mBTScanRunnable, SCAN_INTERVAL_MS);
                 		}
                 	}
                 }
@@ -409,6 +417,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         // Otherwise, setup the BT link
         } else {
         	Log.i(TAG, "BT enabled. Setting up link..");
+        	ensureBTDiscoverable();
             if (mBTManager == null) setupBTLink();
         }
 	}
@@ -431,7 +440,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             // Only if the state is STATE_NONE, do we know that we haven't started already
             if (mBTManager.getWearableState() == BluetoothManager.STATE_NONE) {
               // Start the Bluetooth threads
-              mBTManager.setup();
+//              mBTManager.setup();
             }
             if (mBTManager.getPairedUserState() == BluetoothManager.STATE_NONE) {
             	mBTManager.startPairedUserThreads();
@@ -445,7 +454,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         super.onDestroy();
         // Stop the Bluetooth threads
         if (mBTManager != null) {
-        	mBTManager.stop();
+//        	mBTManager.stop();
         	mBTManager.stopPairedUserThreads();
         }
         // Stop the send and scan handler runnables
@@ -476,7 +485,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         	device = mBTAdapter.getRemoteDevice(BluetoothManager.DEVICE2_MAC);
         }
         // Attempt to connect to the device
-        mBTManager.connectWearable(device);
+//        mBTManager.connectWearable(device);
     }
 	
 	/**
@@ -524,6 +533,18 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 //    }
 	
 	/**
+	 * Ensures that Bluetooth is discoverable
+	 */
+	private void ensureBTDiscoverable() {
+    	if (mBTAdapter.getScanMode() !=
+    			BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+    		Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+    		discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0);
+    		startActivity(discoverableIntent);
+    	}
+	}
+	
+	/**
 	 *  This routine is called when an activity completes.
 	 */
 	@Override
@@ -533,13 +554,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		switch(requestCode) {
 		case REQUEST_ENABLE_BT:
             if (resultCode == Activity.RESULT_OK) {
-            	// Ensure BT is permanently discoverable
-            	if (mBTAdapter.getScanMode() !=
-            			BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
-            		Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-            		discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0);
-            		startActivity(discoverableIntent);
-            	}
+            	ensureBTDiscoverable();
                 setupBTLink();
             } else {
                 Log.d(TAG, "BT not enabled");
@@ -882,34 +897,39 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 * while DISTANCE_FAR can be associated with a slightly negative sound.
 	 */
 	private void playSound(int distanceRange) {
+		Log.d(TAG, "playSond()");
 		// Play the default notification sound when data is received
 		MediaPlayer mp = null;
 		if(PLAY_NOTIFICATION) {
 			switch(distanceRange) {
 			case DISTANCE_NEAR:
 				mp = MediaPlayer.create(this, R.raw.positive);
-				if(mp == null) return;
-				mp.setOnCompletionListener(new OnCompletionListener() {
-		             @Override
-		             public void onCompletion(MediaPlayer mp) {
-		                 mp.release();
-		             }
-		          });
-				mp.start();
 				break;
 			case DISTANCE_FAR:
 				mp = MediaPlayer.create(this, R.raw.negative);
-				if(mp == null) return;
-				mp.setOnCompletionListener(new OnCompletionListener() {
-		             @Override
-		             public void onCompletion(MediaPlayer mp) {
-		                 mp.release();
-		             }
-		          });
-				mp.start();
 			default:
 				break;
 			}
+			
+			if(mp == null) {
+				Log.d(TAG, "playSound() failed");
+				// Fallback to ringtone notification if our sound cannot be played
+				try {
+    				Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+    			    Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notification);
+    			    r.play();
+    			} catch (Exception e) {
+    			    Log.e(TAG, "Error playing notification" + e);
+    			}
+				return;
+			}
+			mp.setOnCompletionListener(new OnCompletionListener() {
+	             @Override
+	             public void onCompletion(MediaPlayer mp) {
+	                 mp.release();
+	             }
+	          });
+			mp.start();
 		}
 	}
 }
