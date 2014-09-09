@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Set;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
@@ -202,6 +203,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             		mPool.matchData(data);
             		// Play an audio cue when data send/receive is done
             		playSound(mCurrDistance);
+            		// Preempt animation in the TextScrollFragment if any to display new data
+            		if(mTextScrollFragment != null) mTextScrollFragment.clearAndGetNextText();
             	}
     			// Unpair the users' phones if they were bonded
             	// Note: we have to do this because the low level implementation may change between
@@ -248,6 +251,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private FBListFragment mFBListFragment;
 	// Contents of the Twitter tab
 	private TwitterListFragment mTWListFragment;
+	//
+	private TextScrollFragment mTextScrollFragment;
 	
 	// TwitterUtils instance
 	TwitterUtils mTwitterUtils = TwitterUtils.INSTANCE;
@@ -298,7 +303,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 	mCurrDistance = getDistanceFromRSSI(rssi);
                 	Toast.makeText(getApplicationContext(), "RSSI: " + rssi + "dBm", Toast.LENGTH_SHORT).show();
                 	synchronized (this) {
-                		// Send if in range or if data has changed
+                		// Send if in range and distance range is different from the last scan
                 		if(mCurrDistance != DISTANCE_OUTOFRANGE && mPrevDistance != mCurrDistance) { //isDataChanged(mCurrDistance)) {
                 			Log.i(TAG, "Sending to " + device.getName() + "," + device.getAddress());
                 			// Cache the BluetoothDevice and distance range
@@ -310,6 +315,19 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                         	// Get the data to be sent
                 			JSONObject data = getCuesData(mCurrDistance);
                 			if(null != data) {
+                				// If data hasn't changed from the last time a transmission was made
+                				// for this distance range, we basically only need to send the
+                				// distance range to the other device
+                				if(!isDataChanged(mCurrDistance)) {
+                					data = null;
+                					String dummyData = "{\"" + InfoPool.JSON_DISTANCE_NAME + "\":" + mCurrDistance + "}";
+                					try {
+										data = new JSONObject(dummyData);
+									} catch (JSONException e) {
+										Log.e(TAG, "dummy data JSON creation error" + e);
+										// But this is ok since we know the JSON is valid
+									}
+                				}
                 				// Connect and send
                 				mBTManager.connectAndSend(device, data);
                 				// Note: Devices are unbonded later after send/receive succeeds
@@ -472,21 +490,21 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     }
 	/** End MainActivity lifecycle methods*/
 	
-	/**
-	 * Connect to the Bluetooth device
-	 */
-	private void connectDevice() {
-		Log.d(TAG, "connectDevice");
-        // Get the BluetoothDevice object
-        BluetoothDevice device = null;
-        if(mBTAdapter.getAddress().equals(USER2)) {
-        	device = mBTAdapter.getRemoteDevice(BluetoothManager.DEVICE1_MAC);
-        } else {
-        	device = mBTAdapter.getRemoteDevice(BluetoothManager.DEVICE2_MAC);
-        }
-        // Attempt to connect to the device
+//	/**
+//	 * Connect to the Bluetooth device
+//	 */
+//	private void connectDevice() {
+//		Log.d(TAG, "connectDevice");
+//        // Get the BluetoothDevice object
+//        BluetoothDevice device = null;
+//        if(mBTAdapter.getAddress().equals(USER2)) {
+//        	device = mBTAdapter.getRemoteDevice(BluetoothManager.DEVICE1_MAC);
+//        } else {
+//        	device = mBTAdapter.getRemoteDevice(BluetoothManager.DEVICE2_MAC);
+//        }
+//        // Attempt to connect to the device
 //        mBTManager.connectWearable(device);
-    }
+//    }
 	
 	/**
 	 * Setup BluetoothManager and UI element links
@@ -498,15 +516,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         mBTManager = new BluetoothManager(this, mBTMessageHandler, this);
 
         // Connect to the Bluetooth device
-        connectDevice();
+//        connectDevice();
         
         // Start the runnable to periodically keep pushing data, if available, to the wearable
 //        mSendCueHandler.postDelayed(mSendCueRunnable, PUSH_INTERVAL_MS);
         
-        // Start Bluetooth discovery to continuously monitor signal strength of
-        // the nearby user
-        // Note: This is being run on a GS3Mini with 4.1.2 JellyBean which does not
-        // support Bluetooth LE. Therefore discovery being started is MANDATORY.
+        // Start Bluetooth discovery to continuously monitor signal strength of the nearby user
+        // Note: This is being done without Bluetooth LE. Therefore discovery being started is MANDATORY.
         // Register the BroadcastReceiver
         if(mBTAdapter.getAddress().equals(USER1)) {
 	        registerReceiver(mBTScanReceiver, new IntentFilter(BluetoothDevice.ACTION_FOUND));
@@ -592,8 +608,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			return true;
 		} else if(id == R.id.action_showTextScrollDisplay) {
 			if(mPool.hasNext()) {
-				DialogFragment dialog = new TextScrollFragment();
-				dialog.show(getSupportFragmentManager(), "text_scroll");
+				mTextScrollFragment = null;
+				mTextScrollFragment = new TextScrollFragment();
+				mTextScrollFragment.show(getSupportFragmentManager(), "text_scroll");
 			} else {
 				Toast.makeText(getApplicationContext(), R.string.no_data_anywhere, Toast.LENGTH_LONG).show();
 			}
@@ -713,7 +730,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
      * @param dataChanged
      */
     private void setDataChanged(int distanceRange, boolean dataChanged) {
-    	switch(mCurrDistance) {
+    	switch(distanceRange) {
     	case DISTANCE_NEAR: mNearDataChanged = dataChanged; break;
     	case DISTANCE_FAR: mFarDataChanged = dataChanged; break;
     	case DISTANCE_OUTOFRANGE:

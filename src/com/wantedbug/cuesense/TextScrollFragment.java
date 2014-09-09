@@ -266,6 +266,14 @@ public class TextScrollFragment extends DialogFragment {
 	}
 	
 	/**
+	 * Clears text animation and fetches new data to display
+	 */
+	public void clearAndGetNextText() {
+		mScrollText.clearAnimation();
+		getNextText();
+	}
+	
+	/**
 	 * Sets mScrollText by getting the next CueItem from the InfoPool
 	 * and starting its intro animation
 	 */
@@ -303,7 +311,7 @@ public class TextScrollFragment extends DialogFragment {
 		case INFO_FACEBOOK:
 			mImage.setImageDrawable(getResources().getDrawable(R.drawable.com_facebook_inverse_icon));
 			mImage.setBackgroundColor(getResources().getColor(R.color.com_facebook_blue));
-			mContextHeader.setText(spacer + "On my Facebook..");
+			mContextHeader.setText(spacer + "On Facebook..");
 			mScrollText.setTextColor(Color.parseColor("#627AAD")); // Facebook blue
 			mScrollText.setText(item.data());
 			mScrollText.startAnimation(mSlideInTopAnim);
@@ -311,7 +319,7 @@ public class TextScrollFragment extends DialogFragment {
 		case INFO_TWITTER:
 			mImage.setImageDrawable(getResources().getDrawable(R.drawable.twitter_logo_blue));
 			mImage.setBackgroundColor(0x00000000);
-			mContextHeader.setText(spacer + "On my Twitter..");
+			mContextHeader.setText(spacer + "On Twitter..");
 			mScrollText.setTextColor(Color.parseColor("#1dcaff")); // Twitter cyan
 			mScrollText.setText(item.data());
 			mScrollText.startAnimation(mSlideInRightAnim);
