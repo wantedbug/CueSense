@@ -48,13 +48,9 @@ public class InfoPool {
 	
 	// List for cues matched with another user - next highest priority
 	private List<CueItem> mMatchedCuesList = new ArrayList<CueItem>(INIT_SIZE);
-	// Global list counter
-	private int mMatchedCounter = 0;
 	
 	// Global list for everything else - lowest priority
 	private ArrayList<CueItem> mGlobalList = new ArrayList<CueItem>(INIT_SIZE);
-	// Global list counter
-	private int mGlobalCounter = 0;
 	
 	// Lists that contain appropriate CueItems for the respective distance levels
 	// See MainActivity.BT_RSSI_NEAR etc.
@@ -117,7 +113,6 @@ public class InfoPool {
 	public synchronized void clearMatchedCues() {
 		Log.d(TAG, "clearMatchedCues()");
 		mMatchedCuesList.clear();
-		mMatchedCounter = 0;
 	}
 
 	/**
@@ -307,6 +302,22 @@ public class InfoPool {
 				it.remove();
 			}
 		}
+		
+		// Delete from the neighbour lists as well
+		it = mNeighbourNearList.iterator();
+		while(it.hasNext()) {
+			CueItem item = it.next();
+			if(item.type().equals(type)) {
+				it.remove();
+			}
+		}
+		it = mNeighbourFarList.iterator();
+		while(it.hasNext()) {
+			CueItem item = it.next();
+			if(item.type().equals(type)) {
+				it.remove();
+			}
+		}
 	}
 	
 	/**
@@ -334,30 +345,12 @@ public class InfoPool {
 	 */
 	public synchronized CueItem getNext() {
 		Log.d(TAG, "getNext()");
-//		if(mNewCuesList.isEmpty() && mGlobalList.isEmpty() && mMatchedCuesList.isEmpty()) {
-//			Log.i(TAG, "getNext() lists empty");
-//			return new CueItem(-1, InfoType.INFO_SENTINEL, "CueSense", true);
-//		}
 		
-		// Return the first encountered checked Cue that the user entered
+		// Return an item that the user entered
 		// and add the same to the end of the global list
 		if(!mNewCuesList.isEmpty()) {
 			boolean found = false;
 			CueItem ret = new CueItem(-1, InfoType.INFO_SENTINEL, "", false); // to make the silly Android compiler happy
-//			Iterator<CueItem> it = mNewCuesList.iterator();
-//			while(!found && it.hasNext()) {
-//				CueItem item = it.next();
-//				if(item.isChecked()) {
-//					ret = item;
-//					mGlobalList.add(item);
-//					it.remove();
-//					found = true;
-//				}
-//			}
-//			if(found) {
-//				Log.i(TAG, "getNext() from new list " + ret.data());
-//				return ret;
-//			}
 			while(!found) {
 				ret = mNewCuesList.get(new Random().nextInt(mNewCuesList.size()));
 				if(ret.isChecked()) {
@@ -373,45 +366,12 @@ public class InfoPool {
 		
 		// If there's a matched Cue, return that
 		if(!mMatchedCuesList.isEmpty()) {
-//			if(mMatchedCounter >= mMatchedCuesList.size()) {
-//				mMatchedCounter = 0;
-//			}
-//			CueItem ret = mMatchedCuesList.get(mMatchedCounter);
-//			++mMatchedCounter;
-//			Log.i(TAG, "getNext() from matched list " + ret.data());
-//			return ret;
-			boolean found = false;
-			CueItem ret = new CueItem(-1, InfoType.INFO_SENTINEL, "", false); // to make the silly Android compiler happy
-			while(!found) {
-				ret = mMatchedCuesList.get(new Random().nextInt(mMatchedCuesList.size()));
-				if(ret.isChecked()) {
-					found = true;
-					Log.i(TAG, "getNext() from matched list " + ret.data());
-					return ret;
-				}
-			}
+			CueItem ret = mMatchedCuesList.get(new Random().nextInt(mMatchedCuesList.size()));
+			Log.i(TAG, "getNext() from matched list " + ret.data());
+			return ret;
 		}
 		
-		// If not, then return the next checked item from the global list
-//		CueItem ret = new CueItem(-1, InfoType.INFO_SENTINEL, "", false); // to make the silly Android compiler happy
-//		int count = 0;
-//		while(count != mGlobalList.size()) {
-//			Log.d(TAG, "searching in the global list");
-//			if(mGlobalCounter >= mGlobalList.size()) {
-//				mGlobalCounter = 0;
-//			}
-//			CueItem item = mGlobalList.get(mGlobalCounter);
-//			if(item.isChecked()) {
-//				ret = item;
-//				break;
-//			} else {
-//				++mGlobalCounter;
-//				++count;
-//			}
-//		}
-//		++mGlobalCounter;
-//		Log.i(TAG, "getNext() from global list " + ret.data());
-//		return ret;
+		// If not, then return an item from the global list
 		boolean found = false;
 		CueItem ret = new CueItem(-1, InfoType.INFO_SENTINEL, "", false); // to make the silly Android compiler happy
 		while(!found) {
@@ -635,7 +595,7 @@ public class InfoPool {
 	/**
 	 * Extracts and matches received with what we currently have
 	 * @param data
-	 * Performs basic string matching 
+	 * Performs basic approximate string matching 
 	 */
 	public synchronized void matchData(String data) {
 		Log.d(TAG, "matchData()");
@@ -664,6 +624,7 @@ public class InfoPool {
 		// JSONObject
 		while(!recovered) {
 			try {
+				obj = null;
 				obj = new JSONObject(temp);
 				recovered = true;
 				rawData = temp;
@@ -688,6 +649,9 @@ public class InfoPool {
 		return rawData;
 	}
 	
+	private List<CueItem> mNeighbourNearList = new ArrayList<CueItem>();
+	private List<CueItem> mNeighbourFarList = new ArrayList<CueItem>();
+	
 	/**
 	 * Thread to perform matching
 	 * @author vikasprabhu
@@ -700,7 +664,6 @@ public class InfoPool {
 		 * Constants
 		 */
 		private static final double THRESHOLD_NEAR = 0.8;
-		private static final double THRESHOLD_INTERMEDIATE = 0.5;
 		private static final double THRESHOLD_FAR = 0.5;
 		
 		/**
@@ -711,16 +674,18 @@ public class InfoPool {
 		// Raw JSON data
 		private final String mRawData;
 		// List of CueItems constructed from above JSON data
-		private List<CueItem> mItems;
+		private List<CueItem> mNeighbourItems;
 		// Distance range received
 		private int mDistance = MainActivity.DISTANCE_OUTOFRANGE;
 		// Twitter screen name of the nearby user
 		private String mTargetUserScreenName = "";
+		//
+		private boolean mHasContent = false;
 		
 		public MatchThread(String data) {
 			Log.d(TAG, "create MatchThread " + data.length());
 			mRawData = fixRawData(data);
-			mItems = new ArrayList<CueItem>();
+			mNeighbourItems = new ArrayList<CueItem>();
 		}
 		
 		public void run() {
@@ -735,6 +700,7 @@ public class InfoPool {
 					mTargetUserScreenName = root.getString(JSON_TWITTERSCREENNAME_NAME);
 				JSONArray itemsArray = null;
 				if(root.has(JSON_ARRAY_NAME)) {
+					mHasContent = true;
 					itemsArray = root.getJSONArray(JSON_ARRAY_NAME);
 					for(int i = 0; mRunning && i < itemsArray.length(); ++i) {
 						JSONObject itemJSON = itemsArray.getJSONObject(i);
@@ -742,9 +708,11 @@ public class InfoPool {
 						String data = itemJSON.optString(CueItem.JSON_TAG_DATA);
 						if(data != null && type != null) {
 							CueItem item = new CueItem(-1, type, data, true);
-							mItems.add(item);
+							mNeighbourItems.add(item);
 						}
 					}
+				} else {
+					mHasContent = false;
 				}
 			} catch (JSONException e) {
 				Log.e(TAG, "JSONObject creation/extraction error " + e);
@@ -765,28 +733,54 @@ public class InfoPool {
 		 * distance range involved
 		 */
 		private void match() {
-			Log.d(TAG, "match()");
+			Log.i(TAG, "match() mHasContent=" + mHasContent);
 			// Clear any matches previously generated
 			clearMatchedCues();
-			
-			switch(mDistance) {
-			case MainActivity.DISTANCE_NEAR:
-				match(mNearList, mItems, THRESHOLD_NEAR);
-				// Get common followings tweets if we have the target user's screen name
-				if(!mTargetUserScreenName.isEmpty())
-					getCommonTweets();
-				break;
-			case MainActivity.DISTANCE_FAR:
-				// Match data
-				match(mFarList, mItems, THRESHOLD_FAR);
-				break;
-			default: // If distance item is not received for some reason, fall back to matching with everything we have
-				match(mNearList, mItems, THRESHOLD_NEAR);
-				// Get common followings tweets if we have the target user's screen name
-				if(!mTargetUserScreenName.isEmpty())
-					getCommonTweets();
-				match(mFarList, mItems, THRESHOLD_FAR);
-				break;
+
+			if(mHasContent) {
+				switch(mDistance) {
+				case MainActivity.DISTANCE_NEAR:
+					mNeighbourNearList.clear();
+					mNeighbourNearList.addAll(mNeighbourItems);
+					match(mNearList, mNeighbourItems, THRESHOLD_NEAR);
+					// Get common followings tweets if we have the target user's screen name
+					if(!mTargetUserScreenName.isEmpty())
+						getCommonTweets();
+					break;
+				case MainActivity.DISTANCE_FAR:
+					mNeighbourFarList.clear();
+					mNeighbourFarList.addAll(mNeighbourItems);
+					// Match data
+					match(mFarList, mNeighbourItems, THRESHOLD_FAR);
+					break;
+				default: // If distance item is not received for some reason, fall back to matching with everything we have
+					match(mNearList, mNeighbourItems, THRESHOLD_NEAR);
+					// Get common followings tweets if we have the target user's screen name
+					if(!mTargetUserScreenName.isEmpty())
+						getCommonTweets();
+					match(mFarList, mNeighbourItems, THRESHOLD_FAR);
+					break;
+				}
+			} else {
+				switch(mDistance) {
+				case MainActivity.DISTANCE_NEAR:
+					match(mNearList, mNeighbourNearList, THRESHOLD_NEAR);
+					// Get common followings tweets if we have the target user's screen name
+					if(!mTargetUserScreenName.isEmpty())
+						getCommonTweets();
+					break;
+				case MainActivity.DISTANCE_FAR:
+					// Match data
+					match(mFarList, mNeighbourFarList, THRESHOLD_FAR);
+					break;
+				default: // If distance item is not received for some reason, fall back to matching with everything we have
+					match(mNearList, mNeighbourNearList, THRESHOLD_NEAR);
+					// Get common followings tweets if we have the target user's screen name
+					if(!mTargetUserScreenName.isEmpty())
+						getCommonTweets();
+					match(mFarList, mNeighbourFarList, THRESHOLD_FAR);
+					break;
+				}
 			}
 		}
 		

@@ -869,8 +869,10 @@ public class BluetoothManager {
             			JSONObject data = new JSONObject(rcvd);
             			int distance = data.optInt(InfoPool.JSON_DISTANCE_NAME);
             			if(distance == 0) distance = mDistanceRangeListener.currentDistanceRange();
-            			if(distance > MainActivity.DISTANCE_OUTOFRANGE &&
-            					distance <= MainActivity.DISTANCE_FAR) {
+            			boolean hasContent = data.has(InfoPool.JSON_ARRAY_NAME);
+            			if(hasContent &&
+        					(distance > MainActivity.DISTANCE_OUTOFRANGE &&
+        					 distance <= MainActivity.DISTANCE_FAR)) {
             				JSONObject myData = InfoPool.INSTANCE.getData(distance);
             				if(myData != null) write(myData.toString().getBytes());
             				mmDataNotSent = false;

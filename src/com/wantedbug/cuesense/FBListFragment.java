@@ -501,13 +501,6 @@ public class FBListFragment extends ListFragment {
 		if(session.isPermissionGranted("user_birthday")) {
 			if(!user.getBirthday().isEmpty()) {
 				/** 2. Get the children from the JSON response */
-//				// Child 1: the actual birthday as returned by Facebook
-//				Map<String, String> birthdayString = new HashMap<String, String>();
-//				birthdayString.put(ITEM_DATA, user.getBirthday());
-//				aboutMeList.add(birthdayString);
-//				++numChildrenAdded;
-//				CueItem birthdayStringItem = new CueItem(-1, InfoType.INFO_FACEBOOK, user.getBirthday(), true);
-//				mListener.onFacebookCueAdded(birthdayStringItem);
 				// Child 2: the birthday month
 				int month = Integer.parseInt(user.getBirthday().substring(0, 2));
 				String bdayMonth = "";
