@@ -298,7 +298,7 @@ public class FBListFragment extends ListFragment {
 			/** 2. Get the children from the JSON response */
 			List<Map<String, String>> peopleList = new ArrayList<Map<String, String>>();
 			numChildrenAdded = 0;
-			for (int j = 0; j < peopleJSONArray.length(); ++j) {
+			for (int j = 0; j < peopleJSONArray.length() && j < 20; ++j) {
 				try {
 					JSONObject personJSON = peopleJSONArray.getJSONObject(j);
 					if(personJSON.has("name")) {
@@ -338,7 +338,7 @@ public class FBListFragment extends ListFragment {
 			/** 2. Get the children from the JSON response */
 			List<Map<String, String>> teamsList = new ArrayList<Map<String, String>>();
 			numChildrenAdded = 0;
-			for (int j = 0; j < teamsJSONArray.length(); ++j) {
+			for (int j = 0; j < teamsJSONArray.length() && j < 20; ++j) {
 				try {
 					JSONObject teamJSON = teamsJSONArray.getJSONObject(j);
 					if(teamJSON.has("name")) {
@@ -380,7 +380,7 @@ public class FBListFragment extends ListFragment {
 				List<Map<String, String>> schoolsList = new ArrayList<Map<String, String>>();
 				numChildrenAdded = 0;
 				// Add all schools as children
-				for (int j = 0; j < schoolsJSON.length(); ++j) {
+				for (int j = 0; j < schoolsJSON.length() && j < 20; ++j) {
 					try {
 						JSONObject schoolJSON = schoolsJSON.getJSONObject(j);
 						JSONObject school = schoolJSON.getJSONObject("school");
@@ -422,7 +422,7 @@ public class FBListFragment extends ListFragment {
 				List<Map<String, String>> companiesList = new ArrayList<Map<String, String>>();
 				numChildrenAdded = 0;
 				// Add all companies as children
-				for (int j = 0; j < companiesJSON.length(); ++j) {
+				for (int j = 0; j < companiesJSON.length() && j < 20; ++j) {
 					JSONObject companyJSON = companiesJSON.optJSONObject(j);
 					try {
 						JSONObject company = companyJSON.getJSONObject("employer");
@@ -462,7 +462,7 @@ public class FBListFragment extends ListFragment {
 			/** 2. Get the children from the JSON response */
 			List<Map<String, String>> languagesList = new ArrayList<Map<String, String>>();
 			numChildrenAdded = 0;
-			for (int i = 0; i < languages.length(); i++) {
+			for (int i = 0; i < languages.length() && i < 20; i++) {
 				JSONObject languageJSON = null;
 				try {
 					languageJSON = languages.getJSONObject(i);
@@ -584,7 +584,7 @@ public class FBListFragment extends ListFragment {
 						/** 2. Get the children from the JSON response */
 						List<Map<String, String>> booksChildrenList = new ArrayList<Map<String, String>>();
 						int numChildrenAdded = 0;
-						for(int i = 0; i < booksJSON.length(); ++i) {
+						for(int i = 0; i < booksJSON.length() && i < 20; ++i) {
 							JSONObject bookData = null;
 							try {
 								bookData = booksJSON.getJSONObject(i).getJSONObject("data").getJSONObject("book");
@@ -654,7 +654,7 @@ public class FBListFragment extends ListFragment {
 						/** 2. Get the children from the JSON response */
 						List<Map<String, String>> musicChildrenList = new ArrayList<Map<String, String>>();
 						int numChildrenAdded = 0;
-						for(int i = 0; i < musicJSON.length(); ++i) {
+						for(int i = 0; i < musicJSON.length() && i < 20; ++i) {
 							JSONObject musicData = null;
 							try {
 								musicData = musicJSON.getJSONObject(i);

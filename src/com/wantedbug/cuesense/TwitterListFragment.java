@@ -225,6 +225,7 @@ public class TwitterListFragment extends ListFragment {
 							favouritesGroupMap.put(ITEM_DATA, "Favourites");
 							/** 2. Get the children from the response */
 							List<Map<String, String>> favouritesList = new ArrayList<Map<String, String>>();
+							int count = 0;
 							for(Status s : mFavourites) {
 								Map<String, String> favouritesChild = new HashMap<String, String>();
 								String data = "@" + s.getUser().getName() + ": " + s.getText();
@@ -232,6 +233,8 @@ public class TwitterListFragment extends ListFragment {
 								favouritesList.add(favouritesChild);
 								CueItem favouriteItem = new CueItem(-1, InfoType.INFO_TWITTER, data, true);
 //								mListener.onTwitterCueAdded(favouriteItem);
+								++count;
+								if(count == 20) break;
 							}
 							/** 3. Add the list item's children to the list view */
 							mGroupData.add(favouritesGroupMap);
@@ -264,6 +267,7 @@ public class TwitterListFragment extends ListFragment {
 							friendsGroupMap.put(ITEM_DATA, "Friends");
 							/** 2. Get the children from the response */
 							List<Map<String, String>> friendsList = new ArrayList<Map<String, String>>();
+							int count = 0;
 							for(User u : mFriends) {
 								Map<String, String> friendsChild = new HashMap<String, String>();
 								String data = "I follow " + u.getName();
@@ -271,6 +275,8 @@ public class TwitterListFragment extends ListFragment {
 								friendsList.add(friendsChild);
 								CueItem friendItem = new CueItem(-1, InfoType.INFO_TWITTER, data, true);
 								mListener.onTwitterCueAdded(friendItem);
+								++count;
+								if(count == 20) break;
 							}
 							/** 3. Add the list item's children to the list view */
 							mGroupData.add(friendsGroupMap);
@@ -304,6 +310,7 @@ public class TwitterListFragment extends ListFragment {
 							followersGroupMap.put(ITEM_DATA, "Followers");
 							/** 2. Get the children from the response */
 							List<Map<String, String>> followersList = new ArrayList<Map<String, String>>();
+							int count = 0;
 							for(User u : mFollowers) {
 								Map<String, String> followersChild = new HashMap<String, String>();
 								String data = "I'm followed by " + u.getName();
@@ -311,6 +318,8 @@ public class TwitterListFragment extends ListFragment {
 								followersList.add(followersChild);
 								CueItem followerItem = new CueItem(-1, InfoType.INFO_TWITTER, data, true);
 								mListener.onTwitterCueAdded(followerItem);
+								++count;
+								if(count == 20) break;
 							}
 							/** 3. Add the list item's children to the list view */
 							mGroupData.add(followersGroupMap);
