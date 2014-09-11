@@ -222,7 +222,7 @@ public class TwitterListFragment extends ListFragment {
 						if(!mFavourites.isEmpty()) {
 							/** 1. Add the list item header to the list view */
 							Map<String, String> favouritesGroupMap = new HashMap<String, String>();
-							favouritesGroupMap.put(ITEM_DATA, "Favourites");
+							favouritesGroupMap.put(ITEM_DATA, "My favourite tweets");
 							/** 2. Get the children from the response */
 							List<Map<String, String>> favouritesList = new ArrayList<Map<String, String>>();
 							int count = 0;
@@ -264,13 +264,13 @@ public class TwitterListFragment extends ListFragment {
 						if(!mFriends.isEmpty()) {
 							/** 1. Add the list item header to the list view */
 							Map<String, String> friendsGroupMap = new HashMap<String, String>();
-							friendsGroupMap.put(ITEM_DATA, "Friends");
+							friendsGroupMap.put(ITEM_DATA, "My friends and followees");
 							/** 2. Get the children from the response */
 							List<Map<String, String>> friendsList = new ArrayList<Map<String, String>>();
 							int count = 0;
 							for(User u : mFriends) {
 								Map<String, String> friendsChild = new HashMap<String, String>();
-								String data = "I follow " + u.getName();
+								String data = u.getName();
 								friendsChild.put(ITEM_DATA, data);
 								friendsList.add(friendsChild);
 								CueItem friendItem = new CueItem(-1, InfoType.INFO_TWITTER, data, true);
@@ -307,13 +307,13 @@ public class TwitterListFragment extends ListFragment {
 						if(!mFollowers.isEmpty()) {
 							/** 1. Add the list item header to the list view */
 							Map<String, String> followersGroupMap = new HashMap<String, String>();
-							followersGroupMap.put(ITEM_DATA, "Followers");
+							followersGroupMap.put(ITEM_DATA, "My followers");
 							/** 2. Get the children from the response */
 							List<Map<String, String>> followersList = new ArrayList<Map<String, String>>();
 							int count = 0;
 							for(User u : mFollowers) {
 								Map<String, String> followersChild = new HashMap<String, String>();
-								String data = "I'm followed by " + u.getName();
+								String data = u.getName();
 								followersChild.put(ITEM_DATA, data);
 								followersList.add(followersChild);
 								CueItem followerItem = new CueItem(-1, InfoType.INFO_TWITTER, data, true);
