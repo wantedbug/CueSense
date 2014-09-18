@@ -69,6 +69,8 @@ public class InfoPool {
 	// Thread to perform matching
 	private MatchThread mMatchThread = null;
 	
+	private CueItem mPrevItem = new CueItem(-1, InfoType.INFO_SENTINEL, "", false);
+	
 	/**
 	 * Private c'tor to defeat instantiation
 	 */
@@ -231,6 +233,10 @@ public class InfoPool {
 				it.setType(item.type());
 				it.setData(item.data());
 				it.setChecked(item.isChecked());
+				if(!it.isChecked()) {
+					mGlobalList.add(it);
+					mNewCuesList.remove(it);
+				}
 				onCueUpdated(item);
 				wasInNewList = true;
 				break;
@@ -333,6 +339,11 @@ public class InfoPool {
 		return true;
 	}
 	
+	private void updatePrevItem(CueItem ret) {
+		mPrevItem = null;
+		mPrevItem = ret;
+	}
+	
 	/**
 	 * Gets next Cue from the appropriate list
 	 * @return
@@ -346,41 +357,59 @@ public class InfoPool {
 	public synchronized CueItem getNext() {
 		Log.d(TAG, "getNext()");
 		
+		int count = 0;
+		final int NUMTRIES = 100;
+		
 		// Return an item that the user entered
 		// and add the same to the end of the global list
 		if(!mNewCuesList.isEmpty()) {
 			boolean found = false;
 			CueItem ret = new CueItem(-1, InfoType.INFO_SENTINEL, "", false); // to make the silly Android compiler happy
-			while(!found) {
+			while(!found && count < NUMTRIES) {
 				ret = mNewCuesList.get(new Random().nextInt(mNewCuesList.size()));
-				if(ret.isChecked()) {
+				if(ret.isChecked() && !ret.data().equals(mPrevItem.data())) {
 					found = true;
 					mGlobalList.add(ret);
 					boolean removed = mNewCuesList.remove(ret);
 					Log.i(TAG, "item removed = " + removed + " from mNewCuesList " + ret.data());
 					Log.i(TAG, "getNext() from new list " + ret.data());
+					updatePrevItem(ret);
 					return ret;
 				}
+				++count;
 			}
 		}
 		
 		// If there's a matched Cue, return that
+		count = 0;
 		if(!mMatchedCuesList.isEmpty()) {
-			CueItem ret = mMatchedCuesList.get(new Random().nextInt(mMatchedCuesList.size()));
-			Log.i(TAG, "getNext() from matched list " + ret.data());
-			return ret;
+			boolean found = false;
+			CueItem ret = new CueItem(-1, InfoType.INFO_SENTINEL, "", false); // to make the silly Android compiler happy
+			while(!found && count < NUMTRIES) {
+				ret = mMatchedCuesList.get(new Random().nextInt(mMatchedCuesList.size()));
+				if(ret.isChecked() && !ret.data().equals(mPrevItem.data())) {
+					found = true;
+					Log.i(TAG, "getNext() from matched list " + ret.data());
+					updatePrevItem(ret);
+					return ret;
+				}
+				++count;
+			}
 		}
 		
 		// If not, then return an item from the global list
 		boolean found = false;
+		count = 0;
 		CueItem ret = new CueItem(-1, InfoType.INFO_SENTINEL, "", false); // to make the silly Android compiler happy
-		while(!found) {
+		while(!found && count < NUMTRIES) {
 			ret = mGlobalList.get(new Random().nextInt(mGlobalList.size()));
-			if(ret.isChecked()) {
+			if(ret.isChecked() && !ret.data().equals(mPrevItem.data())) {
 				found = true;
 				Log.i(TAG, "getNext() from global list " + ret.data());
+				updatePrevItem(ret);
 				return ret;
 			}
+			++count;
 		}
 		
 		// If all the lists are empty

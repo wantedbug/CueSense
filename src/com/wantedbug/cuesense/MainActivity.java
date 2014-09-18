@@ -118,7 +118,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// Bluetooth RSSI range values
 	// Note: calibrate these for every test environment since Bluetooth RSSI
 	// values are dependent on the surroundings, surfaces, objects, obstacles, etc.
-	private static final int BT_RSSI_NEAR = 60;
+	private static final int BT_RSSI_NEAR = 65;
 	private static final int BT_RSSI_FAR = 100;
 	
 	// Distance levels
@@ -204,7 +204,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
             		// Play an audio cue when data send/receive is done
             		playSound(mCurrDistance);
             		// Preempt animation in the TextScrollFragment if any to display new data
-            		if(mTextScrollFragment != null) mTextScrollFragment.clearAndGetNextText();
+            		if(mTextScrollFragment != null && mTextScrollFragment.isAdded()) mTextScrollFragment.clearAndGetNextText();
             	}
     			// Unpair the users' phones if they were bonded
             	// Note: we have to do this because the low level implementation may change between
@@ -304,7 +304,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 	Toast.makeText(getApplicationContext(), "RSSI: " + rssi + "dBm", Toast.LENGTH_SHORT).show();
                 	synchronized (this) {
                 		// Send if in range and distance range is different from the last scan
-                		if(mCurrDistance != DISTANCE_OUTOFRANGE && mPrevDistance != mCurrDistance) { //isDataChanged(mCurrDistance)) {
+                		if(mCurrDistance != DISTANCE_OUTOFRANGE && mPrevDistance != mCurrDistance) {
                 			Log.i(TAG, "Sending to " + device.getName() + "," + device.getAddress());
                 			// Cache the BluetoothDevice and distance range
                 			mCurrDevice = device;
@@ -319,10 +319,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 				// for this distance range, we basically only need to send the
                 				// distance range to the other device
                 				if(!isDataChanged(mCurrDistance)) {
-                					data = null;
                 					String dummyData = "{\"" + InfoPool.JSON_DISTANCE_NAME + "\":" + mCurrDistance + "}";
                 					try {
-										data = new JSONObject(dummyData);
+                    					JSONObject tempData = new JSONObject(dummyData);
+                    					data = null;
+                    					data = tempData;
 									} catch (JSONException e) {
 										Log.e(TAG, "dummy data JSON creation error" + e);
 										// But this is ok since we know the JSON is valid
